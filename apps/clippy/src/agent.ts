@@ -29,6 +29,10 @@ Open and view the image file at the path given, then lead with the answer. If it
 the likely cause and the concrete fix. Be specific and skimmable. If you genuinely cannot view the
 image, say so plainly instead of guessing.`;
 
+const ASSISTANT_PERSONA = `You are Tandem, an ambient AI coworker on the user's desktop. Lead with the answer.
+Be concise, warm, and skimmable — like a sharp colleague, not a chatbot. The PM OS workspace is on
+disk; use its skills and knowledge when the question is PM-related. Never invent facts.`;
+
 function engineCfg(cfg: ClippyConfig) {
   return { cliBin: cfg.agent, model: cfg.agentModel, workspace: cfg.workspace, timeoutMs: 180_000 };
 }
@@ -67,6 +71,16 @@ export async function askAboutScreenshot(
     `--- QUESTION ---\n${question?.trim() || "What's on my screen? If there's an error, tell me how to fix it."}`,
   ].join("\n\n");
   const result = await runAgent(engineCfg(cfg), { prompt, outputFormat: "text", mode: "ask" });
+  return { text: result.text };
+}
+
+/** General ask — read-only desktop assistant (no screenshot). */
+export async function ask(cfg: ClippyConfig, question: string): Promise<{ text: string }> {
+  const result = await runAgent(engineCfg(cfg), {
+    prompt: `${ASSISTANT_PERSONA}\n\n--- QUESTION ---\n${question.trim()}`,
+    outputFormat: "text",
+    mode: "ask",
+  });
   return { text: result.text };
 }
 

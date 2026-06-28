@@ -1,12 +1,13 @@
-import { app, BrowserWindow, ipcMain, Menu, screen, shell } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain, Menu, powerMonitor, screen, shell } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import chokidar from "chokidar";
 import { loadConfig, type ClippyConfig } from "./config.ts";
 import { parseTasksMarkdown, type ParsedTasks, type SectionKey } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
-import { askAboutScreenshot, capture, groom } from "./agent.ts";
+import { ask, askAboutScreenshot, capture, groom } from "./agent.ts";
 
 const APP_DIR = resolve(__dirname, ".."); // apps/clippy
 const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS submodule)
@@ -14,6 +15,8 @@ const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS 
 let cfg: ClippyConfig;
 let win: BrowserWindow;
 let expanded = false;
+let lastNudgeAt = 0;
+let nudgeTimer: ReturnType<typeof setInterval> | null = null;
 
 interface WindowState {
   x?: number;
@@ -28,11 +31,23 @@ function statePath(): string {
   return join(app.getPath("userData"), "window-state.json");
 }
 
+function normalizeState(raw: Partial<WindowState>): WindowState {
+  const panelW = Number(raw.panelW);
+  const panelH = Number(raw.panelH);
+  return {
+    x: raw.x,
+    y: raw.y,
+    expanded: Boolean(raw.expanded),
+    panelW: Number.isFinite(panelW) && panelW >= cfg.panel.minW ? panelW : cfg.panel.defaultW,
+    panelH: Number.isFinite(panelH) && panelH >= cfg.panel.minH ? panelH : cfg.panel.defaultH,
+  };
+}
+
 function loadState(): WindowState {
   try {
-    return { expanded: false, ...JSON.parse(readFileSync(statePath(), "utf8")) };
+    return normalizeState({ expanded: false, ...JSON.parse(readFileSync(statePath(), "utf8")) });
   } catch {
-    return { expanded: false, panelW: cfg.panel.defaultW, panelH: cfg.panel.defaultH };
+    return normalizeState({ expanded: false });
   }
 }
 
@@ -63,6 +78,16 @@ function broadcast(): void {
   if (!win?.isDestroyed()) win.webContents.send("tasks:updated", readTasks());
 }
 
+const TOP_MARGIN = 14;
+
+function anchorTopCenter(): void {
+  if (!win || win.isDestroyed()) return;
+  const bounds = win.getBounds();
+  const work = screen.getPrimaryDisplay().workArea;
+  const x = Math.round(work.x + (work.width - bounds.width) / 2);
+  const y = Math.round(work.y + TOP_MARGIN);
+  win.setPosition(x, y);
+}
 function clampPanel(w: number, h: number): { w: number; h: number } {
   const area = screen.getDisplayMatching(win.getBounds()).workAreaSize;
   return {
@@ -75,13 +100,13 @@ function setExpanded(v: boolean): void {
   expanded = v;
   state.expanded = v;
   if (v) {
-    const { w, h } = clampPanel(state.panelW, state.panelH);
-    state.panelW = w;
-    state.panelH = h;
-    win.setResizable(true);
-    win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
-    win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
+    const w = cfg.panel.defaultW;
+    const h = cfg.panel.defaultH;
+    win.setResizable(false);
+    win.setMinimumSize(w, h);
+    win.setMaximumSize(w, h);
     win.setSize(w, h, false);
+    win.webContents.send("widget:expanded", true);
     win.show();
     win.focus();
   } else {
@@ -89,44 +114,126 @@ function setExpanded(v: boolean): void {
     win.setMinimumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setMaximumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
+    win.webContents.send("widget:expanded", false);
   }
-  win.webContents.send("widget:expanded", v);
+  anchorTopCenter();
   saveState();
 }
 
-/**
- * Native macOS region snip. Hides Clippy first so it isn't in the shot. Returns the saved
- * path, or null if the user pressed Esc (screencapture then writes no file).
- */
-function captureScreenshot(): Promise<string | null> {
+function screenshotPreviewUrl(path: string): string {
+  return pathToFileURL(path).href;
+}
+
+function snipPayload(path: string | null, status: string, extra: Record<string, unknown> = {}) {
+  return path
+    ? { path, previewUrl: screenshotPreviewUrl(path), status, ...extra }
+    : { status, ...extra };
+}
+
+function restoreWindowAfterSnip(priorVisible: boolean, priorExpanded: boolean): void {
+  if (!priorVisible) return;
+  if (priorExpanded) setExpanded(true);
+  else setExpanded(false);
+}
+
+/** Native macOS region snip — hides Clippy so it isn't in the shot. */
+function captureRegion(): Promise<string | null> {
   const dir = join(cfg.workspace, ".tandem", "screenshots");
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `shot-${Date.now()}.png`);
-  const wasVisible = win.isVisible();
   win.hide();
   return new Promise((resolve) => {
     setTimeout(() => {
-      // -i interactive selection, -x no shutter sound.
       execFile("screencapture", ["-i", "-x", file], () => {
-        if (wasVisible) win.show();
         resolve(existsSync(file) ? file : null);
       });
     }, 180);
   });
 }
 
+function paintDelay(ms = 100): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Global hotkey path: expand → capture → preview + processing → answer. */
+async function runHotkeySnip(): Promise<void> {
+  const priorExpanded = expanded;
+  const priorVisible = win.isVisible();
+
+  setExpanded(true);
+  win.webContents.send("widget:snip-result", snipPayload(null, "selecting"));
+  await paintDelay();
+
+  const path = await captureRegion();
+  if (!path) {
+    win.webContents.send("widget:snip-result", snipPayload(null, "cancelled"));
+    restoreWindowAfterSnip(priorVisible, priorExpanded);
+    return;
+  }
+
+  setExpanded(true);
+  win.webContents.send("widget:snip-result", snipPayload(path, "captured"));
+
+  if (!cfg.hotkey.autoAsk) {
+    win.webContents.send("widget:snip-ready", { path, previewUrl: screenshotPreviewUrl(path) });
+    return;
+  }
+
+  win.webContents.send("widget:snip-result", snipPayload(path, "loading"));
+  try {
+    const { text } = await askAboutScreenshot(cfg, path, cfg.hotkey.question);
+    win.webContents.send("widget:snip-result", snipPayload(path, "done", { text }));
+  } catch (err) {
+    const msg = String((err as Error)?.message ?? err);
+    win.webContents.send("widget:snip-result", snipPayload(path, "error", { text: msg }));
+  }
+}
+
+function pingActivity(): void {
+  lastNudgeAt = Date.now(); // reset nudge cooldown on any interaction
+  if (win && !win.isDestroyed()) win.webContents.send("widget:nudge-clear");
+}
+
+function startNudgeWatcher(): void {
+  if (nudgeTimer) clearInterval(nudgeTimer);
+  if (!cfg.nudge.enabled) return;
+
+  nudgeTimer = setInterval(() => {
+    if (!win || win.isDestroyed()) return;
+    const idle = powerMonitor.getSystemIdleTime();
+    const sinceNudge = (Date.now() - lastNudgeAt) / 1000;
+    if (idle >= cfg.nudge.idleSeconds && sinceNudge >= cfg.nudge.cooldownSeconds) {
+      lastNudgeAt = Date.now();
+      win.webContents.send("widget:nudge", {
+        idleSeconds: idle,
+        message:
+          "You've been quiet a while — stuck on something? Snip your screen (⌘⇧T) or tell me what you're working on.",
+      });
+    }
+  }, 20_000);
+}
+
+function registerHotkey(): void {
+  const accel = cfg.hotkey.snip?.trim();
+  globalShortcut.unregisterAll();
+
+  if (accel) {
+    const ok = globalShortcut.register(accel, () => {
+      pingActivity();
+      void runHotkeySnip().catch((err) => console.error("[hotkey] snip failed:", err));
+    });
+    if (ok) console.log(`Hotkey registered: ${accel} → snip & ask Tandem`);
+    else console.warn(`⚠ Could not register hotkey ${accel}`);
+  }
+}
+
 function showContextMenu(): void {
-  const t = readTasks();
   const menu = Menu.buildFromTemplate([
-    { label: `Open tasks (${t.openCount})`, click: () => setExpanded(true) },
-    { label: `Triage (${t.sectionCounts.needs_triage})`, click: () => { setExpanded(true); win.webContents.send("widget:show-triage"); } },
-    { label: "Snip & ask Tandem", click: () => { setExpanded(true); win.webContents.send("widget:snip"); } },
-    { type: "separator" },
-    { label: expanded ? "Collapse" : "Expand", click: () => setExpanded(!expanded) },
-    { label: "Refresh", click: () => broadcast() },
+    { label: "Snip screen", click: () => void runHotkeySnip() },
     { label: "Open tasks.md", click: () => shell.openPath(cfg.tasksFile) },
     { type: "separator" },
-    { label: "Quit", click: () => app.quit() },
+    { label: expanded ? "Minimize" : "Open", click: () => setExpanded(!expanded) },
+    { label: "Quit Tandem", click: () => app.quit() },
   ]);
   menu.popup({ window: win });
 }
@@ -137,16 +244,39 @@ function registerIpc(): void {
   ipcMain.handle("tasks:toggle", (_e, id: string) => { toggleDoneInFile(cfg.tasksFile, id); broadcast(); });
   ipcMain.handle("tasks:move", (_e, p: { id: string; toSection: SectionKey }) => { moveTaskInFile(cfg.tasksFile, p.id, p.toSection); broadcast(); });
 
-  ipcMain.handle("config:get", () => ({ panel: cfg.panel, collapsed: cfg.collapsed, tasksFile: cfg.tasksFile, workspace: cfg.workspace }));
+  ipcMain.handle("config:get", () => ({
+    panel: cfg.panel,
+    collapsed: cfg.collapsed,
+    tasksFile: cfg.tasksFile,
+    workspace: cfg.workspace,
+    hotkey: cfg.hotkey,
+    nudge: cfg.nudge,
+    voice: cfg.voice,
+  }));
 
-  ipcMain.handle("widget:toggle", () => setExpanded(!expanded));
-  ipcMain.handle("widget:expand", (_e, v: boolean) => setExpanded(v));
-  ipcMain.handle("widget:context-menu", () => showContextMenu());
+  ipcMain.handle("widget:toggle", () => { pingActivity(); setExpanded(!expanded); });
+  ipcMain.handle("widget:expand", (_e, v: boolean) => { pingActivity(); setExpanded(v); });
+  ipcMain.handle("widget:context-menu", () => { pingActivity(); showContextMenu(); });
+  ipcMain.handle("widget:activity", () => { pingActivity(); });
 
   ipcMain.handle("agent:groom", async () => groom(cfg));
   ipcMain.handle("agent:capture", async (_e, p: { text: string }) => { await capture(cfg, p.text); broadcast(); });
+  ipcMain.handle("agent:ask", async (_e, p: { text: string }) => ask(cfg, p.text));
 
-  ipcMain.handle("screenshot:capture", async () => captureScreenshot());
+  ipcMain.handle("screenshot:capture", async () => {
+    const priorExpanded = expanded;
+    const priorVisible = win.isVisible();
+    await paintDelay(60);
+    const path = await captureRegion();
+    if (!path) {
+      win.webContents.send("widget:snip-result", snipPayload(null, "cancelled"));
+      restoreWindowAfterSnip(priorVisible, priorExpanded);
+      return null;
+    }
+    setExpanded(true);
+    return path;
+  });
+  ipcMain.handle("screenshot:preview-url", (_e, path: string) => screenshotPreviewUrl(path));
   ipcMain.handle("agent:ask-screenshot", async (_e, p: { path: string; question: string }) =>
     askAboutScreenshot(cfg, p.path, p.question),
   );
@@ -174,15 +304,17 @@ function registerIpc(): void {
 
 function createWindow(): void {
   state = loadState();
+  // Always start collapsed — avoids window/UI size mismatch showing desktop bleed-through.
+  state.expanded = false;
+
   win = new BrowserWindow({
     width: cfg.collapsed.w,
     height: cfg.collapsed.h,
-    x: state.x,
-    y: state.y,
     frame: false,
     transparent: true,
     backgroundColor: "#00000000",
-    hasShadow: false,
+    hasShadow: true,
+    roundedCorners: true,
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
@@ -191,20 +323,25 @@ function createWindow(): void {
       preload: join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
+      backgroundThrottling: false,
     },
   });
 
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setAlwaysOnTop(true, "screen-saver");
-  if (process.platform === "darwin") app.dock?.hide();
-
-  win.on("moved", () => {
-    const [x = 0, y = 0] = win.getPosition();
-    state.x = x; state.y = y;
-    saveState();
-  });
+  if (process.platform === "darwin") {
+    app.dock?.hide();
+    win.setVibrancy("under-window");
+  }
 
   win.loadFile(join(APP_DIR, "ui", "index.html"));
+
+  win.webContents.once("did-finish-load", () => {
+    setExpanded(false);
+    anchorTopCenter();
+  });
+
+  screen.on("display-metrics-changed", () => anchorTopCenter());
 
   const watcher = chokidar.watch(cfg.tasksFile, {
     ignoreInitial: true,
@@ -218,8 +355,16 @@ app.whenReady().then(() => {
   cfg = loadConfig(APP_DIR, REPO_ROOT);
   console.log(`Clippy workspace: ${cfg.workspace}`);
   console.log(`Clippy tasksFile: ${cfg.tasksFile}`);
+
   registerIpc();
   createWindow();
+  registerHotkey();
+  startNudgeWatcher();
+});
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
+  if (nudgeTimer) clearInterval(nudgeTimer);
 });
 
 app.on("window-all-closed", () => app.quit());

@@ -1,6 +1,31 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 
+export interface ClippyHotkeyConfig {
+  /** Electron accelerator, e.g. Command+Shift+T. null = disabled. */
+  snip: string | null;
+  /** When true, the hotkey captures then immediately asks the agent (no extra click). */
+  autoAsk: boolean;
+  /** Question sent with autoAsk. */
+  question: string;
+}
+
+export interface ClippyNudgeConfig {
+  enabled: boolean;
+  /** System idle (no mouse/keyboard) before the orb pulses. */
+  idleSeconds: number;
+  /** Min time between nudges. */
+  cooldownSeconds: number;
+}
+
+export interface ClippyVoiceConfig {
+  enabled: boolean;
+  /** Submit as soon as speech is recognized. */
+  autoSend: boolean;
+  /** Read answers aloud (macOS TTS). */
+  speakReplies: boolean;
+}
+
 export interface ClippyConfig {
   workspace: string; // absolute
   tasksFile: string; // absolute
@@ -9,6 +34,9 @@ export interface ClippyConfig {
   agentFlags: string[];
   panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number };
   collapsed: { w: number; h: number };
+  hotkey: ClippyHotkeyConfig;
+  nudge: ClippyNudgeConfig;
+  voice: ClippyVoiceConfig;
 }
 
 function readJson(path: string): Record<string, any> {
@@ -31,6 +59,9 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     ...user,
     panel: { ...defaults.panel, ...user.panel },
     collapsed: { ...defaults.collapsed, ...user.collapsed },
+    hotkey: { ...defaults.hotkey, ...user.hotkey },
+    nudge: { ...defaults.nudge, ...user.nudge },
+    voice: { ...defaults.voice, ...user.voice },
   };
 
   const workspace = !merged.workspace || merged.workspace === "."
@@ -51,5 +82,22 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     agentFlags: merged.agentFlags ?? ["-p", "--trust", "--output-format", "text"],
     panel: merged.panel,
     collapsed: merged.collapsed,
+    hotkey: {
+      snip: merged.hotkey?.snip ?? "Command+Shift+T",
+      autoAsk: merged.hotkey?.autoAsk !== false,
+      question:
+        merged.hotkey?.question?.trim() ||
+        "What's on my screen? If there's an error, tell me how to fix it.",
+    },
+    nudge: {
+      enabled: merged.nudge?.enabled !== false,
+      idleSeconds: Number(merged.nudge?.idleSeconds ?? 120),
+      cooldownSeconds: Number(merged.nudge?.cooldownSeconds ?? 600),
+    },
+    voice: {
+      enabled: merged.voice?.enabled !== false,
+      autoSend: merged.voice?.autoSend !== false,
+      speakReplies: Boolean(merged.voice?.speakReplies),
+    },
   };
 }

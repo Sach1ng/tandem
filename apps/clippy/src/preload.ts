@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { pathToFileURL } from "node:url";
 
 /** The only surface the renderer can touch. Everything goes through ipcRenderer.invoke/.on. */
 const taskWidget = {
@@ -10,8 +11,10 @@ const taskWidget = {
 
   // ai actions
   capture: (text: string) => ipcRenderer.invoke("agent:capture", { text }),
+  ask: (text: string) => ipcRenderer.invoke("agent:ask", { text }),
   groom: () => ipcRenderer.invoke("agent:groom"),
   snip: (): Promise<string | null> => ipcRenderer.invoke("screenshot:capture"),
+  screenshotPreviewUrl: (path: string) => pathToFileURL(path).href,
   askScreenshot: (path: string, question: string) =>
     ipcRenderer.invoke("agent:ask-screenshot", { path, question }),
 
@@ -25,6 +28,7 @@ const taskWidget = {
   setPanelSize: (w: number, h: number) => ipcRenderer.invoke("window:set-panel-size", { w, h }),
   getWindowBounds: () => ipcRenderer.invoke("window:get-bounds"),
   getConfig: () => ipcRenderer.invoke("config:get"),
+  pingActivity: () => ipcRenderer.invoke("widget:activity"),
 
   // events
   onUpdated: (cb: (tasks: unknown) => void) =>
@@ -33,6 +37,13 @@ const taskWidget = {
     ipcRenderer.on("widget:expanded", (_e, v) => cb(v)),
   onShowTriage: (cb: () => void) => ipcRenderer.on("widget:show-triage", () => cb()),
   onSnip: (cb: () => void) => ipcRenderer.on("widget:snip", () => cb()),
+  onSnipResult: (cb: (p: { path: string; status: string; text?: string }) => void) =>
+    ipcRenderer.on("widget:snip-result", (_e, p) => cb(p)),
+  onSnipReady: (cb: (p: { path: string }) => void) =>
+    ipcRenderer.on("widget:snip-ready", (_e, p) => cb(p)),
+  onNudge: (cb: (p: { idleSeconds: number; message: string }) => void) =>
+    ipcRenderer.on("widget:nudge", (_e, p) => cb(p)),
+  onNudgeClear: (cb: () => void) => ipcRenderer.on("widget:nudge-clear", () => cb()),
 };
 
 contextBridge.exposeInMainWorld("taskWidget", taskWidget);

@@ -3,42 +3,49 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tandem Clippy</title>
+    <title>Tandem</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <!-- Collapsed: just the paperclip -->
-    <div id="collapsed" class="collapsed">
-      <svg viewBox="0 0 64 64" width="48" height="48" aria-label="Tandem" class="clip">
-        <path
-          d="M44 18 L24 38 a8 8 0 0 0 11.3 11.3 L52 32 a14 14 0 0 0 -19.8 -19.8 L14 30 a20 20 0 0 0 28.3 28.3 L58 42"
-          fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-      <span id="badge" class="badge" hidden>0</span>
+  <body class="mode-collapsed mood-rest">
+    <!-- Collapsed: circular glass orb — fills the entire window, no bleed-through -->
+    <div id="collapsed" class="orb-shell" aria-label="Tandem">
+      <div class="buddy">
+        <div class="buddy-face">
+          <span class="eye left"></span>
+          <span class="eye right"></span>
+        </div>
+      </div>
     </div>
 
-    <!-- Expanded: the task panel -->
-    <div id="expanded" class="panel" hidden>
-      <header class="panel-header">
-        <span class="title">Tandem</span>
-        <div class="actions">
-          <button id="btn-snip" title="Snip a region of your screen and ask Tandem">Snip</button>
-          <button id="btn-triage" title="Needs triage">Triage <span id="triage-count" class="pill">0</span></button>
-          <button id="btn-groom" title="AI groom">Groom</button>
-          <button id="btn-refresh" title="Refresh">↻</button>
-          <button id="btn-close" title="Collapse">×</button>
+    <!-- Expanded: glass assistant card -->
+    <div id="expanded" class="card glass" hidden>
+      <div class="card-top">
+        <div class="buddy buddy-sm">
+          <div class="buddy-face">
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+          </div>
         </div>
-      </header>
-
-      <div class="capture">
-        <input id="capture-input" type="text" placeholder="Capture a task… (↵)" />
+        <button id="btn-close" class="icon-btn" title="Minimize" aria-label="Minimize">×</button>
       </div>
 
-      <div id="groom-panel" class="groom" hidden></div>
+      <form id="ask-form" class="ask-form">
+        <input id="ask-input" type="text" placeholder="Ask anything…" autocomplete="off" spellcheck="true" />
+        <button type="button" id="btn-snip" class="icon-btn snip-btn" title="Snip screen (⌘⇧T)" aria-label="Snip">◫</button>
+      </form>
 
-      <main id="sections" class="sections"></main>
+      <div id="snip-panel" class="snip-panel glass-inset" hidden>
+        <div class="snip-preview-wrap">
+          <img id="snip-preview" alt="Screenshot preview" />
+          <div id="snip-processing" class="snip-processing" hidden>
+            <span class="snip-spinner" aria-hidden="true"></span>
+            <span id="snip-status-text">Analyzing…</span>
+          </div>
+        </div>
+      </div>
 
-      <div id="resize-grip" class="resize-grip" title="Resize"></div>
+      <div id="nudge-hint" class="hint glass-inset" hidden></div>
+      <div id="reply" class="reply glass-inset" hidden></div>
     </div>
 
     <script src="app.js"></script>

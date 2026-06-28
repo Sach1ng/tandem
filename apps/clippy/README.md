@@ -1,22 +1,17 @@
 # Tandem — Clippy
 
-A frameless, always-on-top desktop paperclip. Clippy is Tandem's **visual** surface: snip a region
-of your screen and ask about it, plus a live task board backed by a plain `tasks.md`.
+A frameless buddy orb on your desktop — a general AI assistant, not a task board.
 
 ## Run (macOS)
 ```bash
 npm start          # from this directory, or: npm run clippy (from repo root)
 ```
-First run needs `cursor-agent login` done once.
 
-- **Click** the paperclip to expand/collapse · **drag** to move · **right-click** for the menu.
-- **Snip** → native region capture (`screencapture -i`). Then ask anything about the shot —
-  "what's causing this error?", "explain this stack trace". Read-only; the agent only views the image.
-- **Capture** box → adds a task to *Needs triage* via the agent.
-- **Groom** → read-only review: focus list, suggested moves (one-click apply), stale items.
+- **Click** the orb to open a small ask card · **drag** to move · **right-click** for menu
+- **⌘⇧T** — snip any region of your screen and get an answer
+- Type a question and press ↵ — runs against PM OS on disk
 
-> Screenshots are saved to `.tandem/screenshots/` in the workspace (gitignored). Image understanding
-> depends on the model you've selected supporting vision; if it can't view the image, it will say so.
+Tasks still live in `tasks.md` (editable via right-click → Open tasks.md) but are not shown in the UI.
 
 ## Point it at your tasks
 By default it reads `tasks.example.md` at the repo root. To use your own file, create

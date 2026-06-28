@@ -48,7 +48,7 @@ surface. Tandem flips that:
 | Surface | What it does | Where |
 |---|---|---|
 | **Slack coworker** | Tag `@Tandem` or DM it. It runs your request as a `cursor-agent` task in the workspace and replies in-thread. Follow-ups resume the same chat. Owner allow-list + per-thread "open" grants. | `apps/slack` |
-| **Clippy** | A frameless, always-on-top paperclip — the *visual* surface. **Snip** any region of your screen and ask about it (errors, bugs, "what's wrong here"). Also a live task board from `tasks.md` with one-click **capture** and AI **groom**. | `apps/clippy` |
+| **Clippy** | A frameless, always-on-top buddy orb — the *visual* surface. Click to ask; **⌘⇧T** to snip any screen region and get an answer. Tasks live in `tasks.md` (editable via right-click). | `apps/clippy` |
 | **Chrome extension** | Ambient, page-aware prompts. It reads the page you're on (ticket, doc, dashboard) and answers questions about it through a tiny local bridge that calls the engine. | `apps/chrome-extension` |
 
 All three import `@tandem/engine`. That shared package is the whole point — add a fourth surface and
@@ -172,8 +172,11 @@ Roadmap: ambient/proactive nudges, scheduled tasks, and more surfaces.
 
 ## Credits
 
-Built by [Sachin Gupta (@Sach1ng)](https://github.com/Sach1ng). Stands on
-[PM OS](https://github.com/Sach1ng/PM-operating-OS) and the [Cursor CLI](https://cursor.com/docs/cli).
+Built by [Sachin Gupta (@Sach1ng)](https://github.com/Sach1ng). Contributors:
+[Hardik Tiwari (@hardiktiwari)](https://github.com/hardiktiwari).
+
+Stands on [PM OS](https://github.com/Sach1ng/PM-operating-OS) and the
+[Cursor CLI](https://cursor.com/docs/cli).
 
 *Personal project. Not affiliated with or endorsed by any employer or vendor.*
 

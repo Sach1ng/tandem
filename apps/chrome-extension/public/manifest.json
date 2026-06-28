@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Tandem",
+  "version": "0.1.0",
+  "description": "An ambient AI coworker in your browser — ask about whatever page you're on, answered by the Cursor CLI against your PM OS workspace.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Ask Tandem about this page"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["activeTab", "contextMenus", "storage"],
+  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

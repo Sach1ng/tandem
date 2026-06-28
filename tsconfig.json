@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@tandem/engine": ["packages/engine/src/index.ts"],
+      "@tandem/core": ["packages/core/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/scripts/**/*.ts",
+    "apps/slack/src/**/*.ts",
+    "apps/clippy/src/**/*.ts",
+    "apps/chrome-extension/src/**/*.ts"
+  ]
+}

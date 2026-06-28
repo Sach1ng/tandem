@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnp.*
+
+# build output
+dist/
+out/
+*.tsbuildinfo
+
+# secrets & local config
+.env
+.env.local
+**/.env
+config.json
+**/config.json
+!config.default.json
+
+# runtime state (never commit) — chat sessions, dedupe sets, grants, logs
+**/sessions.json
+**/processed.json
+**/open-threads.json
+**/state/
+*.log
+logs/
+
+# os / editor
+.DS_Store
+.idea/
+*.swp
+
+# packaged apps
+apps/clippy/release/
+apps/clippy/*.app

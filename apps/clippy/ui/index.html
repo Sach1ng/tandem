@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tandem Clippy</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Collapsed: just the paperclip -->
+    <div id="collapsed" class="collapsed">
+      <svg viewBox="0 0 64 64" width="48" height="48" aria-label="Tandem" class="clip">
+        <path
+          d="M44 18 L24 38 a8 8 0 0 0 11.3 11.3 L52 32 a14 14 0 0 0 -19.8 -19.8 L14 30 a20 20 0 0 0 28.3 28.3 L58 42"
+          fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span id="badge" class="badge" hidden>0</span>
+    </div>
+
+    <!-- Expanded: the task panel -->
+    <div id="expanded" class="panel" hidden>
+      <header class="panel-header">
+        <span class="title">Tandem</span>
+        <div class="actions">
+          <button id="btn-triage" title="Needs triage">Triage <span id="triage-count" class="pill">0</span></button>
+          <button id="btn-groom" title="AI groom">Groom</button>
+          <button id="btn-refresh" title="Refresh">↻</button>
+          <button id="btn-close" title="Collapse">×</button>
+        </div>
+      </header>
+
+      <div class="capture">
+        <input id="capture-input" type="text" placeholder="Capture a task… (↵)" />
+      </div>
+
+      <div id="groom-panel" class="groom" hidden></div>
+
+      <main id="sections" class="sections"></main>
+
+      <div id="resize-grip" class="resize-grip" title="Resize"></div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

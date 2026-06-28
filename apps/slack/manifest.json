@@ -1,0 +1,45 @@
+{
+  "display_information": {
+    "name": "Tandem",
+    "description": "An ambient AI coworker powered by the Cursor CLI + PM OS.",
+    "background_color": "#1a1a2e"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "Tandem",
+      "always_online": true
+    }
+  },
+  "oauth_config": {
+    "scopes": {
+      "user": ["search:read", "search:read.public"],
+      "bot": [
+        "channels:history",
+        "channels:join",
+        "channels:read",
+        "chat:write",
+        "chat:write.public",
+        "groups:history",
+        "groups:read",
+        "im:history",
+        "im:read",
+        "im:write",
+        "mpim:history",
+        "mpim:read",
+        "mpim:write",
+        "users:read",
+        "team:read",
+        "links:read"
+      ]
+    }
+  },
+  "settings": {
+    "socket_mode_enabled": true,
+    "interactivity": {
+      "is_enabled": true
+    },
+    "event_subscriptions": {
+      "bot_events": ["message.channels", "message.groups", "message.im", "message.mpim"]
+    }
+  }
+}

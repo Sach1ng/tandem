@@ -1,0 +1,19 @@
+{
+  "workspace": ".",
+  "tasksFile": "tasks.example.md",
+  "agent": "cursor-agent",
+  "agentModel": "auto",
+  "agentFlags": ["-p", "--trust", "--output-format", "text"],
+  "panel": {
+    "minW": 320,
+    "minH": 360,
+    "maxW": 560,
+    "maxH": 820,
+    "defaultW": 400,
+    "defaultH": 560
+  },
+  "collapsed": {
+    "w": 96,
+    "h": 110
+  }
+}

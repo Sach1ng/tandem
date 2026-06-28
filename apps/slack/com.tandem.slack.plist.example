@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd LaunchAgent for the Tandem Slack coworker.
+  1. Edit the paths below to match your machine.
+  2. Copy to ~/Library/LaunchAgents/com.tandem.slack.plist
+  3. launchctl load ~/Library/LaunchAgents/com.tandem.slack.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tandem.slack</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/ABSOLUTE/PATH/TO/tandem/apps/slack/run.sh</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/tandem-slack.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/tandem-slack.err.log</string>
+</dict>
+</plist>

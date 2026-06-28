@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Tandem</title>
+  </head>
+  <body>
+    <header>
+      <span class="brand">Tandem</span>
+      <span id="status" class="status">● checking…</span>
+    </header>
+
+    <div id="context" class="context">Reading page…</div>
+    <div id="suggestions" class="suggestions"></div>
+
+    <textarea id="q" rows="2" placeholder="Ask about this page… (⌘/Ctrl + ↵)"></textarea>
+    <button id="ask" class="ask">Ask Tandem</button>
+
+    <div id="answer" class="answer"></div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

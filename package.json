@@ -1,0 +1,31 @@
+{
+  "name": "tandem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An ambient AI coworker layer. Carries a capability OS you own (PM OS) out of the IDE and into Slack, your screen, and your browser — powered by the Cursor CLI, so it runs on any model.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/slack",
+    "apps/clippy",
+    "apps/chrome-extension"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "engine:smoke": "tsx packages/engine/scripts/smoke.ts",
+    "slack": "npm run start --workspace @tandem/slack",
+    "clippy": "npm run start --workspace @tandem/clippy",
+    "chrome:build": "npm run build --workspace @tandem/chrome-extension"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "MIT",
+  "author": "Sachin Gupta (@Sach1ng)"
+}

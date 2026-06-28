@@ -1,0 +1,14 @@
+{
+  "name": "@tandem/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cursor CLI adapter — the single brain every Tandem surface shells out to.",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "smoke": "tsx scripts/smoke.ts"
+  }
+}

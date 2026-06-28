@@ -11,6 +11,9 @@ const taskWidget = {
   // ai actions
   capture: (text: string) => ipcRenderer.invoke("agent:capture", { text }),
   groom: () => ipcRenderer.invoke("agent:groom"),
+  snip: (): Promise<string | null> => ipcRenderer.invoke("screenshot:capture"),
+  askScreenshot: (path: string, question: string) =>
+    ipcRenderer.invoke("agent:ask-screenshot", { path, question }),
 
   // window / chrome
   toggleExpand: () => ipcRenderer.invoke("widget:toggle"),
@@ -29,6 +32,7 @@ const taskWidget = {
   onExpanded: (cb: (v: boolean) => void) =>
     ipcRenderer.on("widget:expanded", (_e, v) => cb(v)),
   onShowTriage: (cb: () => void) => ipcRenderer.on("widget:show-triage", () => cb()),
+  onSnip: (cb: () => void) => ipcRenderer.on("widget:snip", () => cb()),
 };
 
 contextBridge.exposeInMainWorld("taskWidget", taskWidget);

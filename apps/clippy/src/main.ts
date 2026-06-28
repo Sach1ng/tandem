@@ -1,11 +1,12 @@
 import { app, BrowserWindow, ipcMain, Menu, screen, shell } from "electron";
-import { readFileSync, writeFileSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import chokidar from "chokidar";
 import { loadConfig, type ClippyConfig } from "./config.ts";
 import { parseTasksMarkdown, type ParsedTasks, type SectionKey } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
-import { capture, groom } from "./agent.ts";
+import { askAboutScreenshot, capture, groom } from "./agent.ts";
 
 const APP_DIR = resolve(__dirname, ".."); // apps/clippy
 const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS submodule)
@@ -93,11 +94,33 @@ function setExpanded(v: boolean): void {
   saveState();
 }
 
+/**
+ * Native macOS region snip. Hides Clippy first so it isn't in the shot. Returns the saved
+ * path, or null if the user pressed Esc (screencapture then writes no file).
+ */
+function captureScreenshot(): Promise<string | null> {
+  const dir = join(cfg.workspace, ".tandem", "screenshots");
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, `shot-${Date.now()}.png`);
+  const wasVisible = win.isVisible();
+  win.hide();
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // -i interactive selection, -x no shutter sound.
+      execFile("screencapture", ["-i", "-x", file], () => {
+        if (wasVisible) win.show();
+        resolve(existsSync(file) ? file : null);
+      });
+    }, 180);
+  });
+}
+
 function showContextMenu(): void {
   const t = readTasks();
   const menu = Menu.buildFromTemplate([
     { label: `Open tasks (${t.openCount})`, click: () => setExpanded(true) },
     { label: `Triage (${t.sectionCounts.needs_triage})`, click: () => { setExpanded(true); win.webContents.send("widget:show-triage"); } },
+    { label: "Snip & ask Tandem", click: () => { setExpanded(true); win.webContents.send("widget:snip"); } },
     { type: "separator" },
     { label: expanded ? "Collapse" : "Expand", click: () => setExpanded(!expanded) },
     { label: "Refresh", click: () => broadcast() },
@@ -122,6 +145,11 @@ function registerIpc(): void {
 
   ipcMain.handle("agent:groom", async () => groom(cfg));
   ipcMain.handle("agent:capture", async (_e, p: { text: string }) => { await capture(cfg, p.text); broadcast(); });
+
+  ipcMain.handle("screenshot:capture", async () => captureScreenshot());
+  ipcMain.handle("agent:ask-screenshot", async (_e, p: { path: string; question: string }) =>
+    askAboutScreenshot(cfg, p.path, p.question),
+  );
 
   ipcMain.handle("shell:open-tasks", () => shell.openPath(cfg.tasksFile));
 

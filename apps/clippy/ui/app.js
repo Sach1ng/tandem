@@ -54,6 +54,7 @@ document.getElementById("btn-close").onclick = () => w.setExpanded(false);
 document.getElementById("btn-refresh").onclick = () => w.refresh();
 document.getElementById("btn-triage").onclick = () => scrollToSection("needs_triage");
 document.getElementById("btn-groom").onclick = runGroom;
+document.getElementById("btn-snip").onclick = runSnip;
 
 els.captureInput.addEventListener("keydown", async (e) => {
   if (e.key !== "Enter") return;
@@ -174,6 +175,41 @@ function scrollToSection(key) {
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+/* ---------- Snip & ask (screenshot) ---------- */
+async function runSnip() {
+  els.groomPanel.hidden = false;
+  els.groomPanel.innerHTML = "<div class='summary'>Select a region of your screen…</div>";
+  const path = await w.snip();
+  if (!path) {
+    els.groomPanel.hidden = true;
+    return;
+  }
+  els.groomPanel.innerHTML = "<div class='summary'>Screenshot captured. What do you want to know?</div>";
+  const input = document.createElement("input");
+  input.className = "snip-input";
+  input.type = "text";
+  input.placeholder = "e.g. what's causing this error? (↵, or blank for a general read)";
+  const answer = document.createElement("div");
+  answer.className = "snip-answer";
+  els.groomPanel.append(input, answer);
+  input.focus();
+
+  input.addEventListener("keydown", async (e) => {
+    if (e.key !== "Enter") return;
+    const q = input.value.trim();
+    input.disabled = true;
+    answer.textContent = "Looking at your screen…";
+    try {
+      const { text } = await w.askScreenshot(path, q);
+      answer.textContent = text || "(no output)";
+    } catch (err) {
+      answer.textContent = `Failed: ${String(err?.message ?? err)}`;
+    } finally {
+      input.disabled = false;
+    }
+  });
+}
+
 /* ---------- Groom ---------- */
 async function runGroom() {
   els.groomPanel.hidden = false;
@@ -256,6 +292,7 @@ w.onExpanded((v) => {
   if (v) els.captureInput.focus();
 });
 w.onShowTriage(() => scrollToSection("needs_triage"));
+w.onSnip(() => runSnip());
 
 (async () => {
   const tasks = await w.getTasks();

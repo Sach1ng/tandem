@@ -48,7 +48,7 @@ surface. Tandem flips that:
 | Surface | What it does | Where |
 |---|---|---|
 | **Slack coworker** | Tag `@Tandem` or DM it. It runs your request as a `cursor-agent` task in the workspace and replies in-thread. Follow-ups resume the same chat. Owner allow-list + per-thread "open" grants. | `apps/slack` |
-| **Clippy** | A frameless, always-on-top paperclip. Click to expand a live task board parsed from `tasks.md` (Active / Scheduled / Waiting / Needs triage). One-click **capture** and AI **groom** via the CLI. | `apps/clippy` |
+| **Clippy** | A frameless, always-on-top paperclip — the *visual* surface. **Snip** any region of your screen and ask about it (errors, bugs, "what's wrong here"). Also a live task board from `tasks.md` with one-click **capture** and AI **groom**. | `apps/clippy` |
 | **Chrome extension** | Ambient, page-aware prompts. It reads the page you're on (ticket, doc, dashboard) and answers questions about it through a tiny local bridge that calls the engine. | `apps/chrome-extension` |
 
 All three import `@tandem/engine`. That shared package is the whole point — add a fourth surface and

@@ -31,3 +31,6 @@ logs/
 # packaged apps
 apps/clippy/release/
 apps/clippy/*.app
+
+# clippy screenshot scratch (visual context sent to the agent)
+.tandem/

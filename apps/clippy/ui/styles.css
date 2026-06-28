@@ -178,6 +178,29 @@ html, body {
   cursor: pointer;
 }
 
+.snip-input {
+  width: 100%;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--fg);
+  padding: 7px 9px;
+  font-size: 12px;
+  outline: none;
+}
+.snip-input:focus { border-color: var(--accent); }
+.snip-answer {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+  color: var(--fg);
+}
+.snip-answer:empty { display: none; }
+
 .resize-grip {
   position: absolute;
   right: 2px;

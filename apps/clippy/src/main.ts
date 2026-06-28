@@ -106,11 +106,13 @@ function setExpanded(v: boolean): void {
     win.setMinimumSize(w, h);
     win.setMaximumSize(w, h);
     win.setSize(w, h, false);
+    if (process.platform === "darwin") win.setVibrancy("under-window");
     win.webContents.send("widget:expanded", true);
     win.show();
     win.focus();
   } else {
     win.setResizable(false);
+    if (process.platform === "darwin") win.setVibrancy(null);
     win.setMinimumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setMaximumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
@@ -207,7 +209,7 @@ function startNudgeWatcher(): void {
       win.webContents.send("widget:nudge", {
         idleSeconds: idle,
         message:
-          "You've been quiet a while — stuck on something? Snip your screen (⌘⇧T) or tell me what you're working on.",
+          "Hey — you've been quiet a while. Stuck on something? Snip your screen (⌘⇧T) or ask me here.",
       });
     }
   }, 20_000);
@@ -222,7 +224,7 @@ function registerHotkey(): void {
       pingActivity();
       void runHotkeySnip().catch((err) => console.error("[hotkey] snip failed:", err));
     });
-    if (ok) console.log(`Hotkey registered: ${accel} → snip & ask Tandem`);
+    if (ok) console.log(`Hotkey registered: ${accel} → snip & ask Pip`);
     else console.warn(`⚠ Could not register hotkey ${accel}`);
   }
 }
@@ -233,7 +235,7 @@ function showContextMenu(): void {
     { label: "Open tasks.md", click: () => shell.openPath(cfg.tasksFile) },
     { type: "separator" },
     { label: expanded ? "Minimize" : "Open", click: () => setExpanded(!expanded) },
-    { label: "Quit Tandem", click: () => app.quit() },
+    { label: "Quit Pip", click: () => app.quit() },
   ]);
   menu.popup({ window: win });
 }
@@ -313,8 +315,8 @@ function createWindow(): void {
     frame: false,
     transparent: true,
     backgroundColor: "#00000000",
-    hasShadow: true,
-    roundedCorners: true,
+    hasShadow: false,
+    roundedCorners: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
@@ -331,7 +333,7 @@ function createWindow(): void {
   win.setAlwaysOnTop(true, "screen-saver");
   if (process.platform === "darwin") {
     app.dock?.hide();
-    win.setVibrancy("under-window");
+    // Vibrancy only when expanded — on a square transparent window it bleeds as white corners.
   }
 
   win.loadFile(join(APP_DIR, "ui", "index.html"));

@@ -1,15 +1,24 @@
-# Tandem — Clippy
+# Pip — Tandem's desktop buddy
 
-A frameless buddy orb on your desktop — a general AI assistant, not a task board.
+A frameless buddy orb on your desktop — Pip is Tandem's **visual** surface: a general AI assistant,
+not a task board.
+
+## Naming
+
+| Layer | Name | What it is |
+|---|---|---|
+| **Product** | Tandem | Ambient AI coworker across Slack, desktop, and Chrome |
+| **Desktop buddy** | **Pip** | The orb on your screen (this app) |
+| **Brain** | PM OS | Skills, knowledge, and memory on disk |
 
 ## Run (macOS)
 ```bash
 npm start          # from this directory, or: npm run clippy (from repo root)
 ```
 
-- **Click** the orb to open a small ask card · **drag** to move · **right-click** for menu
+- **Click** Pip to open the ask card · **right-click** for menu
 - **⌘⇧T** — snip any region of your screen and get an answer
-- Type a question and press ↵ — runs against PM OS on disk
+- Type a question and press ↵ — Pip runs against PM OS on disk
 
 Tasks still live in `tasks.md` (editable via right-click → Open tasks.md) but are not shown in the UI.
 

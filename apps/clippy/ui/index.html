@@ -3,16 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tandem</title>
+    <title>Pip · Tandem</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="mode-collapsed mood-rest">
     <!-- Collapsed: circular glass orb — fills the entire window, no bleed-through -->
-    <div id="collapsed" class="orb-shell" aria-label="Tandem">
+    <div id="collapsed" class="orb-shell" aria-label="Pip">
       <div class="buddy">
+        <span class="antenna left" aria-hidden="true"></span>
+        <span class="antenna right" aria-hidden="true"></span>
         <div class="buddy-face">
-          <span class="eye left"></span>
-          <span class="eye right"></span>
+          <span class="eye left"><span class="iris"></span><span class="shine"></span></span>
+          <span class="eye right"><span class="iris"></span><span class="shine"></span></span>
+          <span class="blush left" aria-hidden="true"></span>
+          <span class="blush right" aria-hidden="true"></span>
+          <span class="smile" aria-hidden="true"></span>
         </div>
       </div>
     </div>
@@ -20,17 +25,25 @@
     <!-- Expanded: glass assistant card -->
     <div id="expanded" class="card glass" hidden>
       <div class="card-top">
-        <div class="buddy buddy-sm">
-          <div class="buddy-face">
-            <span class="eye left"></span>
-            <span class="eye right"></span>
+        <div class="card-brand">
+          <div class="buddy buddy-sm">
+            <span class="antenna left" aria-hidden="true"></span>
+            <span class="antenna right" aria-hidden="true"></span>
+            <div class="buddy-face">
+              <span class="eye left"><span class="iris"></span><span class="shine"></span></span>
+              <span class="eye right"><span class="iris"></span><span class="shine"></span></span>
+              <span class="blush left" aria-hidden="true"></span>
+              <span class="blush right" aria-hidden="true"></span>
+              <span class="smile" aria-hidden="true"></span>
+            </div>
           </div>
+          <span class="buddy-name">Pip</span>
         </div>
         <button id="btn-close" class="icon-btn" title="Minimize" aria-label="Minimize">×</button>
       </div>
 
       <form id="ask-form" class="ask-form">
-        <input id="ask-input" type="text" placeholder="Ask anything…" autocomplete="off" spellcheck="true" />
+        <input id="ask-input" type="text" placeholder="Ask Pip anything…" autocomplete="off" spellcheck="true" />
         <button type="button" id="btn-snip" class="icon-btn snip-btn" title="Snip screen (⌘⇧T)" aria-label="Snip">◫</button>
       </form>
 

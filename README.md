@@ -1,7 +1,7 @@
 # Tandem
 
 **An ambient AI coworker that lives where you work.** Tandem takes a capability OS you own —
-[PM OS](https://github.com/Sach1ng/PM-operating-OS) — out of the IDE and into Slack, your screen,
+[PM OS](https://github.com/hardiktiwari/PM-operating-OS) — out of the IDE and into Slack, your screen,
 and your browser. It's powered by the **Cursor CLI**, so the same coworker runs on *any* model.
 
 > One brain. Many surfaces. Your models, your machine, your context.
@@ -172,10 +172,10 @@ Roadmap: ambient/proactive nudges, scheduled tasks, and more surfaces.
 
 ## Credits
 
-Built by [Sachin Gupta (@Sach1ng)](https://github.com/Sach1ng). Contributors:
+Co-created by [Sachin Gupta (@Sach1ng)](https://github.com/Sach1ng) and
 [Hardik Tiwari (@hardiktiwari)](https://github.com/hardiktiwari).
 
-Stands on [PM OS](https://github.com/Sach1ng/PM-operating-OS) and the
+Stands on [PM OS](https://github.com/hardiktiwari/PM-operating-OS) and the
 [Cursor CLI](https://cursor.com/docs/cli).
 
 *Personal project. Not affiliated with or endorsed by any employer or vendor.*

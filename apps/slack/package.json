@@ -6,7 +6,9 @@
   "description": "Tandem Slack coworker — tag it or DM it; it runs as a cursor-agent task against the PM OS workspace and replies in-thread.",
   "scripts": {
     "start": "node --env-file=.env --import tsx src/app.ts",
-    "dev": "node --env-file=.env --import tsx --watch src/app.ts"
+    "dev": "node --env-file=.env --import tsx --watch src/app.ts",
+    "setup": "node --import tsx scripts/setup-server.ts",
+    "smoke": "node --env-file=.env --import tsx scripts/smoke.ts"
   },
   "dependencies": {
     "@slack/bolt": "^3.19.0",

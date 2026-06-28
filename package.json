@@ -18,7 +18,10 @@
     "verify": "tsx scripts/verify-offline.ts",
     "engine:smoke": "tsx packages/engine/scripts/smoke.ts",
     "clippy:agent-smoke": "tsx apps/clippy/scripts/agent-smoke.ts",
+    "clippy:screenshot-smoke": "tsx apps/clippy/scripts/screenshot-smoke.ts",
     "slack": "npm run start --workspace @tandem/slack",
+    "slack:setup": "npm run setup --workspace @tandem/slack",
+    "slack:smoke": "npm run smoke --workspace @tandem/slack",
     "clippy": "npm run start --workspace @tandem/clippy",
     "chrome:build": "npm run build --workspace @tandem/chrome-extension"
   },

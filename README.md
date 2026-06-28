@@ -156,8 +156,19 @@ it's remote code execution by design. So:
 
 ## Status
 
-Early and evolving. The engine, Slack coworker, Clippy, and the Chrome extension all run today against
-a locally installed `cursor-agent`. Roadmap: ambient/proactive nudges, scheduled tasks, and more surfaces.
+All four surfaces are live-tested against a local `cursor-agent`:
+
+```bash
+npm run verify              # 16 offline checks
+npm run engine:smoke        # CLI + JSON parse
+npm run slack:smoke         # agent + Slack DM reply
+npm run clippy:agent-smoke  # groom + capture
+npm run clippy:screenshot-smoke  # vision (set TEST_IMG=… if no Screen Recording)
+```
+
+Slack setup wizard: `npm run slack:setup` → http://127.0.0.1:8766
+
+Roadmap: ambient/proactive nudges, scheduled tasks, and more surfaces.
 
 ## Credits
 

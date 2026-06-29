@@ -8,7 +8,8 @@
     "start": "node --env-file=.env --import tsx src/app.ts",
     "dev": "node --env-file=.env --import tsx --watch src/app.ts",
     "setup": "node --import tsx scripts/setup-server.ts",
-    "smoke": "node --env-file=.env --import tsx scripts/smoke.ts"
+    "smoke": "node --env-file=.env --import tsx scripts/smoke.ts",
+    "reinstall": "node --env-file=.env --import tsx scripts/reinstall-manifest.ts"
   },
   "dependencies": {
     "@slack/bolt": "^3.19.0",

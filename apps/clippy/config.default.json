@@ -8,12 +8,10 @@
     "minW": 300,
     "minH": 56,
     "maxW": 520,
-    "maxH": 220,
+    "maxH": 400,
     "defaultW": 400,
     "defaultH": 58,
-    "compactH": 58,
-    "tallH": 156,
-    "snipH": 172
+    "compactH": 58
   },
   "collapsed": {
     "w": 56,

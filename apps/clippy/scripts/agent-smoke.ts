@@ -28,12 +28,18 @@ async function main() {
 
   const cfg: ClippyConfig = {
     workspace: REPO_ROOT,
+    agentWorkspace: process.env.TANDEM_KNOWLEDGE_BASE || join(REPO_ROOT, "external", "pm-operating-os"),
+    knowledgeBase: process.env.TANDEM_KNOWLEDGE_BASE || join(REPO_ROOT, "external", "pm-operating-os"),
     tasksFile: testFile,
     agent: "cursor-agent",
     agentModel: process.env.CURSOR_MODEL || "auto",
     agentFlags: ["-p", "--trust", "--output-format", "text"],
     panel: { minW: 320, minH: 360, maxW: 560, maxH: 820, defaultW: 400, defaultH: 560 },
     collapsed: { w: 96, h: 110 },
+    placement: { corner: "top-right", margin: 16 },
+    hotkey: { snip: "Command+Shift+T", autoAsk: false, question: "What's on my screen?" },
+    nudge: { enabled: false, idleSeconds: 120, cooldownSeconds: 600 },
+    voice: { enabled: false, autoSend: true, speakReplies: false },
   };
 
   console.log("→ groom (read-only)…");

@@ -35,10 +35,13 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Clip collapsed window to a perfect circle — kills square-corner white bleed */
+/* Clip collapsed window to a circle — on orb only (body clip-path breaks clicks on macOS). */
 body.mode-collapsed {
-  border-radius: 50%;
   overflow: hidden;
+}
+
+body.mode-collapsed .orb-shell {
+  border-radius: 50%;
   clip-path: circle(50% at 50% 50%);
 }
 
@@ -71,7 +74,8 @@ body.mode-collapsed {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   background:
     radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.06) 0%, transparent 46%),
     linear-gradient(155deg, var(--pip-light) 0%, var(--pip-mid) 48%, var(--pip-deep) 100%);
@@ -326,14 +330,19 @@ body.mood-thinking .smile {
 /* ── Expanded: horizontal pill ── */
 body.mode-expanded {
   background: transparent;
-  border-radius: 29px;
+  border-radius: 22px;
   overflow: hidden;
-  clip-path: none;
+  clip-path: inset(0 round 22px);
+}
+
+body.mode-expanded .card {
+  border-radius: 22px;
+  overflow: hidden;
 }
 
 .card {
   width: 100%;
-  height: 100%;
+  height: auto;
   padding: 0;
   border-radius: 20px;
   overflow: hidden;
@@ -344,8 +353,15 @@ body.mode-expanded {
 .card-shell {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
   min-height: 56px;
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+.card-shell:active,
+.is-dragging {
+  cursor: grabbing;
 }
 
 .card-row {
@@ -365,7 +381,8 @@ body.mode-expanded {
   border: none;
   padding: 0;
   margin: 0;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   background:
     radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.05) 0%, transparent 46%),
     linear-gradient(155deg, var(--pip-light) 0%, var(--pip-mid) 48%, var(--pip-deep) 100%);
@@ -388,13 +405,13 @@ body.mode-expanded {
 }
 
 .card-extras {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 0 10px 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  -webkit-app-region: drag;
 }
 
 .card-extras[hidden] {
@@ -408,21 +425,26 @@ body.mode-expanded {
   -webkit-app-region: no-drag;
 }
 
-.ask-form input {
+.ask-form textarea {
   flex: 1;
   min-width: 0;
-  height: 36px;
-  padding: 0 12px;
+  min-height: 36px;
+  max-height: 72px;
+  padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(8px);
   color: var(--fg);
   font-size: 13px;
+  line-height: 1.35;
   outline: none;
+  resize: none;
+  overflow-y: auto;
+  font-family: inherit;
 }
-.ask-form input::placeholder { color: var(--muted); }
-.ask-form input:focus {
+.ask-form textarea::placeholder { color: var(--muted); }
+.ask-form textarea:focus {
   border-color: rgba(196, 160, 106, 0.45);
   box-shadow: 0 0 0 3px rgba(196, 160, 106, 0.1);
 }
@@ -454,12 +476,13 @@ body.mode-expanded {
   font-size: 11.5px;
   line-height: 1.4;
   color: var(--muted);
+  -webkit-app-region: no-drag;
 }
 
 .reply {
-  flex: 1;
-  min-height: 52px;
-  max-height: 112px;
+  flex: 0 0 auto;
+  min-height: 28px;
+  max-height: 160px;
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 13px;
@@ -470,6 +493,7 @@ body.mode-expanded {
   -webkit-user-select: text;
   user-select: text;
   background: rgba(0, 0, 0, 0.32);
+  -webkit-app-region: no-drag;
 }
 .reply.thinking {
   color: var(--pip-warm-soft);
@@ -489,17 +513,18 @@ body.mode-expanded {
   border-radius: 8px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.35);
-  min-height: 52px;
-  max-height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
 }
 
 #snip-preview {
   display: block;
-  width: 100%;
-  max-height: 72px;
+  max-width: 100%;
+  max-height: 140px;
+  width: auto;
+  height: auto;
   object-fit: contain;
   object-position: center top;
 }
@@ -542,4 +567,9 @@ body.mode-expanded {
 body.snip-active .ask-form {
   opacity: 0.55;
   pointer-events: none;
+}
+
+body.snip-active.snip-waiting .ask-form {
+  opacity: 1;
+  pointer-events: auto;
 }

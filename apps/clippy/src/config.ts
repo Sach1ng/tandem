@@ -29,12 +29,14 @@ export interface ClippyVoiceConfig {
 }
 
 export interface ClippyPlacementConfig {
-  corner: "top-right" | "bottom-right";
+  corner: "top-center" | "top-right" | "bottom-right";
   margin: number;
 }
 
 export interface ClippyConfig {
-  workspace: string; // absolute
+  workspace: string; // absolute — tasks, screenshots, local config
+  agentWorkspace: string; // absolute — cursor-agent --workspace (PM OS or Tandem root)
+  knowledgeBase: string; // absolute — PM OS brain directory
   tasksFile: string; // absolute
   agent: string;
   agentModel: string;
@@ -92,8 +94,17 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     ? merged.tasksFile
     : resolve(workspace, merged.tasksFile);
 
+  const knowledgeBaseRaw = merged.knowledgeBase?.trim();
+  const knowledgeBase = knowledgeBaseRaw
+    ? isAbsolute(knowledgeBaseRaw)
+      ? knowledgeBaseRaw
+      : resolve(workspace, knowledgeBaseRaw)
+    : "";
+
   return {
     workspace,
+    agentWorkspace: workspace, // finalized in main after ensureKnowledgeBase
+    knowledgeBase,
     tasksFile,
     agent: merged.agent ?? "cursor-agent",
     agentModel: merged.agentModel ?? "auto",

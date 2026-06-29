@@ -1,10 +1,9 @@
-import { relative } from "node:path";
 import { runAgent } from "@tandem/engine";
 import type { ClippyConfig } from "./config.ts";
 
-/** Path to the task file, relative to the agent's workspace, for use inside prompts. */
+/** Absolute path to the task file for use inside prompts (agent cwd may be PM OS). */
 function taskFileRef(cfg: ClippyConfig): string {
-  return relative(cfg.workspace, cfg.tasksFile) || cfg.tasksFile;
+  return cfg.tasksFile;
 }
 
 const groomPrompt = (file: string) => `Read the task file at ${file} (it has four sections: Active, Scheduled, Waiting, Needs triage).
@@ -30,11 +29,17 @@ the likely cause and the concrete fix. Be specific and skimmable. If you genuine
 image, say so plainly instead of guessing.`;
 
 const ASSISTANT_PERSONA = `You are Pip, Tandem's desktop buddy — a warm, concise ambient coworker on the user's screen.
-Lead with the answer. Be skimmable, like a sharp colleague, not a chatbot. Tandem's PM OS workspace
-is on disk; use its skills and knowledge when the question is PM-related. Never invent facts.`;
+Lead with the answer. Be skimmable, like a sharp colleague, not a chatbot. PM OS lives at the
+knowledge base path given below; use its skills and knowledge when the question is PM-related.
+Never invent facts.`;
 
 function engineCfg(cfg: ClippyConfig) {
-  return { cliBin: cfg.agent, model: cfg.agentModel, workspace: cfg.workspace, timeoutMs: 180_000 };
+  return {
+    cliBin: cfg.agent,
+    model: cfg.agentModel,
+    workspace: cfg.agentWorkspace,
+    timeoutMs: 180_000,
+  };
 }
 
 /** Read-only review of the board. Returns the raw model output (expected to be JSON). */
@@ -67,6 +72,7 @@ export async function askAboutScreenshot(
 ): Promise<{ text: string }> {
   const prompt = [
     SCREEN_PERSONA,
+    `--- KNOWLEDGE BASE ---\n${cfg.knowledgeBase}`,
     `--- SCREENSHOT ---\nView the image at this absolute path and analyze what it shows:\n${imagePath}`,
     `--- QUESTION ---\n${question?.trim() || "What's on my screen? If there's an error, tell me how to fix it."}`,
   ].join("\n\n");
@@ -77,7 +83,7 @@ export async function askAboutScreenshot(
 /** General ask — read-only desktop assistant (no screenshot). */
 export async function ask(cfg: ClippyConfig, question: string): Promise<{ text: string }> {
   const result = await runAgent(engineCfg(cfg), {
-    prompt: `${ASSISTANT_PERSONA}\n\n--- QUESTION ---\n${question.trim()}`,
+    prompt: `${ASSISTANT_PERSONA}\n\n--- KNOWLEDGE BASE ---\n${cfg.knowledgeBase}\n\n--- QUESTION ---\n${question.trim()}`,
     outputFormat: "text",
     mode: "ask",
   });

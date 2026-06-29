@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, Menu, powerMonitor, screen, shell } from "electron";
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, powerMonitor, screen, shell } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -8,6 +8,7 @@ import { loadConfig, type ClippyConfig } from "./config.ts";
 import { parseTasksMarkdown, type ParsedTasks, type SectionKey } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
 import { ask, askAboutScreenshot, capture, groom } from "./agent.ts";
+import { ensureKnowledgeBase } from "./knowledge-base.ts";
 
 const APP_DIR = resolve(__dirname, ".."); // apps/clippy
 const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS submodule)
@@ -52,6 +53,8 @@ function loadState(): WindowState {
 }
 
 let state: WindowState;
+let skipMovedSave = 0;
+
 function saveState(): void {
   try {
     writeFileSync(statePath(), JSON.stringify(state, null, 2));
@@ -78,7 +81,18 @@ function broadcast(): void {
   if (!win?.isDestroyed()) win.webContents.send("tasks:updated", readTasks());
 }
 
-/** Pin a screen corner; top-right grows down (replies visible), bottom-right grows up. */
+function moveWindow(x: number, y: number, persist = false): void {
+  if (!win || win.isDestroyed()) return;
+  skipMovedSave++;
+  win.setPosition(Math.round(x), Math.round(y));
+  if (persist) {
+    state.x = Math.round(x);
+    state.y = Math.round(y);
+    saveState();
+  }
+}
+
+/** Pin a screen corner when the user hasn't dragged Pip elsewhere. */
 function anchorWindow(): void {
   if (!win || win.isDestroyed()) return;
   const bounds = win.getBounds();
@@ -90,7 +104,20 @@ function anchorWindow(): void {
     corner === "bottom-right"
       ? Math.round(work.y + work.height - bounds.height - margin)
       : Math.round(work.y + margin);
-  win.setPosition(x, y);
+  moveWindow(x, y);
+}
+
+function hasUserPlacement(): boolean {
+  return Number.isFinite(state.x) && Number.isFinite(state.y);
+}
+
+function applyPlacement(): void {
+  if (!win || win.isDestroyed()) return;
+  if (hasUserPlacement()) {
+    moveWindow(state.x!, state.y!);
+    return;
+  }
+  anchorWindow();
 }
 
 function clampPanel(w: number, h: number): { w: number; h: number } {
@@ -105,27 +132,26 @@ function setExpanded(v: boolean): void {
   expanded = v;
   state.expanded = v;
   if (v) {
-    const w = cfg.panel.defaultW;
-    const h = cfg.panel.defaultH;
+    const w = state.panelW || cfg.panel.defaultW;
+    const h = state.panelH || cfg.panel.compactH || cfg.panel.defaultH;
     win.setResizable(false);
-    win.setMinimumSize(w, h);
-    win.setMaximumSize(w, h);
+    win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
+    win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
     win.setSize(w, h, false);
-    if (process.platform === "darwin") win.setVibrancy("under-window");
+    win.setBackgroundColor("#00000000");
     win.webContents.send("widget:expanded", true);
     win.show();
     win.focus();
   } else {
     win.setResizable(false);
-    if (process.platform === "darwin") win.setVibrancy(null);
     win.setMinimumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setMaximumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
+    win.setBackgroundColor("#00000000");
     win.webContents.send("widget:expanded", false);
-    // Collapsed orb must stay visible — hide() during snip is the only time we tuck away.
     win.show();
   }
-  anchorWindow();
+  applyPlacement();
   saveState();
 }
 
@@ -188,9 +214,12 @@ async function runHotkeySnip(): Promise<void> {
     }
 
     setExpanded(true);
-    win.webContents.send("widget:snip-result", snipPayload(path, "ready"));
+    win.webContents.send("widget:snip-result", snipPayload(path, "captured"));
 
-    if (!cfg.hotkey.autoAsk) return;
+    if (!cfg.hotkey.autoAsk) {
+      win.webContents.send("widget:snip-ready", { path, previewUrl: screenshotPreviewUrl(path) });
+      return;
+    }
 
     win.webContents.send("widget:snip-result", snipPayload(path, "loading"));
     try {
@@ -270,20 +299,37 @@ function registerIpc(): void {
     collapsed: cfg.collapsed,
     tasksFile: cfg.tasksFile,
     workspace: cfg.workspace,
+    agentWorkspace: cfg.agentWorkspace,
+    knowledgeBase: cfg.knowledgeBase,
     hotkey: cfg.hotkey,
     placement: cfg.placement,
     nudge: cfg.nudge,
     voice: cfg.voice,
   }));
 
-  ipcMain.handle("widget:toggle", () => { pingActivity(); setExpanded(!expanded); });
-  ipcMain.handle("widget:expand", (_e, v: boolean) => { pingActivity(); setExpanded(v); });
+  ipcMain.handle("widget:toggle", () => {
+    pingActivity();
+    setExpanded(!expanded);
+    return expanded;
+  });
+  ipcMain.handle("widget:expand", (_e, v: boolean) => {
+    pingActivity();
+    setExpanded(v);
+    return expanded;
+  });
   ipcMain.handle("widget:context-menu", () => { pingActivity(); showContextMenu(); });
   ipcMain.handle("widget:activity", () => { pingActivity(); });
 
   ipcMain.handle("agent:groom", async () => groom(cfg));
   ipcMain.handle("agent:capture", async (_e, p: { text: string }) => { await capture(cfg, p.text); broadcast(); });
-  ipcMain.handle("agent:ask", async (_e, p: { text: string }) => ask(cfg, p.text));
+  ipcMain.handle("agent:ask", async (_e, p: { text: string }) => {
+    try {
+      return await ask(cfg, p.text);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { text: msg };
+    }
+  });
 
   ipcMain.handle("screenshot:capture", async () => {
     const priorExpanded = expanded;
@@ -299,15 +345,23 @@ function registerIpc(): void {
     return path;
   });
   ipcMain.handle("screenshot:preview-url", (_e, path: string) => screenshotPreviewUrl(path));
-  ipcMain.handle("agent:ask-screenshot", async (_e, p: { path: string; question: string }) =>
-    askAboutScreenshot(cfg, p.path, p.question),
-  );
+  ipcMain.handle("agent:ask-screenshot", async (_e, p: { path: string; question: string }) => {
+    if (!p.path || !existsSync(p.path)) {
+      return { text: "Screenshot file not found. Try snipping again." };
+    }
+    try {
+      return await askAboutScreenshot(cfg, p.path, p.question);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { text: msg };
+    }
+  });
 
   ipcMain.handle("shell:open-tasks", () => shell.openPath(cfg.tasksFile));
 
   ipcMain.handle("window:drag-by", (_e, p: { dx: number; dy: number }) => {
     const [x = 0, y = 0] = win.getPosition();
-    win.setPosition(Math.round(x + p.dx), Math.round(y + p.dy));
+    moveWindow(x + p.dx, y + p.dy, true);
   });
   ipcMain.handle("window:resize-by", (_e, p: { dw: number; dh: number }) => {
     const { w, h } = clampPanel(state.panelW + p.dw, state.panelH + p.dh);
@@ -316,10 +370,14 @@ function registerIpc(): void {
     saveState();
   });
   ipcMain.handle("window:set-panel-size", (_e, p: { w: number; h: number }) => {
+    if (!expanded) return;
     const { w, h } = clampPanel(p.w, p.h);
-    state.panelW = w; state.panelH = h;
+    state.panelW = w;
+    state.panelH = h;
+    win.setMinimumSize(w, h);
+    win.setMaximumSize(w, h);
     win.setSize(w, h, false);
-    anchorWindow();
+    applyPlacement();
     saveState();
   });
   ipcMain.handle("window:get-bounds", () => win.getBounds());
@@ -342,6 +400,8 @@ function createWindow(): void {
     skipTaskbar: true,
     resizable: false,
     fullscreenable: false,
+    acceptFirstMouse: true,
+    focusable: true,
     webPreferences: {
       preload: join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -354,17 +414,29 @@ function createWindow(): void {
   win.setAlwaysOnTop(true, "screen-saver");
   if (process.platform === "darwin") {
     app.dock?.hide();
-    // Vibrancy only when expanded — on a square transparent window it bleeds as white corners.
   }
+
+  win.on("moved", () => {
+    if (skipMovedSave > 0) {
+      skipMovedSave--;
+      return;
+    }
+    const [x, y] = win.getPosition();
+    state.x = x;
+    state.y = y;
+    saveState();
+  });
 
   win.loadFile(join(APP_DIR, "ui", "index.html"));
 
   win.webContents.once("did-finish-load", () => {
     setExpanded(false);
-    anchorWindow();
+    applyPlacement();
   });
 
-  screen.on("display-metrics-changed", () => anchorWindow());
+  screen.on("display-metrics-changed", () => {
+    if (!hasUserPlacement()) applyPlacement();
+  });
 
   const watcher = chokidar.watch(cfg.tasksFile, {
     ignoreInitial: true,
@@ -374,9 +446,38 @@ function createWindow(): void {
   win.on("closed", () => watcher.close());
 }
 
-app.whenReady().then(() => {
-  cfg = loadConfig(APP_DIR, REPO_ROOT);
+app.whenReady().then(async () => {
+  const loaded = loadConfig(APP_DIR, REPO_ROOT);
+
+  try {
+    const kb = await ensureKnowledgeBase(loaded.workspace, loaded.knowledgeBase || undefined, async () => {
+      const { canceled, filePaths } = await dialog.showOpenDialog({
+        type: "question",
+        title: "Choose knowledge base",
+        message: "PM OS was not found in your workspace.",
+        detail:
+          "Select the folder that contains your PM OS brain (a skills/ directory — e.g. external/pm-operating-os after tandem init, or a PM-operating-OS clone).",
+        properties: ["openDirectory", "createDirectory"],
+        buttonLabel: "Use this folder",
+      });
+      return canceled || !filePaths[0] ? null : filePaths[0];
+    });
+
+    cfg = {
+      ...loaded,
+      knowledgeBase: kb.knowledgeBase,
+      agentWorkspace: kb.agentWorkspace,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    dialog.showErrorBox("Pip — knowledge base required", msg);
+    app.quit();
+    return;
+  }
+
   console.log(`Clippy workspace: ${cfg.workspace}`);
+  console.log(`Clippy knowledge base: ${cfg.knowledgeBase}`);
+  console.log(`Clippy agent workspace: ${cfg.agentWorkspace}`);
   console.log(`Clippy tasksFile: ${cfg.tasksFile}`);
 
   registerIpc();

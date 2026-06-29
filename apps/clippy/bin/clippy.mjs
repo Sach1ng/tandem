@@ -7,16 +7,24 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
-import { resolveWorkspace } from "@tandem/core";
+import { defaultPmOsDir, isPmOsDir, resolveWorkspace } from "@tandem/core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const clippyRoot = resolve(__dirname, "..");
 const require = createRequire(import.meta.url);
 
 const ws = resolveWorkspace();
-if (!existsSync(join(ws, "AGENTS.md"))) {
+const hasWorkspace = existsSync(join(ws, "AGENTS.md"));
+const hasPmOs = isPmOsDir(defaultPmOsDir(ws));
+
+if (!hasWorkspace && !hasPmOs) {
   console.error(`No Tandem workspace at ${ws}. Run: tandem init`);
+  console.error(`Or launch Clippy and choose a PM OS knowledge base folder when prompted.`);
   process.exit(1);
+}
+
+if (!hasPmOs) {
+  console.warn(`PM OS not found at ${defaultPmOsDir(ws)} — Clippy will ask you to choose a knowledge base.`);
 }
 
 process.env.TANDEM_WORKSPACE = ws;

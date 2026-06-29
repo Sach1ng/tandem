@@ -9,12 +9,14 @@
   "files": [
     "dist",
     "ui",
+    "monitor",
     "bin",
     "config.default.json"
   ],
   "scripts": {
     "build": "node build.mjs",
-    "start": "npm run build && electron .",
+    "start": "electron .",
+    "dev": "npm run build && electron .",
     "prepublishOnly": "npm run build",
     "package": "npm run build && electron-packager . Tandem --platform=darwin --arch=arm64 --out=release --overwrite"
   },

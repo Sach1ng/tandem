@@ -33,6 +33,22 @@ tandem clippy
 - **⌘⇧T** — snip any region of your screen and get an answer
 - Type a question and press ↵ — Pip runs against PM OS on disk
 
+## Monitor dashboard
+
+While Pip is running, a local web UI logs every ask, screenshot, capture, and groom:
+
+**http://127.0.0.1:8791**
+
+- **Active** — in-flight requests (live via SSE)
+- **History** — past requests with question, response, duration, and screenshot previews
+- Right-click Pip → **Open monitor**, or open the URL in a browser
+
+Logs persist at `{workspace}/.tandem/pip-requests.json`. Disable or change port in `config.json`:
+
+```json
+{ "monitor": { "enabled": true, "port": 8791 } }
+```
+
 Tasks still live in `tasks.md` (editable via right-click → Open tasks.md) but are not shown in the UI.
 
 **Placement:** Pip sits in the **top-right** (below the menu bar). The ask bar extends left;

@@ -1,5 +1,11 @@
 import { runAgent } from "@tandem/engine";
 import type { ClippyConfig } from "./config.ts";
+import {
+  isPmQuestion,
+  isShortQuestion,
+  isTrivialGreeting,
+  localGreetingReply,
+} from "./agent-session.ts";
 
 /** Absolute path to the task file for use inside prompts (agent cwd may be PM OS). */
 function taskFileRef(cfg: ClippyConfig): string {
@@ -22,72 +28,93 @@ Format: a checkbox line "- [ ] <title> #project/<inferred> #from/self #p<0|1|2>"
 sub-bullets for Source, Due (if any), and Next action. Infer a sensible project tag and priority.
 Do NOT modify, reorder, or reformat any existing tasks. Task to add: "${text.replace(/"/g, '\\"')}"`;
 
-const SCREEN_PERSONA = `You are Pip, Tandem's desktop buddy. The user has captured a screenshot of part of their screen
-and wants help with what's in it — often a bug, error message, stack trace, log, or UI state.
-Open and view the image file at the path given, then lead with the answer. If it's an error, explain
-the likely cause and the concrete fix. Be specific and skimmable. If you genuinely cannot view the
-image, say so plainly instead of guessing.`;
+const PM_OS_HINT = (kb: string) =>
+  `PM OS: ${kb} — Read/Grep or @paths only if needed for this question.`;
 
-const ASSISTANT_PERSONA = `You are Pip, Tandem's desktop buddy — a warm, concise ambient coworker on the user's screen.
-Lead with the answer. Be skimmable, like a sharp colleague, not a chatbot. PM OS lives at the
-knowledge base path given below; use its skills and knowledge when the question is PM-related.
-Never invent facts.`;
-
-function engineCfg(cfg: ClippyConfig) {
+function engineCfg(cfg: ClippyConfig, model?: string) {
   return {
     cliBin: cfg.agent,
-    model: cfg.agentModel,
+    model: model ?? cfg.agentModel,
     workspace: cfg.agentWorkspace,
-    timeoutMs: 180_000,
+    timeoutMs: 120_000,
   };
+}
+
+function askPrompt(cfg: ClippyConfig, question: string): string {
+  const q = question.trim();
+  const pm = isPmQuestion(q) ? `\n${PM_OS_HINT(cfg.knowledgeBase)}` : "";
+  if (isShortQuestion(q)) {
+    return `You are Pip, a concise desktop buddy. Reply in 1–3 sentences.${pm}\n\nQ: ${q}`;
+  }
+  return `You are Pip, a concise desktop buddy. Lead with the answer.${pm}\n\nQ: ${q}`;
+}
+
+function screenshotPrompt(imagePath: string, question: string, kb: string): string {
+  const q = question.trim() || "What's on screen? If there's an error, explain the fix.";
+  const pm = isPmQuestion(q) ? `\nPM OS (only if relevant): ${kb}` : "";
+  return `@${imagePath}\n\n${q}${pm}`;
+}
+
+export interface AgentReply {
+  text: string;
+  chatId: string | null;
+  durationMs: number;
 }
 
 /** Read-only review of the board. Returns the raw model output (expected to be JSON). */
 export async function groom(cfg: ClippyConfig): Promise<{ raw: string }> {
   const result = await runAgent(engineCfg(cfg), {
     prompt: groomPrompt(taskFileRef(cfg)),
-    outputFormat: "text",
-    mode: "plan", // read-only — a "safe" groom
+    outputFormat: "json",
+    mode: "plan",
   });
   return { raw: stripFences(result.text) };
 }
 
 /** Writes one task into Needs triage. Needs write access, so force is on. */
 export async function capture(cfg: ClippyConfig, text: string): Promise<void> {
-  await runAgent(engineCfg(cfg), {
+  await runAgent(engineCfg(cfg, cfg.agentFastModel), {
     prompt: capturePrompt(taskFileRef(cfg), text),
-    outputFormat: "text",
+    outputFormat: "json",
     force: true,
   });
 }
 
-/**
- * Visual help: analyze a captured screenshot. Read-only (`ask` mode) — the agent only needs to
- * view the image file, never write or run shell.
- */
+/** Visual help: analyze a captured screenshot. Read-only (`ask` mode). */
 export async function askAboutScreenshot(
   cfg: ClippyConfig,
   imagePath: string,
   question: string,
-): Promise<{ text: string }> {
-  const prompt = [
-    SCREEN_PERSONA,
-    `--- KNOWLEDGE BASE ---\n${cfg.knowledgeBase}`,
-    `--- SCREENSHOT ---\nView the image at this absolute path and analyze what it shows:\n${imagePath}`,
-    `--- QUESTION ---\n${question?.trim() || "What's on my screen? If there's an error, tell me how to fix it."}`,
-  ].join("\n\n");
-  const result = await runAgent(engineCfg(cfg), { prompt, outputFormat: "text", mode: "ask" });
-  return { text: result.text };
+  opts: { resumeChatId?: string | null } = {},
+): Promise<AgentReply> {
+  const model = cfg.agentVisionModel?.trim() || cfg.agentFastModel || cfg.agentModel;
+  const result = await runAgent(engineCfg(cfg, model), {
+    prompt: screenshotPrompt(imagePath, question, cfg.knowledgeBase),
+    outputFormat: "json",
+    mode: "ask",
+    resumeChatId: opts.resumeChatId,
+  });
+  return { text: result.text, chatId: result.chatId, durationMs: result.durationMs };
 }
 
 /** General ask — read-only desktop assistant (no screenshot). */
-export async function ask(cfg: ClippyConfig, question: string): Promise<{ text: string }> {
-  const result = await runAgent(engineCfg(cfg), {
-    prompt: `${ASSISTANT_PERSONA}\n\n--- KNOWLEDGE BASE ---\n${cfg.knowledgeBase}\n\n--- QUESTION ---\n${question.trim()}`,
-    outputFormat: "text",
+export async function ask(
+  cfg: ClippyConfig,
+  question: string,
+  opts: { resumeChatId?: string | null } = {},
+): Promise<AgentReply> {
+  const q = question.trim();
+  if (isTrivialGreeting(q)) {
+    return { ...localGreetingReply(), chatId: opts.resumeChatId ?? null, durationMs: 0 };
+  }
+  const model = cfg.agentFastModel?.trim() || cfg.agentModel;
+  const result = await runAgent(engineCfg(cfg, model), {
+    prompt: askPrompt(cfg, q),
+    outputFormat: "json",
     mode: "ask",
+    resumeChatId: opts.resumeChatId,
   });
-  return { text: result.text };
+  return { text: result.text, chatId: result.chatId, durationMs: result.durationMs };
 }
 
 /** Models sometimes wrap JSON in ``` fences despite instructions — strip them. */

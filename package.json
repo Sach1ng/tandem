@@ -23,7 +23,7 @@
     "slack:setup": "npm run setup --workspace @tandem/slack",
     "slack:smoke": "npm run smoke --workspace @tandem/slack",
     "slack:reinstall": "npm run reinstall --workspace @tandem/slack",
-    "clippy": "npm run start --workspace @tandem/clippy",
+    "clippy": "npm run build --workspace @tandem/clippy && npm run start --workspace @tandem/clippy",
     "chrome:build": "npm run build --workspace @tandem/chrome-extension",
     "tandem:init": "node packages/cli/bin/tandem.mjs init",
     "tandem:doctor": "node packages/cli/bin/tandem.mjs doctor"

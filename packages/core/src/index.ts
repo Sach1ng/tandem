@@ -8,3 +8,9 @@ export {
   resolveAgentWorkspace,
   resolveKnowledgeBase,
 } from "./pm-os.ts";
+export {
+  appendWebTask,
+  appendTaskSubBullet,
+  resolveTasksFile,
+  type WebTaskMeta,
+} from "./tasks.ts";

@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { join } from "node:path";
 import {
   defaultPmOsDir,
   isPmOsDir,
-  resolveAgentWorkspace,
   resolveKnowledgeBase,
 } from "@tandem/core";
 
@@ -45,8 +45,11 @@ function validateKnowledgeBase(dir: string): void {
 }
 
 /**
- * Resolve PM OS for the agent. Uses bundled `external/pm-operating-os` when present;
- * otherwise invokes `pickFolder` (Electron dialog) once and saves the choice.
+ * Resolve PM OS for Pip.
+ *
+ * `knowledgeBase` — PM OS brain on disk (skills, knowledge, memory).
+ * `agentWorkspace` — cursor-agent `--workspace` (kept at the Tandem workspace so every
+ *   ask doesn't boot the full PM OS tree; the agent reads PM OS via tools / @paths on demand).
  */
 export async function ensureKnowledgeBase(
   workspace: string,
@@ -55,10 +58,7 @@ export async function ensureKnowledgeBase(
 ): Promise<KnowledgeBaseResolution> {
   const existing = resolveKnowledgeBase(workspace, configured);
   if (existing) {
-    return {
-      knowledgeBase: existing,
-      agentWorkspace: resolveAgentWorkspace(workspace, existing),
-    };
+    return { knowledgeBase: existing, agentWorkspace: workspace };
   }
 
   const bundled = defaultPmOsDir(workspace);
@@ -72,8 +72,5 @@ export async function ensureKnowledgeBase(
   validateKnowledgeBase(picked);
   saveKnowledgeBase(picked);
 
-  return {
-    knowledgeBase: picked,
-    agentWorkspace: resolveAgentWorkspace(workspace, picked),
-  };
+  return { knowledgeBase: picked, agentWorkspace: workspace };
 }

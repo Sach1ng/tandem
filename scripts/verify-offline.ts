@@ -85,8 +85,8 @@ const chromeBridge = readFileSync(join(ROOT, "apps/chrome-extension/bridge/serve
 check("Lens bridge persona", /You are Lens, Tandem's page-aware browser surface/.test(chromeBridge));
 
 const pipAgent = readFileSync(join(ROOT, "apps/clippy/src/agent.ts"), "utf8");
-check("Pip assistant persona", /You are Pip, Tandem's desktop buddy/.test(pipAgent));
-check("Pip screenshot persona", /You are Pip, Tandem's desktop buddy/.test(pipAgent));
+check("Pip assistant persona", /You are Pip/.test(pipAgent));
+check("Pip screenshot @-path prompt", /@\$\{imagePath\}/.test(pipAgent));
 
 const pipHtml = readFileSync(join(ROOT, "apps/clippy/ui/index.html"), "utf8");
 check("Pip UI title", pipHtml.includes("Pip · Tandem"));

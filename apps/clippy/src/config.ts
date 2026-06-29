@@ -40,6 +40,10 @@ export interface ClippyConfig {
   tasksFile: string; // absolute
   agent: string;
   agentModel: string;
+  /** Faster model for short text asks (e.g. composer-2.5-fast). Screenshots still use agentModel. */
+  agentFastModel: string;
+  /** Vision/screenshot model — defaults to agentFastModel. */
+  agentVisionModel: string;
   agentFlags: string[];
   panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number; compactH?: number; tallH?: number; snipH?: number };
   collapsed: { w: number; h: number };
@@ -47,6 +51,12 @@ export interface ClippyConfig {
   hotkey: ClippyHotkeyConfig;
   nudge: ClippyNudgeConfig;
   voice: ClippyVoiceConfig;
+  monitor: ClippyMonitorConfig;
+}
+
+export interface ClippyMonitorConfig {
+  enabled: boolean;
+  port: number;
 }
 
 function readJson(path: string): Record<string, any> {
@@ -81,6 +91,7 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     hotkey: { ...defaults.hotkey, ...user.hotkey },
     nudge: { ...defaults.nudge, ...user.nudge },
     voice: { ...defaults.voice, ...user.voice },
+    monitor: { ...defaults.monitor, ...user.monitor },
   };
 
   const defaultWs = resolveWorkspace(repoRoot);
@@ -108,6 +119,8 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     tasksFile,
     agent: merged.agent ?? "cursor-agent",
     agentModel: merged.agentModel ?? "auto",
+    agentFastModel: merged.agentFastModel ?? "composer-2.5-fast",
+    agentVisionModel: merged.agentVisionModel ?? merged.agentFastModel ?? "composer-2.5-fast",
     agentFlags: merged.agentFlags ?? ["-p", "--trust", "--output-format", "text"],
     panel: merged.panel,
     collapsed: merged.collapsed,
@@ -131,6 +144,10 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
       enabled: merged.voice?.enabled !== false,
       autoSend: merged.voice?.autoSend !== false,
       speakReplies: Boolean(merged.voice?.speakReplies),
+    },
+    monitor: {
+      enabled: merged.monitor?.enabled !== false,
+      port: Number(merged.monitor?.port ?? 8791),
     },
   };
 }

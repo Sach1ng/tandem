@@ -13,7 +13,8 @@ const taskWidget = {
   capture: (text: string) => ipcRenderer.invoke("agent:capture", { text }),
   ask: (text: string) => ipcRenderer.invoke("agent:ask", { text }),
   groom: () => ipcRenderer.invoke("agent:groom"),
-  snip: (): Promise<string | null> => ipcRenderer.invoke("screenshot:capture"),
+  snip: (): Promise<{ path: string; previewUrl: string } | null> =>
+    ipcRenderer.invoke("screenshot:capture"),
   screenshotPreviewUrl: (path: string) => pathToFileURL(path).href,
   askScreenshot: (path: string, question: string) =>
     ipcRenderer.invoke("agent:ask-screenshot", { path, question }),
@@ -44,6 +45,8 @@ const taskWidget = {
   onNudge: (cb: (p: { idleSeconds: number; message: string }) => void) =>
     ipcRenderer.on("widget:nudge", (_e, p) => cb(p)),
   onNudgeClear: (cb: () => void) => ipcRenderer.on("widget:nudge-clear", () => cb()),
+  onWorking: (cb: (p: { active: boolean; label?: string }) => void) =>
+    ipcRenderer.on("widget:working", (_e, p) => cb(p)),
 };
 
 contextBridge.exposeInMainWorld("taskWidget", taskWidget);

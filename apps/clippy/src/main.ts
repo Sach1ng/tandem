@@ -9,6 +9,10 @@ import { parseTasksMarkdown, type ParsedTasks, type SectionKey } from "./parser.
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
 import { ask, askAboutScreenshot, capture, groom } from "./agent.ts";
 import { ensureKnowledgeBase } from "./knowledge-base.ts";
+import { makeScreenshotPreview, type CapturedScreenshot } from "./screenshot.ts";
+import { RequestLog, type RequestSource } from "./request-log.ts";
+import { startMonitorServer } from "./monitor-server.ts";
+import { loadPipChatId, savePipChatId, warmAgentSession } from "./agent-session.ts";
 
 const APP_DIR = resolve(__dirname, ".."); // apps/clippy
 const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS submodule)
@@ -16,8 +20,13 @@ const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS 
 let cfg: ClippyConfig;
 let win: BrowserWindow;
 let expanded = false;
+let expandAnimating = false;
 let lastNudgeAt = 0;
 let nudgeTimer: ReturnType<typeof setInterval> | null = null;
+let tuckedForCapture: { x: number; y: number; wasVisible: boolean } | null = null;
+let requestLog: RequestLog;
+let monitorPort = 8791;
+let pipChatId: string | null = null;
 
 interface WindowState {
   x?: number;
@@ -128,29 +137,79 @@ function clampPanel(w: number, h: number): { w: number; h: number } {
   };
 }
 
-function setExpanded(v: boolean): void {
+const PIP_TRANSITION_MS = 280;
+
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Smooth window resize for collapsed ↔ expanded transitions. */
+async function animateWindowSize(targetW: number, targetH: number, ms = PIP_TRANSITION_MS): Promise<void> {
+  if (!win || win.isDestroyed()) return;
+  const start = win.getBounds();
+  if (start.width === targetW && start.height === targetH) return;
+
+  const minW = Math.min(start.width, targetW);
+  const minH = Math.min(start.height, targetH);
+  const maxW = Math.max(start.width, targetW);
+  const maxH = Math.max(start.height, targetH);
+  win.setMinimumSize(minW, minH);
+  win.setMaximumSize(maxW, maxH);
+
+  const t0 = Date.now();
+  while (true) {
+    const t = Math.min(1, (Date.now() - t0) / ms);
+    const e = easeOutCubic(t);
+    const w = Math.round(start.width + (targetW - start.width) * e);
+    const h = Math.round(start.height + (targetH - start.height) * e);
+    win.setSize(w, h, false);
+    applyPlacement();
+    if (t >= 1) break;
+    await sleep(16);
+  }
+}
+
+async function setExpanded(v: boolean, opts: { animate?: boolean } = {}): Promise<void> {
+  const animate = opts.animate ?? true;
+  if (expandAnimating) return;
+  if (expanded === v && !animate) return;
+
+  expandAnimating = animate;
   expanded = v;
   state.expanded = v;
-  if (v) {
-    const w = state.panelW || cfg.panel.defaultW;
-    const h = state.panelH || cfg.panel.compactH || cfg.panel.defaultH;
-    win.setResizable(false);
-    win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
-    win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
-    win.setSize(w, h, false);
-    win.setBackgroundColor("#00000000");
-    win.webContents.send("widget:expanded", true);
-    win.show();
-    win.focus();
-  } else {
-    win.setResizable(false);
-    win.setMinimumSize(cfg.collapsed.w, cfg.collapsed.h);
-    win.setMaximumSize(cfg.collapsed.w, cfg.collapsed.h);
-    win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
-    win.setBackgroundColor("#00000000");
-    win.webContents.send("widget:expanded", false);
-    win.show();
+  win.setBackgroundColor("#00000000");
+
+  try {
+    if (v) {
+      const w = state.panelW || cfg.panel.defaultW;
+      const h = state.panelH || cfg.panel.compactH || cfg.panel.defaultH;
+      win.setResizable(false);
+      win.webContents.send("widget:expanded", true);
+      win.show();
+      if (animate) await animateWindowSize(w, h);
+      else win.setSize(w, h, false);
+      win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
+      win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
+      win.focus();
+    } else {
+      win.webContents.send("widget:expanded", false);
+      const cw = cfg.collapsed.w;
+      const ch = cfg.collapsed.h;
+      win.setResizable(false);
+      if (animate) await animateWindowSize(cw, ch);
+      else win.setSize(cw, ch, false);
+      win.setMinimumSize(cw, ch);
+      win.setMaximumSize(cw, ch);
+      win.show();
+    }
+  } finally {
+    expandAnimating = false;
   }
+
   applyPlacement();
   saveState();
 }
@@ -159,9 +218,18 @@ function screenshotPreviewUrl(path: string): string {
   return pathToFileURL(path).href;
 }
 
-function snipPayload(path: string | null, status: string, extra: Record<string, unknown> = {}) {
-  return path
-    ? { path, previewUrl: screenshotPreviewUrl(path), status, ...extra }
+function snipPayload(
+  shot: CapturedScreenshot | null,
+  status: string,
+  extra: Record<string, unknown> = {},
+) {
+  return shot
+    ? {
+        path: shot.path,
+        previewUrl: screenshotPreviewUrl(shot.previewPath),
+        status,
+        ...extra,
+      }
     : { status, ...extra };
 }
 
@@ -171,24 +239,45 @@ function restoreWindowAfterSnip(priorVisible: boolean, priorExpanded: boolean): 
     win.hide();
     return;
   }
-  setExpanded(priorExpanded);
+  setExpanded(priorExpanded, { animate: false });
 }
 
-/** Native macOS region snip — hides Clippy so it isn't in the shot. */
-function captureRegion(): Promise<string | null> {
+function tuckWindowForCapture(): void {
+  if (!win || win.isDestroyed()) return;
+  const [x = 0, y = 0] = win.getPosition();
+  tuckedForCapture = { x, y, wasVisible: win.isVisible() };
+  skipMovedSave += 2;
+  // Move off-screen instead of hide() — hide() makes Pip feel like it quit/restarted.
+  win.setPosition(-32000, y, false);
+}
+
+function untuckWindow(): void {
+  if (!win || win.isDestroyed() || !tuckedForCapture) return;
+  skipMovedSave += 2;
+  win.setPosition(tuckedForCapture.x, tuckedForCapture.y, false);
+  if (tuckedForCapture.wasVisible) win.show();
+  tuckedForCapture = null;
+}
+
+/** Native macOS region snip — tucks Pip off-screen so it isn't in the shot. */
+function captureRegion(): Promise<CapturedScreenshot | null> {
   const dir = join(cfg.workspace, ".tandem", "screenshots");
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `shot-${Date.now()}.png`);
-  win.hide();
+  tuckWindowForCapture();
   return new Promise((resolve) => {
     setTimeout(() => {
       execFile("screencapture", ["-i", "-x", file], () => {
-        const captured = existsSync(file) ? file : null;
-        // Always bring Clippy back — otherwise a cancel/escape leaves the app invisible ("dead").
-        if (win && !win.isDestroyed()) win.show();
-        resolve(captured);
+        untuckWindow();
+        if (!existsSync(file)) {
+          resolve(null);
+          return;
+        }
+        // Return immediately; thumbnail is for UI only — don't block the snip flow.
+        resolve({ path: file, previewPath: file });
+        void makeScreenshotPreview(file).catch(() => {});
       });
-    }, 180);
+    }, 80);
   });
 }
 
@@ -202,32 +291,43 @@ async function runHotkeySnip(): Promise<void> {
   const priorVisible = win.isVisible();
 
   try {
-    setExpanded(true);
+    await setExpanded(true, { animate: false });
     win.webContents.send("widget:snip-result", snipPayload(null, "selecting"));
     await paintDelay();
 
-    const path = await captureRegion();
-    if (!path) {
+    const shot = await captureRegion();
+    if (!shot) {
       win.webContents.send("widget:snip-result", snipPayload(null, "cancelled"));
       restoreWindowAfterSnip(priorVisible, priorExpanded);
       return;
     }
 
-    setExpanded(true);
-    win.webContents.send("widget:snip-result", snipPayload(path, "captured"));
+    await setExpanded(true, { animate: false });
+    win.webContents.send("widget:snip-result", snipPayload(shot, "captured"));
 
     if (!cfg.hotkey.autoAsk) {
-      win.webContents.send("widget:snip-ready", { path, previewUrl: screenshotPreviewUrl(path) });
+      win.webContents.send("widget:snip-ready", {
+        path: shot.path,
+        previewUrl: screenshotPreviewUrl(shot.previewPath),
+      });
       return;
     }
 
-    win.webContents.send("widget:snip-result", snipPayload(path, "loading"));
+    win.webContents.send("widget:snip-result", snipPayload(shot, "loading"));
+    signalWorking(true, "Analyzing screenshot…");
     try {
-      const { text } = await askAboutScreenshot(cfg, path, cfg.hotkey.question);
-      win.webContents.send("widget:snip-result", snipPayload(path, "done", { text }));
+      const { text } = await runLoggedScreenshotAsk(
+        shot.path,
+        cfg.hotkey.question,
+        "hotkey",
+        shot.previewPath,
+      );
+      win.webContents.send("widget:snip-result", snipPayload(shot, "done", { text }));
     } catch (err) {
       const msg = String((err as Error)?.message ?? err);
-      win.webContents.send("widget:snip-result", snipPayload(path, "error", { text: msg }));
+      win.webContents.send("widget:snip-result", snipPayload(shot, "error", { text: msg }));
+    } finally {
+      signalWorking(false);
     }
   } catch (err) {
     console.error("[hotkey] snip failed:", err);
@@ -239,9 +339,99 @@ async function runHotkeySnip(): Promise<void> {
   }
 }
 
+function signalWorking(active: boolean, label = "Working…"): void {
+  if (!win || win.isDestroyed()) return;
+  win.webContents.send("widget:working", { active, label });
+}
+
 function pingActivity(): void {
   lastNudgeAt = Date.now(); // reset nudge cooldown on any interaction
   if (win && !win.isDestroyed()) win.webContents.send("widget:nudge-clear");
+}
+
+function openMonitorDashboard(): void {
+  void shell.openExternal(`http://127.0.0.1:${monitorPort}`);
+}
+
+async function runLoggedAsk(text: string, source: RequestSource): Promise<{ text: string }> {
+  const entry = requestLog.start({ kind: "ask", question: text, source });
+  try {
+    const result = await ask(cfg, text, { resumeChatId: pipChatId });
+    rememberChatId(result.chatId);
+    requestLog.finish(entry.id, {
+      status: "done",
+      response: result.text,
+      chatId: result.chatId,
+      durationMs: result.durationMs,
+    });
+    return { text: result.text };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    requestLog.finish(entry.id, { status: "error", error: msg });
+    return { text: msg };
+  }
+}
+
+function rememberChatId(chatId: string | null | undefined): void {
+  if (!chatId) return;
+  pipChatId = chatId;
+  savePipChatId(cfg.workspace, chatId);
+}
+
+async function runLoggedScreenshotAsk(
+  path: string,
+  question: string,
+  source: RequestSource,
+  previewPath?: string,
+): Promise<{ text: string }> {
+  const entry = requestLog.start({
+    kind: "screenshot",
+    question,
+    screenshotPath: path,
+    previewPath,
+    source,
+  });
+  try {
+    const result = await askAboutScreenshot(cfg, path, question, { resumeChatId: pipChatId });
+    rememberChatId(result.chatId);
+    requestLog.finish(entry.id, {
+      status: "done",
+      response: result.text,
+      chatId: result.chatId,
+      durationMs: result.durationMs,
+    });
+    return { text: result.text };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    requestLog.finish(entry.id, { status: "error", error: msg });
+    return { text: msg };
+  }
+}
+
+async function runLoggedCapture(text: string, source: RequestSource): Promise<void> {
+  const entry = requestLog.start({ kind: "capture", question: text, source });
+  try {
+    await capture(cfg, text);
+    requestLog.finish(entry.id, { status: "done", response: "Task appended to Needs triage." });
+    broadcast();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    requestLog.finish(entry.id, { status: "error", error: msg });
+    throw err;
+  }
+}
+
+async function runLoggedGroom(source: RequestSource = "menu") {
+  const entry = requestLog.start({ kind: "groom", question: "Review task board", source });
+  try {
+    const result = await groom(cfg);
+    requestLog.finish(entry.id, { status: "done", response: result.raw.slice(0, 4000) });
+    return result;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    requestLog.finish(entry.id, { status: "error", error: msg });
+    throw err;
+  }
 }
 
 function startNudgeWatcher(): void {
@@ -277,12 +467,32 @@ function registerHotkey(): void {
   }
 }
 
+function restartClippy(): void {
+  void dialog
+    .showMessageBox(win, {
+      type: "question",
+      buttons: ["Restart", "Cancel"],
+      defaultId: 1,
+      cancelId: 1,
+      title: "Restart Pip",
+      message: "Restart Pip?",
+      detail: "This will briefly quit and reopen the Pip window.",
+    })
+    .then(({ response }) => {
+      if (response !== 0) return;
+      app.relaunch();
+      app.exit(0);
+    });
+}
+
 function showContextMenu(): void {
   const menu = Menu.buildFromTemplate([
     { label: "Snip screen", click: () => void runHotkeySnip() },
     { label: "Open tasks.md", click: () => shell.openPath(cfg.tasksFile) },
+    { label: "Open monitor", click: () => openMonitorDashboard() },
     { type: "separator" },
-    { label: expanded ? "Minimize" : "Open", click: () => setExpanded(!expanded) },
+    { label: expanded ? "Minimize" : "Open", click: () => void setExpanded(!expanded) },
+    { label: "Restart Pip", click: () => restartClippy() },
     { label: "Quit Pip", click: () => app.quit() },
   ]);
   menu.popup({ window: win });
@@ -305,29 +515,32 @@ function registerIpc(): void {
     placement: cfg.placement,
     nudge: cfg.nudge,
     voice: cfg.voice,
+    monitor: cfg.monitor,
   }));
 
-  ipcMain.handle("widget:toggle", () => {
+  ipcMain.handle("widget:toggle", async () => {
     pingActivity();
-    setExpanded(!expanded);
+    await setExpanded(!expanded);
     return expanded;
   });
-  ipcMain.handle("widget:expand", (_e, v: boolean) => {
+  ipcMain.handle("widget:expand", async (_e, v: boolean) => {
     pingActivity();
-    setExpanded(v);
+    await setExpanded(v);
     return expanded;
   });
   ipcMain.handle("widget:context-menu", () => { pingActivity(); showContextMenu(); });
   ipcMain.handle("widget:activity", () => { pingActivity(); });
 
-  ipcMain.handle("agent:groom", async () => groom(cfg));
-  ipcMain.handle("agent:capture", async (_e, p: { text: string }) => { await capture(cfg, p.text); broadcast(); });
+  ipcMain.handle("agent:groom", async () => runLoggedGroom("menu"));
+  ipcMain.handle("agent:capture", async (_e, p: { text: string }) => {
+    await runLoggedCapture(p.text, "ui");
+  });
   ipcMain.handle("agent:ask", async (_e, p: { text: string }) => {
+    signalWorking(true, "Thinking…");
     try {
-      return await ask(cfg, p.text);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { text: msg };
+      return await runLoggedAsk(p.text, "ui");
+    } finally {
+      signalWorking(false);
     }
   });
 
@@ -335,25 +548,27 @@ function registerIpc(): void {
     const priorExpanded = expanded;
     const priorVisible = win.isVisible();
     await paintDelay(60);
-    const path = await captureRegion();
-    if (!path) {
+    const shot = await captureRegion();
+    if (!shot) {
       win.webContents.send("widget:snip-result", snipPayload(null, "cancelled"));
       restoreWindowAfterSnip(priorVisible, priorExpanded);
       return null;
     }
-    setExpanded(true);
-    return path;
+    await setExpanded(true, { animate: false });
+    return { path: shot.path, previewUrl: screenshotPreviewUrl(shot.previewPath) };
   });
   ipcMain.handle("screenshot:preview-url", (_e, path: string) => screenshotPreviewUrl(path));
   ipcMain.handle("agent:ask-screenshot", async (_e, p: { path: string; question: string }) => {
-    if (!p.path || !existsSync(p.path)) {
+    const path = p.path?.trim();
+    const question = p.question?.trim() || "What's on my screen? If there's an error, tell me how to fix it.";
+    if (!path || !existsSync(path)) {
       return { text: "Screenshot file not found. Try snipping again." };
     }
+    signalWorking(true, "Analyzing screenshot…");
     try {
-      return await askAboutScreenshot(cfg, p.path, p.question);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { text: msg };
+      return await runLoggedScreenshotAsk(path, question, "ui");
+    } finally {
+      signalWorking(false);
     }
   });
 
@@ -374,8 +589,8 @@ function registerIpc(): void {
     const { w, h } = clampPanel(p.w, p.h);
     state.panelW = w;
     state.panelH = h;
-    win.setMinimumSize(w, h);
-    win.setMaximumSize(w, h);
+    win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
+    win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
     win.setSize(w, h, false);
     applyPlacement();
     saveState();
@@ -429,8 +644,14 @@ function createWindow(): void {
 
   win.loadFile(join(APP_DIR, "ui", "index.html"));
 
+  win.webContents.on("render-process-gone", (_e, details) => {
+    console.error("[pip] renderer gone:", details.reason, details.exitCode);
+    if (details.reason === "clean-exit" || win.isDestroyed()) return;
+    win.loadFile(join(APP_DIR, "ui", "index.html"));
+  });
+
   win.webContents.once("did-finish-load", () => {
-    setExpanded(false);
+    void setExpanded(false, { animate: false });
     applyPlacement();
   });
 
@@ -479,6 +700,23 @@ app.whenReady().then(async () => {
   console.log(`Clippy knowledge base: ${cfg.knowledgeBase}`);
   console.log(`Clippy agent workspace: ${cfg.agentWorkspace}`);
   console.log(`Clippy tasksFile: ${cfg.tasksFile}`);
+
+  requestLog = new RequestLog(cfg.workspace);
+  monitorPort = cfg.monitor.port;
+  pipChatId = loadPipChatId(cfg.workspace);
+  if (cfg.monitor.enabled) {
+    startMonitorServer({
+      port: monitorPort,
+      workspace: cfg.workspace,
+      monitorDir: join(APP_DIR, "monitor"),
+      log: requestLog,
+    });
+  }
+
+  // Warm cursor-agent session in background so the first real ask is faster.
+  void warmAgentSession(cfg.agent, pipChatId).then((id) => {
+    if (id) rememberChatId(id);
+  });
 
   registerIpc();
   createWindow();

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pip Monitor · Tandem</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
+        <h1>Pip Monitor</h1>
+        <span class="sub">Clippy requests</span>
+      </div>
+      <div class="stats" id="stats"></div>
+    </header>
+
+    <main class="layout">
+      <section class="panel active-panel">
+        <h2>Active</h2>
+        <div id="active-list" class="request-list"></div>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-head">
+          <h2>History</h2>
+          <input id="filter" type="search" placeholder="Filter by question or response…" />
+        </div>
+        <div id="history-list" class="request-list"></div>
+      </section>
+
+      <aside class="panel detail-panel" id="detail" hidden>
+        <button type="button" id="detail-close" class="ghost-btn" aria-label="Close">×</button>
+        <div id="detail-body"></div>
+      </aside>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -33,6 +33,8 @@ async function main() {
     tasksFile: testFile,
     agent: "cursor-agent",
     agentModel: process.env.CURSOR_MODEL || "auto",
+    agentFastModel: process.env.CURSOR_FAST_MODEL || "composer-2.5-fast",
+    agentVisionModel: process.env.CURSOR_VISION_MODEL || process.env.CURSOR_FAST_MODEL || "composer-2.5-fast",
     agentFlags: ["-p", "--trust", "--output-format", "text"],
     panel: { minW: 320, minH: 360, maxW: 560, maxH: 820, defaultW: 400, defaultH: 560 },
     collapsed: { w: 96, h: 110 },
@@ -40,6 +42,7 @@ async function main() {
     hotkey: { snip: "Command+Shift+T", autoAsk: false, question: "What's on my screen?" },
     nudge: { enabled: false, idleSeconds: 120, cooldownSeconds: 600 },
     voice: { enabled: false, autoSend: true, speakReplies: false },
+    monitor: { enabled: false, port: 8791 },
   };
 
   console.log("→ groom (read-only)…");

@@ -3,19 +3,23 @@
   "tasksFile": "tasks.example.md",
   "agent": "cursor-agent",
   "agentModel": "auto",
+  "agentFastModel": "composer-2.5-fast",
+  "agentVisionModel": "composer-2.5-fast",
   "agentFlags": ["-p", "--trust", "--output-format", "text"],
   "panel": {
-    "minW": 300,
-    "minH": 56,
-    "maxW": 520,
-    "maxH": 400,
-    "defaultW": 400,
-    "defaultH": 58,
-    "compactH": 58
+    "minW": 390,
+    "minH": 73,
+    "maxW": 676,
+    "maxH": 520,
+    "defaultW": 520,
+    "defaultH": 75,
+    "compactH": 75,
+    "tallH": 148,
+    "snipH": 240
   },
   "collapsed": {
-    "w": 56,
-    "h": 56
+    "w": 73,
+    "h": 73
   },
   "placement": {
     "corner": "top-right",
@@ -35,5 +39,9 @@
     "enabled": false,
     "autoSend": true,
     "speakReplies": false
+  },
+  "monitor": {
+    "enabled": true,
+    "port": 8791
   }
 }

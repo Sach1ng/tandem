@@ -41,14 +41,25 @@ async function main() {
     console.log(`  saved ${file}\n→ asking the agent to read it…\n`);
   }
 
+  const kb =
+    process.env.TANDEM_KNOWLEDGE_BASE || join(REPO_ROOT, "external", "pm-operating-os");
   const cfg: ClippyConfig = {
     workspace: REPO_ROOT,
+    agentWorkspace: kb,
+    knowledgeBase: kb,
     tasksFile: join(REPO_ROOT, "tasks.example.md"),
     agent: "cursor-agent",
     agentModel: process.env.CURSOR_MODEL || "auto",
+    agentFastModel: process.env.CURSOR_FAST_MODEL || "composer-2.5-fast",
+    agentVisionModel: process.env.CURSOR_VISION_MODEL || process.env.CURSOR_FAST_MODEL || "composer-2.5-fast",
     agentFlags: ["-p", "--trust", "--output-format", "text"],
     panel: { minW: 320, minH: 360, maxW: 560, maxH: 820, defaultW: 400, defaultH: 560 },
     collapsed: { w: 96, h: 110 },
+    placement: { corner: "top-right", margin: 16 },
+    hotkey: { snip: "Command+Shift+T", autoAsk: false, question: "What's on my screen?" },
+    nudge: { enabled: false, idleSeconds: 120, cooldownSeconds: 600 },
+    voice: { enabled: false, autoSend: true, speakReplies: false },
+    monitor: { enabled: false, port: 8791 },
   };
 
   const { text } = await askAboutScreenshot(cfg, file, "List any text, menu items, or icons you can see in this image.");

@@ -20,19 +20,25 @@ let pendingNudge = null;
 let mood = "rest";
 let snipActive = false;
 let pendingSnipPath = null;
+let pendingSnipPreviewUrl = null;
 let panelSizes = {
-  minW: 300,
-  minH: 56,
-  maxW: 520,
-  maxH: 400,
-  defaultW: 400,
-  compactH: 58,
+  minW: 390,
+  minH: 73,
+  maxW: 676,
+  maxH: 520,
+  defaultW: 520,
+  compactH: 75,
+  tallH: 148,
+  snipH: 220,
 };
 let lastPanelW = 0;
 let lastPanelH = 0;
 let layoutRaf = null;
 let layoutPaused = false;
 let askInFlight = false;
+let workingTimer = null;
+let workingStartedAt = 0;
+const PIP_TRANSITION_MS = 280;
 const DRAG_THRESHOLD = 6;
 
 /** Drag with movement threshold so tap/click still works on the same surface. */
@@ -105,25 +111,84 @@ function ping() {
   void w.pingActivity?.();
 }
 
+function setWorking(active, label = "Working…") {
+  if (active) {
+    workingStartedAt = Date.now();
+    document.body.classList.add("pip-working");
+    setMood("thinking");
+    if (els.snipStatusText) els.snipStatusText.textContent = label;
+    if (workingTimer) clearInterval(workingTimer);
+    workingTimer = setInterval(() => {
+      const secs = Math.floor((Date.now() - workingStartedAt) / 1000);
+      if (secs < 5) return;
+      const base = label.replace(/…$/, "");
+      if (els.snipProcessing && !els.snipProcessing.hidden) {
+        els.snipStatusText.textContent = `${base}… ${secs}s`;
+      }
+      const replyEl = els.reply;
+      if (replyEl && !replyEl.hidden && replyEl.classList.contains("thinking")) {
+        replyEl.textContent = `${base}… ${secs}s`;
+      }
+    }, 1000);
+    return;
+  }
+  document.body.classList.remove("pip-working");
+  if (workingTimer) {
+    clearInterval(workingTimer);
+    workingTimer = null;
+  }
+}
+
+/** Height for the expanded window — don't measure inside a clipped absolute layer. */
+function desiredPanelHeight() {
+  const compact = panelSizes.compactH ?? panelSizes.defaultH ?? 75;
+  const tall = panelSizes.tallH ?? compact + 72;
+  const snip = panelSizes.snipH ?? tall + 72;
+  const maxH = panelSizes.maxH ?? 520;
+
+  const hasSnip = !els.snipPanel.hidden;
+  const hasReply = !els.reply.hidden;
+  const hasHint = !els.nudgeHint.hidden;
+  els.cardExtras.hidden = !hasSnip && !hasReply && !hasHint;
+
+  if (!hasSnip && !hasReply && !hasHint) return compact;
+
+  let h = hasSnip ? snip : tall;
+
+  // Snip preview alone fits in snipH; stack reply/hint below it when analyzing or answering.
+  if (hasSnip && hasReply) {
+    const replyNeed = Math.max(44, Math.min(Math.ceil(els.reply.scrollHeight) + 20, 160));
+    h += replyNeed;
+  }
+  if (hasHint) {
+    h = Math.max(h, (hasSnip ? snip : compact) + Math.ceil(els.nudgeHint.scrollHeight) + 24);
+  }
+  if (!hasSnip && hasReply) {
+    const replyNeed = Math.ceil(els.reply.scrollHeight) + 28;
+    h = Math.max(tall, compact + replyNeed);
+  }
+
+  return Math.min(h, maxH);
+}
+
+function forceLayout() {
+  lastPanelW = 0;
+  lastPanelH = 0;
+  syncLayout();
+}
+
 function syncLayout() {
   if (layoutPaused) return;
   if (layoutRaf) cancelAnimationFrame(layoutRaf);
   layoutRaf = requestAnimationFrame(() => {
     layoutRaf = null;
-    if (els.expanded.hidden || !w?.setPanelSize) return;
+    if (!document.body.classList.contains("mode-expanded") || !w?.setPanelSize) return;
 
-    const hasSnip = !els.snipPanel.hidden;
-    const hasText = !els.reply.hidden || !els.nudgeHint.hidden;
-    els.cardExtras.hidden = !hasSnip && !hasText;
-
-    const shell = els.expanded.querySelector(".card-shell");
-    if (!shell) return;
-
-    const measured = Math.ceil(shell.scrollHeight);
-    const minH = panelSizes.minH ?? panelSizes.compactH ?? 56;
-    const maxH = panelSizes.maxH ?? 400;
-    const minW = panelSizes.minW ?? 300;
-    const maxW = panelSizes.maxW ?? 520;
+    const measured = desiredPanelHeight();
+    const minH = panelSizes.minH ?? panelSizes.compactH ?? 75;
+    const maxH = panelSizes.maxH ?? 520;
+    const minW = panelSizes.minW ?? 390;
+    const maxW = panelSizes.maxW ?? 676;
     const h = Math.max(minH, Math.min(measured, maxH));
     const width = Math.max(minW, Math.min(panelSizes.defaultW, maxW));
 
@@ -137,6 +202,9 @@ function syncLayout() {
       .finally(() => {
         requestAnimationFrame(() => {
           layoutPaused = false;
+          // Refine once the window has room to lay out reply text.
+          const refined = desiredPanelHeight();
+          if (Math.abs(refined - lastPanelH) >= 4) syncLayout();
         });
       });
   });
@@ -146,7 +214,8 @@ function showReply(text, thinking = false) {
   els.reply.hidden = false;
   els.reply.classList.toggle("thinking", thinking);
   els.reply.textContent = text;
-  syncLayout();
+  if (thinking) forceLayout();
+  else syncLayout();
 }
 
 function clearReply() {
@@ -166,6 +235,27 @@ function showHint(msg) {
   syncLayout();
 }
 
+function setSnipContext(path, previewUrl) {
+  pendingSnipPath = path || null;
+  pendingSnipPreviewUrl = previewUrl || null;
+  if (els.snipPanel && path) els.snipPanel.dataset.snipPath = path;
+  else if (els.snipPanel) delete els.snipPanel.dataset.snipPath;
+}
+
+function getSnipPath() {
+  return pendingSnipPath || els.snipPanel?.dataset?.snipPath || null;
+}
+
+function hasSnipPreview() {
+  return !els.snipPanel.hidden && Boolean(els.snipPreview.getAttribute("src"));
+}
+
+function clearSnipContext() {
+  pendingSnipPath = null;
+  pendingSnipPreviewUrl = null;
+  if (els.snipPanel) delete els.snipPanel.dataset.snipPath;
+}
+
 function beginSnipFlow() {
   snipActive = true;
   document.body.classList.add("snip-active");
@@ -177,8 +267,8 @@ function beginSnipFlow() {
 
 function endSnipFlow() {
   snipActive = false;
-  pendingSnipPath = null;
-  document.body.classList.remove("snip-active", "snip-waiting");
+  clearSnipContext();
+  document.body.classList.remove("snip-active", "snip-waiting", "snip-analyzing");
   els.snipPanel.hidden = true;
   els.snipPreview.removeAttribute("src");
   els.snipProcessing.hidden = true;
@@ -202,26 +292,28 @@ function setSnipPreview(path, previewUrl) {
 }
 
 function showSnipAnalyzing(path, previewUrl, message = "Looking at your screenshot…") {
-  pendingSnipPath = path;
-  snipActive = true;
-  document.body.classList.remove("snip-waiting");
-  document.body.classList.add("snip-active");
+  setSnipContext(path, previewUrl);
+  snipActive = false;
+  document.body.classList.remove("snip-active");
+  document.body.classList.add("snip-waiting", "snip-analyzing");
   els.snipPanel.hidden = false;
   setSnipPreview(path, previewUrl);
   setSnipProcessing(true, message);
-  clearReply();
-  setMood("thinking");
-  syncLayout();
+  els.askInput.placeholder = message;
+  showReply("Thinking…", true);
+  setWorking(true, message);
+  forceLayout();
 }
 
-function resetAskUi() {
+function finishJobUi() {
   askInFlight = false;
   els.askInput.disabled = false;
-  document.body.classList.remove("snip-active");
+  els.askInput.placeholder = "Ask Pip…";
+  document.body.classList.remove("snip-analyzing");
   setSnipProcessing(false);
-  setMood("awake");
+  setWorking(false);
   autoResizeAskInput();
-  syncLayout();
+  forceLayout();
 }
 
 function setSnipProcessing(active, message = "Analyzing…") {
@@ -231,6 +323,25 @@ function setSnipProcessing(active, message = "Analyzing…") {
 
 function handleSnipState(payload) {
   const { status, path, previewUrl, text } = payload;
+
+  // Always accept a fresh capture — never drop path while preview is showing.
+  if (status === "captured") {
+    setSnipContext(path, previewUrl);
+    snipActive = false;
+    document.body.classList.remove("snip-active", "snip-analyzing");
+    document.body.classList.add("snip-waiting");
+    els.snipPanel.hidden = false;
+    setSnipPreview(path, previewUrl);
+    setSnipProcessing(false);
+    els.askInput.placeholder = "Ask about this screenshot…";
+    showHint("Screenshot ready — press Enter to ask.");
+    setMood("awake");
+    forceLayout();
+    els.askInput.focus();
+    return;
+  }
+
+  if (askInFlight && status === "loading") return;
 
   if (status === "selecting") {
     beginSnipFlow();
@@ -246,51 +357,46 @@ function handleSnipState(payload) {
     return;
   }
 
-  if (status === "captured") {
-    pendingSnipPath = path;
+  if (status === "loading") {
+    setSnipContext(path, previewUrl);
     snipActive = false;
     document.body.classList.remove("snip-active");
-    document.body.classList.add("snip-waiting");
+    document.body.classList.add("snip-waiting", "snip-analyzing");
     els.snipPanel.hidden = false;
     setSnipPreview(path, previewUrl);
-    setSnipProcessing(false);
-    showHint("Screenshot ready — ask a question about it.");
-    setMood("awake");
-    syncLayout();
-    return;
-  }
-
-  beginSnipFlow();
-
-  if (status === "loading") {
-    setSnipPreview(path, previewUrl);
     setSnipProcessing(true, "Looking at your screen…");
-    clearReply();
-    syncLayout();
+    setWorking(true, "Looking at your screen…");
+    els.askInput.placeholder = "Looking at your screen…";
+    showReply("Thinking…", true);
+    forceLayout();
     return;
   }
 
   if (status === "done") {
     setSnipProcessing(false);
+    setWorking(false);
+    clearSnipContext();
     els.snipPanel.hidden = true;
     snipActive = false;
-    pendingSnipPath = null;
-    document.body.classList.remove("snip-active", "snip-waiting");
+    document.body.classList.remove("snip-active", "snip-waiting", "snip-analyzing");
+    els.snipPreview.removeAttribute("src");
     showReply(text || "(no response)");
     setMood("awake");
-    syncLayout();
+    forceLayout();
     return;
   }
 
   if (status === "error") {
     setSnipProcessing(false);
+    setWorking(false);
+    clearSnipContext();
     els.snipPanel.hidden = true;
     snipActive = false;
-    pendingSnipPath = null;
-    document.body.classList.remove("snip-active", "snip-waiting");
+    document.body.classList.remove("snip-active", "snip-waiting", "snip-analyzing");
+    els.snipPreview.removeAttribute("src");
     showReply(text || "Snip failed");
     setMood("awake");
-    syncLayout();
+    forceLayout();
   }
 }
 
@@ -320,6 +426,11 @@ els.collapsed.addEventListener("contextmenu", (e) => {
   ping();
   w?.showContextMenu();
 });
+els.expanded?.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  ping();
+  w?.showContextMenu();
+});
 
 document.getElementById("btn-snip")?.addEventListener("click", () => {
   if (!w) return;
@@ -328,7 +439,7 @@ document.getElementById("btn-snip")?.addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !els.collapsed.hidden) {
+  if (e.key === "Escape" && document.body.classList.contains("mode-expanded")) {
     ping();
     void w?.setExpanded(false);
   }
@@ -364,25 +475,41 @@ els.askForm.addEventListener("submit", (e) => {
 
 async function runAsk() {
   if (askInFlight || !w) return;
+
   const q = els.askInput.value.trim();
-  const snipPath = pendingSnipPath;
-  if (!q && !snipPath) return;
+  const snipPath = getSnipPath();
+  const snipVisible = hasSnipPreview();
+
+  if (!q && !snipPath && !snipVisible) return;
+  if (snipVisible && !snipPath) {
+    showReply("Screenshot path lost — please snip again.");
+    return;
+  }
+
+  const useScreenshot = Boolean(snipPath);
+  const question = q || "What's on my screen? If there's an error, tell me how to fix it.";
+  const previewUrl =
+    pendingSnipPreviewUrl ||
+    (snipPath ? w.screenshotPreviewUrl?.(snipPath) : null);
 
   askInFlight = true;
   els.askInput.disabled = true;
-  setMood("thinking");
   showHint(null);
 
-  const previewUrl = snipPath ? w.screenshotPreviewUrl?.(snipPath) : null;
-  if (snipPath) {
-    showSnipAnalyzing(snipPath, previewUrl);
+  if (useScreenshot) {
+    showSnipAnalyzing(snipPath, previewUrl, "Looking at your screenshot…");
   } else {
+    setMood("thinking");
+    setWorking(true, "Thinking…");
     showReply("Thinking…", true);
+    forceLayout();
   }
 
   try {
-    const { text } = snipPath ? await w.askScreenshot(snipPath, q) : await w.ask(q);
-    if (snipPath) {
+    const { text } = useScreenshot
+      ? await w.askScreenshot(snipPath, question)
+      : await w.ask(question);
+    if (useScreenshot) {
       handleSnipState({
         status: "done",
         path: snipPath,
@@ -390,54 +517,68 @@ async function runAsk() {
         text,
       });
     } else {
+      setWorking(false);
       showReply(text || "(no response)");
+      setMood("awake");
     }
     els.askInput.value = "";
   } catch (err) {
     const msg = String(err?.message ?? err);
-    if (snipPath) {
+    if (useScreenshot) {
       handleSnipState({ status: "error", path: snipPath, previewUrl, text: msg });
     } else {
+      setWorking(false);
       showReply(msg);
+      setMood("awake");
     }
   } finally {
-    resetAskUi();
+    finishJobUi();
     els.askInput.focus();
   }
 }
 
 async function runSnip() {
   if (askInFlight || !w) return;
-  askInFlight = true;
   try {
     await w.setExpanded(true);
     handleSnipState({ status: "selecting" });
-    const path = await w.snip();
+    const result = await w.snip();
+    const path = typeof result === "string" ? result : result?.path;
+    const previewUrl =
+      (typeof result === "object" && result?.previewUrl) ||
+      (path ? w.screenshotPreviewUrl?.(path) : null);
     if (!path) {
       handleSnipState({ status: "cancelled" });
       return;
     }
-    const previewUrl = w.screenshotPreviewUrl?.(path);
-    showSnipAnalyzing(path, previewUrl);
-    const { text } = await w.askScreenshot(path, "");
-    handleSnipState({ status: "done", path, previewUrl, text });
+    handleSnipState({ status: "captured", path, previewUrl });
+    els.askInput.focus();
   } catch (err) {
     handleSnipState({
       status: "error",
       text: String(err?.message ?? err),
     });
-  } finally {
-    resetAskUi();
   }
 }
 
 if (w) {
   w.onExpanded((open) => {
+    document.body.classList.add("pip-transitioning");
     document.body.classList.toggle("mode-expanded", open);
     document.body.classList.toggle("mode-collapsed", !open);
-    els.collapsed.hidden = open;
-    els.expanded.hidden = !open;
+    els.collapsed.setAttribute("aria-hidden", open ? "true" : "false");
+    els.expanded.setAttribute("aria-hidden", open ? "false" : "true");
+    window.setTimeout(() => {
+      document.body.classList.remove("pip-transitioning");
+    }, PIP_TRANSITION_MS);
     if (open) {
+      const path = getSnipPath();
+      if (path) {
+        els.snipPanel.hidden = false;
+        document.body.classList.add("snip-waiting");
+        setSnipPreview(path, pendingSnipPreviewUrl);
+        forceLayout();
+      }
       syncLayout();
       if (snipActive) return;
       if (pendingNudge) showHint(pendingNudge);
@@ -445,7 +586,15 @@ if (w) {
       autoResizeAskInput();
       els.askInput.focus();
     } else {
-      endSnipFlow();
+      const path = getSnipPath();
+      if (path) {
+        setSnipContext(path, pendingSnipPreviewUrl);
+        els.snipPanel.hidden = true;
+        snipActive = false;
+        document.body.classList.remove("snip-active", "snip-waiting", "snip-analyzing");
+      } else {
+        endSnipFlow();
+      }
       clearReply();
       showHint(null);
       setMood("rest");
@@ -461,17 +610,21 @@ if (w) {
   });
   w.onNudgeClear?.(() => {
     pendingNudge = null;
-    if (!snipActive) {
+    if (!snipActive && !askInFlight) {
       showHint(null);
       setMood("rest");
     }
+  });
+  w.onWorking?.(({ active, label }) => {
+    if (active) setWorking(true, label || "Working…");
+    else if (!askInFlight) setWorking(false);
   });
 
   const shell = els.expanded?.querySelector(".card-shell");
   if (shell && "ResizeObserver" in window) {
     let resizeTimer = null;
     new ResizeObserver(() => {
-      if (layoutPaused || askInFlight) return;
+      if (layoutPaused) return;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => syncLayout(), 80);
     }).observe(shell);

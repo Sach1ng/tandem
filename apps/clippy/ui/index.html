@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="mode-collapsed mood-rest">
-    <div id="collapsed" class="orb-shell" aria-label="Pip">
+    <div id="pip-stage" class="pip-stage">
+    <div id="collapsed" class="orb-shell pip-surface pip-surface-collapsed" aria-label="Pip">
       <div class="buddy">
         <span class="antenna left" aria-hidden="true"></span>
         <span class="antenna right" aria-hidden="true"></span>
@@ -22,7 +23,7 @@
     </div>
 
     <!-- Expanded: bar top row, reply drops below (top-right anchor) -->
-    <div id="expanded" class="card glass" hidden>
+    <div id="expanded" class="card glass pip-surface pip-surface-expanded" aria-hidden="true">
       <div class="card-shell">
         <div class="card-row">
           <div class="card-main">
@@ -60,6 +61,7 @@
           <div id="reply" class="reply glass-inset" hidden></div>
         </div>
       </div>
+    </div>
     </div>
 
     <script src="app.js"></script>

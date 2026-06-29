@@ -14,12 +14,21 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const statusEl = $("status");
 const contextEl = $("context");
+const hintEl = $("hint");
 const suggestionsEl = $("suggestions");
 const qEl = $<HTMLTextAreaElement>("q");
 const askBtn = $<HTMLButtonElement>("ask");
+const assignBtn = $<HTMLButtonElement>("assign");
+const assignedEl = $("assigned");
 const answerEl = $("answer");
 
 let ctx: PageContext | null = null;
+let inFlight = false;
+
+/** Canvas-rendered editors expose little real DOM text — nudge the user to select. */
+function isCanvasDoc(host: string): boolean {
+  return /docs\.google|slides\.google/.test(host);
+}
 
 /** Page-aware prompt suggestions. */
 function suggestionsFor(c: PageContext): string[] {
@@ -34,8 +43,11 @@ function suggestionsFor(c: PageContext): string[] {
 
 async function loadContext(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const { pendingSelection } = await chrome.storage.session.get("pendingSelection");
-  await chrome.storage.session.remove("pendingSelection");
+  const { pendingSelection, pendingAction } = await chrome.storage.session.get([
+    "pendingSelection",
+    "pendingAction",
+  ]);
+  await chrome.storage.session.remove(["pendingSelection", "pendingAction"]);
 
   try {
     if (!tab?.id) throw new Error("no tab");
@@ -49,6 +61,15 @@ async function loadContext(): Promise<void> {
     contextEl.innerHTML = `<div class="ctx-title">${escapeHtml(ctx.title)}</div><div class="ctx-host">${escapeHtml(ctx.host)}</div>` +
       (ctx.selection ? `<div class="ctx-sel">“${escapeHtml(ctx.selection.slice(0, 160))}${ctx.selection.length > 160 ? "…" : ""}”</div>` : "");
     renderSuggestions(suggestionsFor(ctx));
+
+    if (isCanvasDoc(ctx.host) && !ctx.selection) {
+      hintEl.hidden = false;
+      hintEl.textContent =
+        "Tip: select the text you care about first — Google Docs/Slides expose limited page text otherwise.";
+    }
+
+    // Came in via the "Assign to Pip" context menu → run it straight away.
+    if (pendingAction === "assign") void assign();
   }
 }
 
@@ -78,10 +99,20 @@ async function checkBridge(): Promise<void> {
   }
 }
 
+function setBusy(busy: boolean): void {
+  inFlight = busy;
+  askBtn.disabled = busy;
+  assignBtn.disabled = busy;
+}
+
+const BRIDGE_DOWN = "Couldn't reach the bridge. Start it with: npm run bridge -w @tandem/chrome-extension";
+
 async function ask(): Promise<void> {
+  if (inFlight) return;
   const question = qEl.value.trim();
   if (!ctx && !question) return;
-  askBtn.disabled = true;
+  setBusy(true);
+  assignedEl.hidden = true;
   answerEl.textContent = "Thinking…";
   try {
     const res = await fetch(`${BRIDGE}/ask`, {
@@ -91,10 +122,41 @@ async function ask(): Promise<void> {
     });
     const data = await res.json();
     answerEl.textContent = data.error ? `Error: ${data.error}` : data.text || "(no output)";
-  } catch (err) {
-    answerEl.textContent = `Couldn't reach the bridge. Start it with: npm run bridge -w @tandem/chrome-extension`;
+  } catch {
+    answerEl.textContent = BRIDGE_DOWN;
   } finally {
-    askBtn.disabled = false;
+    setBusy(false);
+  }
+}
+
+async function assign(): Promise<void> {
+  if (inFlight) return;
+  if (!ctx) {
+    answerEl.textContent = "Can't read this page, so there's nothing to assign.";
+    return;
+  }
+  const instruction = qEl.value.trim();
+  setBusy(true);
+  assignedEl.hidden = true;
+  answerEl.textContent = "Assigning to Pip… capturing the task and running it now.";
+  try {
+    const res = await fetch(`${BRIDGE}/assign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...ctx, instruction }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      answerEl.textContent = `Error: ${data.error}`;
+    } else {
+      assignedEl.hidden = false;
+      assignedEl.textContent = `Added to Pip's board · ${data.taskId ?? "task"} · check the desktop orb`;
+      answerEl.textContent = data.text || "(no output)";
+    }
+  } catch {
+    answerEl.textContent = BRIDGE_DOWN;
+  } finally {
+    setBusy(false);
   }
 }
 
@@ -103,6 +165,7 @@ function escapeHtml(s: string): string {
 }
 
 askBtn.onclick = () => void ask();
+assignBtn.onclick = () => void assign();
 qEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void ask();
 });

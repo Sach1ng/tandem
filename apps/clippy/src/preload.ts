@@ -47,6 +47,17 @@ const taskWidget = {
   onNudgeClear: (cb: () => void) => ipcRenderer.on("widget:nudge-clear", () => cb()),
   onWorking: (cb: (p: { active: boolean; label?: string }) => void) =>
     ipcRenderer.on("widget:working", (_e, p) => cb(p)),
+  onLensTask: (
+    cb: (p: {
+      id: string;
+      title: string;
+      source: string | null;
+      page: string | null;
+      outcome: string;
+      project: string | null;
+      priority: string | null;
+    }) => void,
+  ) => ipcRenderer.on("widget:lens-task", (_e, p) => cb(p)),
 };
 
 contextBridge.exposeInMainWorld("taskWidget", taskWidget);

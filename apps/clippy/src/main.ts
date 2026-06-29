@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import chokidar from "chokidar";
 import { loadConfig, type ClippyConfig } from "./config.ts";
-import { parseTasksMarkdown, type ParsedTasks, type SectionKey } from "./parser.ts";
+import { parseTasksMarkdown, type ParsedTasks, type SectionKey, type Task } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
 import { ask, askAboutScreenshot, capture, groom } from "./agent.ts";
 import { ensureKnowledgeBase } from "./knowledge-base.ts";
@@ -88,6 +88,55 @@ function readTasks(): ParsedTasks {
 
 function broadcast(): void {
   if (!win?.isDestroyed()) win.webContents.send("tasks:updated", readTasks());
+}
+
+// Lens-assigned tasks we've already surfaced, so a re-parse doesn't re-pop the orb.
+const seenLensTasks = new Set<string>();
+
+/** Stable-ish key for a Lens task across line shifts (title + source + outcome head). */
+function lensTaskKey(t: Task): string {
+  return `${t.title}|${t.meta.source ?? ""}|${(t.meta.outcome ?? "").slice(0, 40)}`;
+}
+
+/**
+ * Find tasks assigned from Lens that have completed (have an Outcome) and surface any new ones in
+ * the orb. On the initial pass we only record existing keys so old tasks don't pop on launch.
+ */
+async function detectLensTasks(initial = false): Promise<void> {
+  if (!win || win.isDestroyed()) return;
+  const parsed = readTasks();
+  const all = [
+    ...parsed.bySection.active,
+    ...parsed.bySection.scheduled,
+    ...parsed.bySection.waiting,
+    ...parsed.bySection.needs_triage,
+  ];
+
+  for (const t of all) {
+    if (t.done) continue;
+    if (!t.tags.includes("from/lens")) continue;
+    if (!t.meta.outcome) continue; // wait until the agent's outcome is written
+    const key = lensTaskKey(t);
+    if (seenLensTasks.has(key)) continue;
+    seenLensTasks.add(key);
+    if (initial) continue;
+
+    const project = t.tags.find((tag) => tag.startsWith("project/"))?.slice("project/".length) ?? null;
+    const payload = {
+      id: t.id,
+      title: t.title,
+      source: t.meta.source ?? null,
+      page: t.meta.page ?? null,
+      outcome: t.meta.outcome ?? "",
+      project,
+      priority: t.priority,
+    };
+
+    pingActivity();
+    win.show();
+    await setExpanded(true);
+    if (!win.isDestroyed()) win.webContents.send("widget:lens-task", payload);
+  }
 }
 
 function moveWindow(x: number, y: number, persist = false): void {
@@ -663,8 +712,14 @@ function createWindow(): void {
     ignoreInitial: true,
     awaitWriteFinish: { stabilityThreshold: 250, pollInterval: 50 },
   });
-  watcher.on("all", () => broadcast());
+  watcher.on("all", () => {
+    broadcast();
+    void detectLensTasks();
+  });
   win.on("closed", () => watcher.close());
+
+  // Snapshot existing Lens tasks so only ones assigned from now on pop the orb.
+  void detectLensTasks(true);
 }
 
 app.whenReady().then(async () => {

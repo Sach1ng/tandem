@@ -580,6 +580,94 @@ body.mode-expanded .card {
   min-height: 40px;
 }
 
+/* ── Lens-assigned task card ── */
+.lens-task {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.lens-task-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.lens-badge {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pip-deep);
+  background: linear-gradient(160deg, var(--pip-warm-soft), var(--pip-warm));
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+.lens-task-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lens-task-source {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lens-task-source:hover { text-decoration: underline; }
+
+.lens-task-outcome {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fg);
+  white-space: pre-wrap;
+  max-height: 180px;
+  overflow-y: auto;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.lens-task-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.lens-act {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--fg);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 8px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, border-color 0.15s;
+}
+.lens-act:hover {
+  background: rgba(196, 160, 106, 0.16);
+  border-color: rgba(196, 160, 106, 0.4);
+}
+.lens-act-ghost {
+  flex: 0 0 auto;
+  color: var(--muted);
+  background: transparent;
+}
+
 /* ── Snip preview (compact, in horizontal bar) ── */
 .snip-panel {
   flex-shrink: 0;

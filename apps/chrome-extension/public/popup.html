@@ -15,11 +15,16 @@
     </header>
 
     <div id="context" class="context">Reading page…</div>
+    <div id="hint" class="hint" hidden></div>
     <div id="suggestions" class="suggestions"></div>
 
-    <textarea id="q" rows="2" placeholder="Ask about this page… (⌘/Ctrl + ↵)"></textarea>
-    <button id="ask" class="ask">Ask Lens</button>
+    <textarea id="q" rows="2" placeholder="Ask, or tell Pip what to do… (⌘/Ctrl + ↵)"></textarea>
+    <div class="actions">
+      <button id="ask" class="btn ask">Ask Lens</button>
+      <button id="assign" class="btn assign" title="Capture this as a task and run it on Pip">Assign to Pip</button>
+    </div>
 
+    <div id="assigned" class="assigned" hidden></div>
     <div id="answer" class="answer"></div>
 
     <script src="popup.js"></script>

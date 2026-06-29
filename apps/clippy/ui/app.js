@@ -14,6 +14,13 @@ const els = {
   snipPreview: document.getElementById("snip-preview"),
   snipProcessing: document.getElementById("snip-processing"),
   snipStatusText: document.getElementById("snip-status-text"),
+  lensTask: document.getElementById("lens-task"),
+  lensTaskTitle: document.getElementById("lens-task-title"),
+  lensTaskSource: document.getElementById("lens-task-source"),
+  lensTaskOutcome: document.getElementById("lens-task-outcome"),
+  lensOpen: document.getElementById("lens-open"),
+  lensDone: document.getElementById("lens-done"),
+  lensDismiss: document.getElementById("lens-dismiss"),
 };
 
 let pendingNudge = null;
@@ -149,9 +156,10 @@ function desiredPanelHeight() {
   const hasSnip = !els.snipPanel.hidden;
   const hasReply = !els.reply.hidden;
   const hasHint = !els.nudgeHint.hidden;
-  els.cardExtras.hidden = !hasSnip && !hasReply && !hasHint;
+  const hasLens = !els.lensTask.hidden;
+  els.cardExtras.hidden = !hasSnip && !hasReply && !hasHint && !hasLens;
 
-  if (!hasSnip && !hasReply && !hasHint) return compact;
+  if (!hasSnip && !hasReply && !hasHint && !hasLens) return compact;
 
   let h = hasSnip ? snip : tall;
 
@@ -166,6 +174,9 @@ function desiredPanelHeight() {
   if (!hasSnip && hasReply) {
     const replyNeed = Math.ceil(els.reply.scrollHeight) + 28;
     h = Math.max(tall, compact + replyNeed);
+  }
+  if (hasLens) {
+    h = Math.max(h, compact + Math.ceil(els.lensTask.scrollHeight) + 24);
   }
 
   return Math.min(h, maxH);
@@ -221,6 +232,35 @@ function showReply(text, thinking = false) {
 function clearReply() {
   els.reply.hidden = true;
   els.reply.textContent = "";
+  syncLayout();
+}
+
+let lensTaskId = null;
+
+function showLensTask(payload) {
+  if (!payload) return;
+  lensTaskId = payload.id ?? null;
+  els.lensTaskTitle.textContent = payload.title || "New task from Lens";
+  if (payload.source) {
+    els.lensTaskSource.hidden = false;
+    els.lensTaskSource.textContent = payload.page || payload.source;
+    els.lensTaskSource.href = payload.source;
+  } else {
+    els.lensTaskSource.hidden = true;
+    els.lensTaskSource.removeAttribute("href");
+  }
+  els.lensTaskOutcome.textContent = payload.outcome || "(no output)";
+  els.lensTask.hidden = false;
+  clearReply();
+  showHint(null);
+  setMood("alert");
+  syncLayout();
+}
+
+function hideLensTask() {
+  lensTaskId = null;
+  els.lensTask.hidden = true;
+  els.lensTaskOutcome.textContent = "";
   syncLayout();
 }
 
@@ -438,6 +478,22 @@ document.getElementById("btn-snip")?.addEventListener("click", () => {
   void runSnip();
 });
 
+els.lensOpen?.addEventListener("click", () => {
+  ping();
+  void w?.openTasksFile?.();
+});
+els.lensDone?.addEventListener("click", () => {
+  ping();
+  if (lensTaskId) void w?.toggleDone?.(lensTaskId);
+  hideLensTask();
+  setMood("awake");
+});
+els.lensDismiss?.addEventListener("click", () => {
+  ping();
+  hideLensTask();
+  setMood("awake");
+});
+
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && document.body.classList.contains("mode-expanded")) {
     ping();
@@ -596,11 +652,13 @@ if (w) {
         endSnipFlow();
       }
       clearReply();
+      hideLensTask();
       showHint(null);
       setMood("rest");
     }
   });
   w.onSnipResult(handleSnipState);
+  w.onLensTask?.(showLensTask);
   w.onSnipReady?.(({ path, previewUrl }) => {
     handleSnipState({ status: "captured", path, previewUrl });
   });

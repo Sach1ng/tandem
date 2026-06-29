@@ -60,19 +60,39 @@ textarea {
   outline: none;
 }
 textarea:focus { border-color: var(--accent); }
-.ask {
-  width: 100%;
-  margin-top: 8px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
+
+.hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.actions { display: flex; gap: 8px; margin-top: 8px; }
+.btn {
+  flex: 1;
   border-radius: 9px;
   padding: 8px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
-.ask:disabled { opacity: 0.6; cursor: default; }
+.btn:disabled { opacity: 0.6; cursor: default; }
+.ask { background: var(--accent); color: #fff; border: none; }
+.assign {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.assign:hover:not(:disabled) { background: rgba(196, 160, 106, 0.12); }
+
+.assigned {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #4ad295;
+  font-weight: 600;
+}
+.assigned:empty { display: none; }
 
 .answer {
   margin-top: 10px;

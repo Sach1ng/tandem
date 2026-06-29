@@ -111,7 +111,7 @@ const server = createServer(async (req, res) => {
         const body = JSON.parse(raw || "{}") as AskBody;
         const result = await runAgent(
           { cliBin: CURSOR_BIN, model: MODEL, workspace: WORKDIR, timeoutMs: 300_000 },
-          { prompt: buildPrompt(body), outputFormat: "json", mode: "ask" }, // read-only in the browser
+          { prompt: buildPrompt(body), outputFormat: "json" },
         );
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ text: result.text }));
@@ -144,10 +144,10 @@ const server = createServer(async (req, res) => {
           via: "Lens",
         });
 
-        // 2. Run the agent now (read-only) with the page context.
+        // 2. Run the agent now with the page context (full tool access).
         const result = await runAgent(
           { cliBin: CURSOR_BIN, model: MODEL, workspace: WORKDIR, timeoutMs: 300_000 },
-          { prompt: buildAssignPrompt(body), outputFormat: "json", mode: "ask" },
+          { prompt: buildAssignPrompt(body), outputFormat: "json" },
         );
 
         // 3. Persist the outcome back onto the same task (Clippy's watcher picks it up).

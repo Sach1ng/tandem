@@ -61,12 +61,11 @@ export interface AgentReply {
   durationMs: number;
 }
 
-/** Read-only review of the board. Returns the raw model output (expected to be JSON). */
+/** Review the board. Returns the raw model output (expected to be JSON). */
 export async function groom(cfg: ClippyConfig): Promise<{ raw: string }> {
   const result = await runAgent(engineCfg(cfg), {
     prompt: groomPrompt(taskFileRef(cfg)),
     outputFormat: "json",
-    mode: "plan",
   });
   return { raw: stripFences(result.text) };
 }
@@ -80,7 +79,7 @@ export async function capture(cfg: ClippyConfig, text: string): Promise<void> {
   });
 }
 
-/** Visual help: analyze a captured screenshot. Read-only (`ask` mode). */
+/** Visual help: analyze a captured screenshot. */
 export async function askAboutScreenshot(
   cfg: ClippyConfig,
   imagePath: string,
@@ -91,13 +90,12 @@ export async function askAboutScreenshot(
   const result = await runAgent(engineCfg(cfg, model), {
     prompt: screenshotPrompt(imagePath, question, cfg.knowledgeBase),
     outputFormat: "json",
-    mode: "ask",
     resumeChatId: opts.resumeChatId,
   });
   return { text: result.text, chatId: result.chatId, durationMs: result.durationMs };
 }
 
-/** General ask — read-only desktop assistant (no screenshot). */
+/** General ask — desktop assistant (no screenshot). */
 export async function ask(
   cfg: ClippyConfig,
   question: string,
@@ -111,7 +109,6 @@ export async function ask(
   const result = await runAgent(engineCfg(cfg, model), {
     prompt: askPrompt(cfg, q),
     outputFormat: "json",
-    mode: "ask",
     resumeChatId: opts.resumeChatId,
   });
   return { text: result.text, chatId: result.chatId, durationMs: result.durationMs };

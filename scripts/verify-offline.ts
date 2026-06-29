@@ -31,15 +31,15 @@ check("Slack: json output + --force (does work) + --resume capable", slackArgs.i
 const slackResume = buildArgs({ workspace: ws }, { prompt: "p", resumeChatId: "chat_42" });
 check("Slack: passes --resume <chatId>", slackResume.includes("--resume") && slackResume.includes("chat_42"));
 
-const groomArgs = buildArgs({ workspace: ws }, { prompt: "groom", outputFormat: "text", mode: "plan" });
-check("Clippy groom: read-only --mode plan, NO --force", groomArgs.includes("--mode") && groomArgs.includes("plan") && !groomArgs.includes("--force"));
+const groomArgs = buildArgs({ workspace: ws }, { prompt: "groom", outputFormat: "text" });
+check("Clippy groom: --force (full tool access)", groomArgs.includes("--force") && !groomArgs.includes("--mode"));
 const captureArgs = buildArgs({ workspace: ws }, { prompt: "capture", outputFormat: "text", force: true });
-check("Clippy capture: --force (writes) + text output", captureArgs.includes("--force") && captureArgs.includes("text"));
-const screenArgs = buildArgs({ workspace: ws }, { prompt: "screenshot", outputFormat: "text", mode: "ask" });
-check("Clippy screenshot: read-only --mode ask", screenArgs.includes("ask") && !screenArgs.includes("--force"));
+check("Clippy capture: --force + text output", captureArgs.includes("--force") && captureArgs.includes("text"));
+const screenArgs = buildArgs({ workspace: ws }, { prompt: "screenshot", outputFormat: "text" });
+check("Clippy screenshot: --force (full tool access)", screenArgs.includes("--force") && !screenArgs.includes("--mode"));
 
-const chromeArgs = buildArgs({ workspace: ws }, { prompt: "page", outputFormat: "json", mode: "ask" });
-check("Chrome: read-only --mode ask (browser is safe)", chromeArgs.includes("ask") && !chromeArgs.includes("--force"));
+const chromeArgs = buildArgs({ workspace: ws }, { prompt: "page", outputFormat: "json" });
+check("Chrome Lens: --force (full tool access)", chromeArgs.includes("--force") && !chromeArgs.includes("--mode"));
 
 console.log("\n[2] Slack mrkdwn conversion\n");
 const md = "# Heading\n**bold** and [link](https://x.com)\n* item";

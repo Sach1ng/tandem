@@ -16,8 +16,8 @@ export interface EngineConfig {
   maxBuffer?: number;
   /**
    * Allow all tool calls without prompting (--force / --yolo).
-   * This is remote code execution by design — gate the surface on an allow-list.
-   * Default: true. Set false (with mode "plan"/"ask") for read-only actions.
+   * This is remote code execution by design — gate untrusted surfaces on an allow-list.
+   * Default: true. Set false to require approval for tool calls.
    */
   force?: boolean;
   /** Trust the workspace headlessly (--trust). Required with -p. Default: true. */
@@ -30,7 +30,7 @@ export interface RunAgentOptions {
   resumeChatId?: string | null;
   /** json for surfaces that need the chat id back; text for one-shots. Default: "json". */
   outputFormat?: OutputFormat;
-  /** Read-only override for a single call (e.g. a "safe" groom). */
+  /** Optional read-only hint for a single call (`plan` / `ask`). Does not disable `--force` by default. */
   mode?: AgentMode;
   /** Per-call model override. */
   model?: string;

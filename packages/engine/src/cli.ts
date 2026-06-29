@@ -42,10 +42,10 @@ export function buildArgs(cfg: EngineConfig, opts: RunAgentOptions): string[] {
     "--model",
     opts.model ?? cfg.model ?? DEFAULTS.model,
   ];
-  // Read-only modes are inherently safe; don't also pass --force there.
   if (opts.mode) {
     args.push("--mode", opts.mode);
-  } else if (force) {
+  }
+  if (force) {
     args.push("--force");
   }
   if (trust) args.push("--trust");

@@ -1,21 +1,37 @@
 {
   "name": "@tandem/clippy",
   "version": "0.1.0",
-  "private": true,
   "description": "Tandem Clippy — a frameless always-on-top task widget backed by tasks.md, with AI groom/capture via the Cursor CLI.",
   "main": "dist/main.cjs",
+  "bin": {
+    "tandem-clippy": "bin/clippy.mjs"
+  },
+  "files": [
+    "dist",
+    "ui",
+    "bin",
+    "config.default.json"
+  ],
   "scripts": {
     "build": "node build.mjs",
     "start": "npm run build && electron .",
+    "prepublishOnly": "npm run build",
     "package": "npm run build && electron-packager . Tandem --platform=darwin --arch=arm64 --out=release --overwrite"
   },
   "dependencies": {
-    "@tandem/core": "*",
-    "@tandem/engine": "*",
-    "chokidar": "^4.0.0"
+    "@tandem/core": "0.1.0",
+    "@tandem/engine": "0.1.0",
+    "chokidar": "^4.0.0",
+    "electron": "^35.0.0"
   },
   "devDependencies": {
-    "electron": "^35.0.0",
     "electron-packager": "^17.1.2"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
   }
 }

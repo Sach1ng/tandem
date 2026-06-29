@@ -1,11 +1,24 @@
 {
   "name": "@tandem/core",
   "version": "0.1.0",
-  "private": true,
+  "description": "Shared Tandem utilities: Slack mrkdwn, atomic JSON state, workspace charter, workspace resolution.",
   "type": "module",
-  "description": "Shared Tandem utilities: Slack mrkdwn, atomic JSON state, workspace charter.",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
   }
 }

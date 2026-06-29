@@ -1,0 +1,23 @@
+{
+  "clientId": "",
+  "redirectPort": 8767,
+  "botScopes": [
+    "channels:history",
+    "channels:join",
+    "channels:read",
+    "chat:write",
+    "chat:write.public",
+    "groups:history",
+    "groups:read",
+    "im:history",
+    "im:read",
+    "im:write",
+    "mpim:history",
+    "mpim:read",
+    "mpim:write",
+    "users:read",
+    "team:read",
+    "links:read"
+  ],
+  "userScopes": ["search:read", "search:read.public"]
+}

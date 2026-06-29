@@ -13,9 +13,20 @@ not a task board.
 | **Browser** | **Lens** | Chrome extension for page-aware Q&A |
 | **Brain** | PM OS | Skills, knowledge, and memory on disk |
 
-## Run (macOS)
+## Install (no GitHub required)
+
+```bash
+npm install -g @tandem/cli @tandem/clippy
+tandem init
+tandem clippy
+```
+
+## Run from source (macOS)
+
 ```bash
 npm start          # from this directory, or: npm run clippy (from repo root)
+# or after building packages:
+tandem clippy
 ```
 
 - **Click** Pip (top-right) to open the ask bar · **right-click** for menu

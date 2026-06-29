@@ -2,13 +2,13 @@ import { createServer } from "node:http";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runAgent, checkCli, EngineError } from "@tandem/engine";
-import { readCharter } from "@tandem/core";
+import { readCharter, resolveWorkspace } from "@tandem/core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../..");
 
 const PORT = Number(process.env.TANDEM_BRIDGE_PORT ?? 8765);
-const WORKDIR = process.env.CURSOR_WORKDIR?.trim() || REPO_ROOT;
+const WORKDIR = resolveWorkspace(REPO_ROOT);
 const MODEL = process.env.CURSOR_MODEL?.trim() || "auto";
 const CURSOR_BIN = process.env.CURSOR_BIN?.trim() || "cursor-agent";
 

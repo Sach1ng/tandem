@@ -1,5 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { resolveWorkspace } from "@tandem/core";
 
 export interface ClippyHotkeyConfig {
   /** Electron accelerator, e.g. Command+Shift+T. null = disabled. */
@@ -54,12 +56,20 @@ function readJson(path: string): Record<string, any> {
 }
 
 /**
- * Merge config.default.json with an optional (gitignored) config.json, then resolve paths.
- * `workspace: "."` means the Tandem repo root, so the agent inherits AGENTS.md + the PM OS submodule.
+ * Merge config.default.json with optional config.json, then resolve paths.
+ *
+ * Workspace resolution (in priority order):
+ *  1. TANDEM_WORKSPACE / CURSOR_WORKDIR env (via resolveWorkspace)
+ *  2. config.json workspace field ("." = resolved default)
+ *  3. repoRoot fallback when developing from a git checkout
+ *
+ * Config file lookup: appDir/config.json first, then ~/.tandem/config.json.
  */
 export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
   const defaults = readJson(join(appDir, "config.default.json"));
-  const user = readJson(join(appDir, "config.json"));
+  const userApp = readJson(join(appDir, "config.json"));
+  const userHome = readJson(join(homedir(), ".tandem", "config.json"));
+  const user = { ...userHome, ...userApp };
   const merged: Record<string, any> = {
     ...defaults,
     ...user,
@@ -71,11 +81,12 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     voice: { ...defaults.voice, ...user.voice },
   };
 
+  const defaultWs = resolveWorkspace(repoRoot);
   const workspace = !merged.workspace || merged.workspace === "."
-    ? repoRoot
+    ? defaultWs
     : isAbsolute(merged.workspace)
       ? merged.workspace
-      : resolve(repoRoot, merged.workspace);
+      : resolve(defaultWs, merged.workspace);
 
   const tasksFile = isAbsolute(merged.tasksFile)
     ? merged.tasksFile
@@ -95,7 +106,7 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     },
     hotkey: {
       snip: merged.hotkey?.snip ?? "Command+Shift+T",
-      autoAsk: merged.hotkey?.autoAsk !== false,
+      autoAsk: merged.hotkey?.autoAsk === true,
       question:
         merged.hotkey?.question?.trim() ||
         "What's on my screen? If there's an error, tell me how to fix it.",

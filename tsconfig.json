@@ -4,13 +4,16 @@
     "baseUrl": ".",
     "paths": {
       "@tandem/engine": ["packages/engine/src/index.ts"],
-      "@tandem/core": ["packages/core/src/index.ts"]
+      "@tandem/core": ["packages/core/src/index.ts"],
+      "@tandem/slack/oauth": ["apps/slack/src/oauth-connect.ts"],
+      "@tandem/slack/config": ["apps/slack/src/config.ts"]
     }
   },
   "include": [
     "packages/*/src/**/*.ts",
     "packages/*/scripts/**/*.ts",
     "apps/slack/src/**/*.ts",
+    "apps/slack/scripts/**/*.ts",
     "apps/clippy/src/**/*.ts",
     "apps/chrome-extension/src/**/*.ts"
   ]

@@ -1,10 +1,8 @@
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
 import { readCharter, readPersona } from "@tandem/core";
+import { SLACK_PKG_DIR } from "./paths.ts";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PERSONA_PATH = join(__dirname, "..", "persona.md");
+const PERSONA_PATH = join(SLACK_PKG_DIR, "persona.md");
 
 /** Hardcoded fallback so the bot still has a voice if persona.md is missing. */
 const PERSONA_FALLBACK =

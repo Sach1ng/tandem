@@ -1,20 +1,45 @@
 {
   "name": "@tandem/slack",
   "version": "0.1.0",
-  "private": true,
+  "description": "Tandem Slack coworker — OAuth connect + local Socket Mode bot backed by cursor-agent.",
   "type": "module",
-  "description": "Tandem Slack coworker — tag it or DM it; it runs as a cursor-agent task against the PM OS workspace and replies in-thread.",
+  "main": "./dist/app.cjs",
+  "exports": {
+    ".": "./dist/app.cjs",
+    "./oauth": "./dist/oauth-connect.js",
+    "./config": "./dist/config.js"
+  },
+  "bin": {
+    "tandem-slack": "./bin/slack.mjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "manifest.json",
+    "oauth.public.json",
+    "oauth.public.example.json",
+    "persona.md"
+  ],
   "scripts": {
-    "start": "node --env-file=.env --import tsx src/app.ts",
+    "build": "node build.mjs",
+    "start": "npm run build && node --env-file=.env dist/app.cjs",
     "dev": "node --env-file=.env --import tsx --watch src/app.ts",
     "setup": "node --import tsx scripts/setup-server.ts",
     "smoke": "node --env-file=.env --import tsx scripts/smoke.ts",
-    "reinstall": "node --env-file=.env --import tsx scripts/reinstall-manifest.ts"
+    "reinstall": "node --env-file=.env --import tsx scripts/reinstall-manifest.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@slack/bolt": "^3.19.0",
     "@slack/web-api": "^6.13.0",
-    "@tandem/core": "*",
-    "@tandem/engine": "*"
+    "@tandem/core": "0.1.0",
+    "@tandem/engine": "0.1.0"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -61,14 +61,42 @@ All three import `@tandem/engine`. One product (**Tandem**), three surface perso
 - Node ≥ 20.6
 - The **Cursor CLI**: `curl https://cursor.com/install -fsS | bash`, then `cursor-agent login`
 
+### Install without GitHub (recommended for third-party users)
+
+No git clone or submodules required — everything ships via npm:
+
+```bash
+npm install -g @tandem/cli @tandem/clippy @tandem/slack
+
+tandem init              # creates ~/.tandem with PM OS brain + AGENTS.md + tasks.md
+tandem doctor            # verify Node, cursor-agent, and workspace
+tandem clippy            # launch the desktop widget
+
+# Slack (after Tandem OAuth app is configured — see apps/slack/README.md)
+tandem slack connect     # one-click OAuth install into your workspace
+tandem slack start       # run the coworker bot locally
+```
+
+Optional: use a custom workspace directory:
+
+```bash
+tandem init ~/my-tandem-workspace
+export TANDEM_WORKSPACE=~/my-tandem-workspace
+```
+
+All surfaces respect `TANDEM_WORKSPACE` (alias: `CURSOR_WORKDIR`).
+
+### Develop from source (contributors)
+
 ```bash
 # 1. Clone with the PM OS submodule
 git clone --recurse-submodules https://github.com/Sach1ng/tandem.git
 cd tandem
 # (already cloned? run: git submodule update --init --recursive)
 
-# 2. Install
+# 2. Install & build
 npm install
+npm run build
 
 # 3. Verify the engine + inspect the CLI's JSON shape
 npm run engine:smoke
@@ -131,14 +159,29 @@ Two deliberate design choices, both from hard-won experience:
 ```
 packages/
   engine/   Cursor CLI adapter — runAgent, extractResult, resume, smoke test
-  core/     shared utils — Slack mrkdwn, atomic JSON state, charter loader
+  core/     shared utils — Slack mrkdwn, atomic JSON state, charter loader, workspace resolution
+  cli/      `tandem` CLI — init, doctor, clippy (npm-installable, no git required)
+  pm-os/    PM OS brain bundle for `tandem init` (npm publish artifact)
 apps/
   slack/             Bolt coworker (Socket Mode + polling fallback)
   clippy/            Electron task widget (tasks.md contract, parser, groom/capture)
   chrome-extension/  MV3 extension + local bridge server
 external/
-  pm-operating-os/   PM OS — the brain (git submodule)
+  pm-operating-os/   PM OS — the brain (git submodule for dev; bundled in @tandem/pm-os for install)
 AGENTS.md            workspace charter, auto-loaded by the engine on every run
+```
+
+### Publishing to npm
+
+From a clean checkout with submodules initialized:
+
+```bash
+npm run build
+npm publish --workspace @tandem/core
+npm publish --workspace @tandem/engine
+npm publish --workspace @tandem/pm-os
+npm publish --workspace @tandem/clippy
+npm publish --workspace @tandem/cli
 ```
 
 ---

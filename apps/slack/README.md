@@ -13,42 +13,81 @@ as a `cursor-agent` task in the workspace (with PM OS on disk) and the answer po
 
 > If your Slack sidebar still says **demo_app**, rename it under [api.slack.com/apps](https://api.slack.com/apps) → your app → **Basic Information** → **App Name** → **Tandem**.
 
-## Setup
+## Install (no GitHub required)
 
-### 1. Create the Slack app
-Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From a manifest**, and
-paste [`manifest.json`](./manifest.json). Then:
-
-- **App-Level Token** (Basic Information → App-Level Tokens) with `connections:write` → `SLACK_APP_TOKEN` (`xapp-…`)
-- **Install to workspace** → **Bot User OAuth Token** → `SLACK_BOT_TOKEN` (`xoxb-…`)
-- **User OAuth Token** (only for the polling fallback) → `SLACK_USER_TOKEN` (`xoxp-…`)
-
-### 2. Configure
 ```bash
-cp .env.example .env
-```
-Fill in the three tokens and **`ALLOWED_USERS`** (your Slack member ID — find it via your profile →
-**⋮** → *Copy member ID*). Leaving it empty lets anyone run commands, which means anyone can make the
-agent run shell on your machine. Don't.
-
-### 3. Run
-```bash
-npm start          # from this directory, or: npm run slack (from repo root)
+npm install -g @tandem/cli @tandem/slack
+tandem init
+tandem slack connect    # OAuth — one "Allow" click in Slack
+tandem slack start
 ```
 
-Invite the bot to a channel (`/invite @Tandem`), then `@Tandem summarize this thread and draft a reply`.
+## Connect via OAuth (recommended)
+
+Prerequisites on **your machine** (once):
+
+1. Register the Tandem distributed app at [api.slack.com/apps](https://api.slack.com/apps)
+2. Paste [`manifest.json`](./manifest.json) → create app
+3. **OAuth & Permissions** → Redirect URLs → add `http://127.0.0.1:8767/oauth/callback`
+4. **Manage Distribution** → complete checklist → **Activate Public Distribution**
+5. **Basic Information** → App-Level Tokens → create token with `connections:write` → copy `xapp-…`
+6. Set credentials (do not commit secrets):
+
+```bash
+export TANDEM_SLACK_CLIENT_ID=1234567890.1234567890
+export TANDEM_SLACK_CLIENT_SECRET=your-client-secret
+export TANDEM_SLACK_APP_TOKEN=xapp-1-…
+```
+
+Optionally put `clientId` in `oauth.public.json` (public); secret and app token stay in env.
+
+Then each user:
+
+```bash
+tandem slack connect
+tandem slack start
+```
+
+Tokens are saved to `~/.tandem/slack/.env` on the user's machine.
+
+## Manual setup (fallback)
+
+If OAuth credentials are not configured:
+
+```bash
+tandem slack setup
+```
+
+Opens a browser wizard to paste `xoxb-`, `xapp-`, and `xoxp-` tokens manually.
 
 ## Commands
-- `@Tandem <anything>` — run a task.
-- `open thread` *(owner only)* — let non-owners use Tandem in this thread for a TTL.
-- `close thread` *(owner only)* — revoke it.
+
+- `@Tandem <anything>` — run a task
+- `open thread` *(owner only)* — let non-owners use Tandem in this thread
+- `close thread` *(owner only)* — revoke it
+
+## CLI reference
+
+```bash
+tandem slack connect [--port=8767] [--no-browser]
+tandem slack start
+tandem slack setup
+tandem slack status
+```
 
 ## Always-on (macOS)
+
 Use the `launchd` LaunchAgent (`com.tandem.slack.plist.example`), **not cron** — cron can't reach the
 keychain/GUI session that `cursor-agent` auth needs.
 
+## Develop from source
+
 ```bash
-cp com.tandem.slack.plist.example ~/Library/LaunchAgents/com.tandem.slack.plist
-# edit the path inside, then:
-launchctl load ~/Library/LaunchAgents/com.tandem.slack.plist
+npm run build
+cp .env.example .env   # or tandem slack connect
+npm start              # from apps/slack, or: npm run slack from repo root
 ```
+
+Setup wizard: `npm run setup` or `tandem slack setup`
+
+Reinstall manifest to an existing app: `npm run reinstall`

@@ -122,6 +122,8 @@ function setExpanded(v: boolean): void {
     win.setMaximumSize(cfg.collapsed.w, cfg.collapsed.h);
     win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
     win.webContents.send("widget:expanded", false);
+    // Collapsed orb must stay visible — hide() during snip is the only time we tuck away.
+    win.show();
   }
   anchorWindow();
   saveState();
@@ -138,9 +140,12 @@ function snipPayload(path: string | null, status: string, extra: Record<string, 
 }
 
 function restoreWindowAfterSnip(priorVisible: boolean, priorExpanded: boolean): void {
-  if (!priorVisible) return;
-  if (priorExpanded) setExpanded(true);
-  else setExpanded(false);
+  if (!win || win.isDestroyed()) return;
+  if (!priorVisible) {
+    win.hide();
+    return;
+  }
+  setExpanded(priorExpanded);
 }
 
 /** Native macOS region snip — hides Clippy so it isn't in the shot. */
@@ -152,7 +157,10 @@ function captureRegion(): Promise<string | null> {
   return new Promise((resolve) => {
     setTimeout(() => {
       execFile("screencapture", ["-i", "-x", file], () => {
-        resolve(existsSync(file) ? file : null);
+        const captured = existsSync(file) ? file : null;
+        // Always bring Clippy back — otherwise a cancel/escape leaves the app invisible ("dead").
+        if (win && !win.isDestroyed()) win.show();
+        resolve(captured);
       });
     }, 180);
   });
@@ -167,32 +175,38 @@ async function runHotkeySnip(): Promise<void> {
   const priorExpanded = expanded;
   const priorVisible = win.isVisible();
 
-  setExpanded(true);
-  win.webContents.send("widget:snip-result", snipPayload(null, "selecting"));
-  await paintDelay();
-
-  const path = await captureRegion();
-  if (!path) {
-    win.webContents.send("widget:snip-result", snipPayload(null, "cancelled"));
-    restoreWindowAfterSnip(priorVisible, priorExpanded);
-    return;
-  }
-
-  setExpanded(true);
-  win.webContents.send("widget:snip-result", snipPayload(path, "captured"));
-
-  if (!cfg.hotkey.autoAsk) {
-    win.webContents.send("widget:snip-ready", { path, previewUrl: screenshotPreviewUrl(path) });
-    return;
-  }
-
-  win.webContents.send("widget:snip-result", snipPayload(path, "loading"));
   try {
-    const { text } = await askAboutScreenshot(cfg, path, cfg.hotkey.question);
-    win.webContents.send("widget:snip-result", snipPayload(path, "done", { text }));
+    setExpanded(true);
+    win.webContents.send("widget:snip-result", snipPayload(null, "selecting"));
+    await paintDelay();
+
+    const path = await captureRegion();
+    if (!path) {
+      win.webContents.send("widget:snip-result", snipPayload(null, "cancelled"));
+      restoreWindowAfterSnip(priorVisible, priorExpanded);
+      return;
+    }
+
+    setExpanded(true);
+    win.webContents.send("widget:snip-result", snipPayload(path, "ready"));
+
+    if (!cfg.hotkey.autoAsk) return;
+
+    win.webContents.send("widget:snip-result", snipPayload(path, "loading"));
+    try {
+      const { text } = await askAboutScreenshot(cfg, path, cfg.hotkey.question);
+      win.webContents.send("widget:snip-result", snipPayload(path, "done", { text }));
+    } catch (err) {
+      const msg = String((err as Error)?.message ?? err);
+      win.webContents.send("widget:snip-result", snipPayload(path, "error", { text: msg }));
+    }
   } catch (err) {
+    console.error("[hotkey] snip failed:", err);
     const msg = String((err as Error)?.message ?? err);
-    win.webContents.send("widget:snip-result", snipPayload(path, "error", { text: msg }));
+    win.webContents.send("widget:snip-result", snipPayload(null, "error", { text: msg }));
+    restoreWindowAfterSnip(priorVisible, priorExpanded);
+  } finally {
+    if (win && !win.isDestroyed() && !win.isVisible()) win.show();
   }
 }
 

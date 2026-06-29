@@ -1,0 +1,33 @@
+{
+  "name": "@tandem/cli",
+  "version": "0.1.0",
+  "description": "Tandem CLI — init a workspace, run doctor checks, launch Clippy. No git required.",
+  "type": "module",
+  "bin": {
+    "tandem": "./bin/tandem.mjs"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@tandem/core": "0.1.0",
+    "@tandem/engine": "0.1.0",
+    "@tandem/pm-os": "0.1.0"
+  },
+  "optionalDependencies": {
+    "@tandem/clippy": "0.1.0",
+    "@tandem/slack": "0.1.0"
+  },
+  "engines": {
+    "node": ">=20.6"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

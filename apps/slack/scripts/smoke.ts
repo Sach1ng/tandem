@@ -36,7 +36,7 @@ async function main() {
   const prompt = assemblePrompt({
     workspace: cfg.workdir,
     channelName: "dm-smoke",
-    threadHistory: [],
+    threadHistory: "",
     userId: ownerId,
     task: PROMPT,
   });

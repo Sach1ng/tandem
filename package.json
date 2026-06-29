@@ -1,7 +1,6 @@
 {
   "name": "tandem",
   "version": "0.1.0",
-  "private": true,
   "description": "An ambient AI coworker layer. Carries a capability OS you own (PM OS) out of the IDE and into Slack, your screen, and your browser — powered by the Cursor CLI, so it runs on any model.",
   "type": "module",
   "engines": {
@@ -14,6 +13,7 @@
     "apps/chrome-extension"
   ],
   "scripts": {
+    "build": "npm run build --workspace @tandem/core && npm run build --workspace @tandem/engine && npm run prepare --workspace @tandem/pm-os && npm run build --workspace @tandem/cli && npm run build --workspace @tandem/clippy && npm run build --workspace @tandem/slack",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "tsx scripts/verify-offline.ts",
     "engine:smoke": "tsx packages/engine/scripts/smoke.ts",
@@ -24,7 +24,9 @@
     "slack:smoke": "npm run smoke --workspace @tandem/slack",
     "slack:reinstall": "npm run reinstall --workspace @tandem/slack",
     "clippy": "npm run start --workspace @tandem/clippy",
-    "chrome:build": "npm run build --workspace @tandem/chrome-extension"
+    "chrome:build": "npm run build --workspace @tandem/chrome-extension",
+    "tandem:init": "node packages/cli/bin/tandem.mjs init",
+    "tandem:doctor": "node packages/cli/bin/tandem.mjs doctor"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

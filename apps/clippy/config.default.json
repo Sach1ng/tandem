@@ -25,7 +25,7 @@
   },
   "hotkey": {
     "snip": "Command+Shift+T",
-    "autoAsk": true,
+    "autoAsk": false,
     "question": "What's on my screen? If there's an error, tell me how to fix it."
   },
   "nudge": {

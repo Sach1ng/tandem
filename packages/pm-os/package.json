@@ -1,0 +1,24 @@
+{
+  "name": "@tandem/pm-os",
+  "version": "0.1.0",
+  "description": "PM OS brain bundle for Tandem — skills, knowledge, memory, and workspace charter.",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "brain",
+    "AGENTS.md",
+    "AGENTS.installed.md",
+    "tasks.template.md",
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "prepare": "node scripts/prepare.mjs",
+    "prepublishOnly": "npm run prepare"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

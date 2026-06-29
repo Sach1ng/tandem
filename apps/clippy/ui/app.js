@@ -1,4 +1,4 @@
-/* Tandem — minimal assistant with expressive buddy moods */
+/* Pip — horizontal assistant bar */
 const w = window.taskWidget;
 
 const els = {
@@ -8,6 +8,7 @@ const els = {
   askInput: document.getElementById("ask-input"),
   reply: document.getElementById("reply"),
   nudgeHint: document.getElementById("nudge-hint"),
+  cardExtras: document.getElementById("card-extras"),
   snipPanel: document.getElementById("snip-panel"),
   snipPreview: document.getElementById("snip-preview"),
   snipProcessing: document.getElementById("snip-processing"),
@@ -17,6 +18,11 @@ const els = {
 let pendingNudge = null;
 let mood = "rest";
 let snipActive = false;
+let panelSizes = { defaultW: 400, compactH: 58, tallH: 156, snipH: 172 };
+
+void w.getConfig?.().then((cfg) => {
+  if (cfg?.panel) panelSizes = { ...panelSizes, ...cfg.panel };
+});
 
 function setMood(next) {
   mood = next;
@@ -28,24 +34,40 @@ function ping() {
   void w.pingActivity?.();
 }
 
+function syncLayout() {
+  const hasSnip = !els.snipPanel.hidden;
+  const hasText = !els.reply.hidden || !els.nudgeHint.hidden;
+  els.cardExtras.hidden = !hasSnip && !hasText;
+
+  let h = panelSizes.compactH;
+  if (hasSnip) h = panelSizes.snipH;
+  else if (hasText) h = panelSizes.tallH;
+
+  void w.setPanelSize?.(panelSizes.defaultW, h);
+}
+
 function showReply(text, thinking = false) {
   els.reply.hidden = false;
   els.reply.classList.toggle("thinking", thinking);
   els.reply.textContent = text;
+  syncLayout();
 }
 
 function clearReply() {
   els.reply.hidden = true;
   els.reply.textContent = "";
+  syncLayout();
 }
 
 function showHint(msg) {
   if (!msg) {
     els.nudgeHint.hidden = true;
+    syncLayout();
     return;
   }
   els.nudgeHint.hidden = false;
   els.nudgeHint.textContent = msg;
+  syncLayout();
 }
 
 function beginSnipFlow() {
@@ -54,6 +76,7 @@ function beginSnipFlow() {
   els.snipPanel.hidden = false;
   showHint(null);
   setMood("thinking");
+  syncLayout();
 }
 
 function endSnipFlow() {
@@ -62,6 +85,7 @@ function endSnipFlow() {
   els.snipPanel.hidden = true;
   els.snipPreview.removeAttribute("src");
   els.snipProcessing.hidden = true;
+  syncLayout();
 }
 
 function setSnipPreview(path, previewUrl) {
@@ -108,26 +132,25 @@ function handleSnipState(payload) {
   }
 
   if (status === "done") {
-    setSnipPreview(path, previewUrl);
     setSnipProcessing(false);
-    showReply(text || "(no response)");
-    setMood("awake");
+    els.snipPanel.hidden = true;
     snipActive = false;
     document.body.classList.remove("snip-active");
+    showReply(text || "(no response)");
+    setMood("awake");
     return;
   }
 
   if (status === "error") {
-    setSnipPreview(path, previewUrl);
     setSnipProcessing(false);
-    showReply(text || "Snip failed");
-    setMood("awake");
+    els.snipPanel.hidden = true;
     snipActive = false;
     document.body.classList.remove("snip-active");
+    showReply(text || "Snip failed");
+    setMood("awake");
   }
 }
 
-/* Click orb to open — anchored top-center, no drag */
 els.collapsed.addEventListener("click", () => {
   ping();
   w.toggleExpand();
@@ -213,6 +236,7 @@ w.onExpanded((open) => {
   els.collapsed.hidden = open;
   els.expanded.hidden = !open;
   if (open) {
+    syncLayout();
     if (snipActive) return;
     if (pendingNudge) showHint(pendingNudge);
     setMood(pendingNudge ? "alert" : "awake");

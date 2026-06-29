@@ -1,8 +1,17 @@
 # Tandem — Slack coworker
 
-Tag `@Tandem` in a channel or DM it. Your message runs as a `cursor-agent` task in the Tandem
-workspace (with PM OS on disk) and the answer posts back in-thread. Follow-ups in the same thread
-resume the same chat.
+**Tandem** is the team surface of the ecosystem — tag `@Tandem` in a channel or DM it. Your message runs
+as a `cursor-agent` task in the workspace (with PM OS on disk) and the answer posts back in-thread.
+
+| Surface | Name | Where |
+|---|---|---|
+| Product | **Tandem** | The ambient coworker |
+| Slack | **Tandem** (`@Tandem`) | Team channels & DMs |
+| Desktop | **Pip** | Buddy orb on your screen |
+| Browser | **Lens** | Chrome extension |
+| Brain | **PM OS** | Skills, knowledge, memory |
+
+> If your Slack sidebar still says **demo_app**, rename it under [api.slack.com/apps](https://api.slack.com/apps) → your app → **Basic Information** → **App Name** → **Tandem**.
 
 ## Setup
 

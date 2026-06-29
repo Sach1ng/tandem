@@ -56,6 +56,7 @@ function htmlPage(manifest: string): string {
       <ol>
         <li>Open <a href="https://api.slack.com/apps" target="_blank" rel="noopener">api.slack.com/apps</a> → <strong>Create New App</strong> → <strong>From a manifest</strong>.</li>
         <li>Paste the manifest JSON below → create the app.</li>
+        <li>If Slack shows <strong>demo_app</strong> as the name, open <strong>Basic Information</strong> → set <strong>App Name</strong> to <code>Tandem</code> (bot display name is already Tandem in the manifest).</li>
         <li><strong>Basic Information</strong> → App-Level Tokens → generate <code>socket</code> with <code>connections:write</code> → copy <code>xapp-…</code>.</li>
         <li><strong>Install App</strong> → Install to workspace → copy <code>xoxb-…</code> (bot) and <code>xoxp-…</code> (user, optional).</li>
       </ol>

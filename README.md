@@ -25,8 +25,8 @@ surface. Tandem flips that:
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │  SURFACES                                                          │
-│   Slack coworker        Clippy (desktop)        Chrome extension   │
-│   tag / DM → tasks      tasks.md widget         ask about any page │
+│   Slack · Tandem        Pip (desktop)           Lens (Chrome)   │
+│   tag @Tandem           buddy orb               page-aware Q&A  │
 └─────────┬──────────────────────┬──────────────────────┬───────────┘
           │                      │                      │
           ▼                      ▼                      ▼
@@ -45,14 +45,13 @@ surface. Tandem flips that:
 
 ## The three surfaces
 
-| Surface | What it does | Where |
-|---|---|---|
-| **Slack coworker** | Tag `@Tandem` or DM it. It runs your request as a `cursor-agent` task in the workspace and replies in-thread. Follow-ups resume the same chat. Owner allow-list + per-thread "open" grants. | `apps/slack` |
-| **Clippy** | A frameless, always-on-top buddy orb — the *visual* surface. Click to ask; **⌘⇧T** to snip any screen region and get an answer. Tasks live in `tasks.md` (editable via right-click). | `apps/clippy` |
-| **Chrome extension** | Ambient, page-aware prompts. It reads the page you're on (ticket, doc, dashboard) and answers questions about it through a tiny local bridge that calls the engine. | `apps/chrome-extension` |
+| Surface | Name | What it does | Where |
+|---|---|---|---|
+| **Slack** | **Tandem** (`@Tandem`) | Tag or DM your team's coworker. Runs `cursor-agent` in the workspace, replies in-thread. | `apps/slack` |
+| **Desktop** | **Pip** | Buddy orb on your screen. Click to ask; **⌘⇧T** to snip and get an answer. | `apps/clippy` |
+| **Browser** | **Lens** | Page-aware prompts about whatever tab you're on, via a local bridge to the engine. | `apps/chrome-extension` |
 
-All three import `@tandem/engine`. That shared package is the whole point — add a fourth surface and
-it inherits the brain for free.
+All three import `@tandem/engine`. One product (**Tandem**), three surface personalities, one brain (**PM OS**).
 
 ---
 

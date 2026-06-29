@@ -3,7 +3,7 @@
   --soft: rgba(255, 255, 255, 0.06);
   --fg: #e8e8f0;
   --muted: #9a9ab0;
-  --accent: #7c5cff;
+  --accent: #c4a06a;
 }
 * { box-sizing: border-box; }
 body {
@@ -15,8 +15,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 13px;
 }
-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.brand-wrap { display: flex; flex-direction: column; gap: 1px; }
 .brand { font-weight: 700; letter-spacing: 0.3px; }
+.brand-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
 .status { font-size: 11px; color: var(--muted); }
 .status.ok { color: #4ad295; }
 .status.warn { color: #ffb95c; }

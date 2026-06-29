@@ -26,14 +26,20 @@ export interface ClippyVoiceConfig {
   speakReplies: boolean;
 }
 
+export interface ClippyPlacementConfig {
+  corner: "top-right" | "bottom-right";
+  margin: number;
+}
+
 export interface ClippyConfig {
   workspace: string; // absolute
   tasksFile: string; // absolute
   agent: string;
   agentModel: string;
   agentFlags: string[];
-  panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number };
+  panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number; compactH?: number; tallH?: number; snipH?: number };
   collapsed: { w: number; h: number };
+  placement: ClippyPlacementConfig;
   hotkey: ClippyHotkeyConfig;
   nudge: ClippyNudgeConfig;
   voice: ClippyVoiceConfig;
@@ -59,6 +65,7 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     ...user,
     panel: { ...defaults.panel, ...user.panel },
     collapsed: { ...defaults.collapsed, ...user.collapsed },
+    placement: { ...defaults.placement, ...user.placement },
     hotkey: { ...defaults.hotkey, ...user.hotkey },
     nudge: { ...defaults.nudge, ...user.nudge },
     voice: { ...defaults.voice, ...user.voice },
@@ -82,6 +89,10 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     agentFlags: merged.agentFlags ?? ["-p", "--trust", "--output-format", "text"],
     panel: merged.panel,
     collapsed: merged.collapsed,
+    placement: {
+      corner: merged.placement?.corner === "bottom-right" ? "bottom-right" : "top-right",
+      margin: Number(merged.placement?.margin ?? 16),
+    },
     hotkey: {
       snip: merged.hotkey?.snip ?? "Command+Shift+T",
       autoAsk: merged.hotkey?.autoAsk !== false,

@@ -78,16 +78,21 @@ function broadcast(): void {
   if (!win?.isDestroyed()) win.webContents.send("tasks:updated", readTasks());
 }
 
-const TOP_MARGIN = 14;
-
-function anchorTopCenter(): void {
+/** Pin a screen corner; top-right grows down (replies visible), bottom-right grows up. */
+function anchorWindow(): void {
   if (!win || win.isDestroyed()) return;
   const bounds = win.getBounds();
-  const work = screen.getPrimaryDisplay().workArea;
-  const x = Math.round(work.x + (work.width - bounds.width) / 2);
-  const y = Math.round(work.y + TOP_MARGIN);
+  const work = screen.getDisplayMatching(bounds).workArea;
+  const margin = cfg.placement?.margin ?? 16;
+  const corner = cfg.placement?.corner ?? "top-right";
+  const x = Math.round(work.x + work.width - bounds.width - margin);
+  const y =
+    corner === "bottom-right"
+      ? Math.round(work.y + work.height - bounds.height - margin)
+      : Math.round(work.y + margin);
   win.setPosition(x, y);
 }
+
 function clampPanel(w: number, h: number): { w: number; h: number } {
   const area = screen.getDisplayMatching(win.getBounds()).workAreaSize;
   return {
@@ -118,7 +123,7 @@ function setExpanded(v: boolean): void {
     win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
     win.webContents.send("widget:expanded", false);
   }
-  anchorTopCenter();
+  anchorWindow();
   saveState();
 }
 
@@ -252,6 +257,7 @@ function registerIpc(): void {
     tasksFile: cfg.tasksFile,
     workspace: cfg.workspace,
     hotkey: cfg.hotkey,
+    placement: cfg.placement,
     nudge: cfg.nudge,
     voice: cfg.voice,
   }));
@@ -299,6 +305,7 @@ function registerIpc(): void {
     const { w, h } = clampPanel(p.w, p.h);
     state.panelW = w; state.panelH = h;
     win.setSize(w, h, false);
+    anchorWindow();
     saveState();
   });
   ipcMain.handle("window:get-bounds", () => win.getBounds());
@@ -340,10 +347,10 @@ function createWindow(): void {
 
   win.webContents.once("did-finish-load", () => {
     setExpanded(false);
-    anchorTopCenter();
+    anchorWindow();
   });
 
-  screen.on("display-metrics-changed", () => anchorTopCenter());
+  screen.on("display-metrics-changed", () => anchorWindow());
 
   const watcher = chokidar.watch(cfg.tasksFile, {
     ignoreInitial: true,

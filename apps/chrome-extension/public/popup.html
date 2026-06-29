@@ -3,11 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="popup.css" />
-    <title>Tandem</title>
+    <title>Lens · Tandem</title>
   </head>
   <body>
     <header>
-      <span class="brand">Tandem</span>
+      <div class="brand-wrap">
+        <span class="brand">Lens</span>
+        <span class="brand-sub">by Tandem</span>
+      </div>
       <span id="status" class="status">● checking…</span>
     </header>
 
@@ -15,7 +18,7 @@
     <div id="suggestions" class="suggestions"></div>
 
     <textarea id="q" rows="2" placeholder="Ask about this page… (⌘/Ctrl + ↵)"></textarea>
-    <button id="ask" class="ask">Ask Tandem</button>
+    <button id="ask" class="ask">Ask Lens</button>
 
     <div id="answer" class="answer"></div>
 

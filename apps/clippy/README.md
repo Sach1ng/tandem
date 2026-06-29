@@ -9,6 +9,8 @@ not a task board.
 |---|---|---|
 | **Product** | Tandem | Ambient AI coworker across Slack, desktop, and Chrome |
 | **Desktop buddy** | **Pip** | The orb on your screen (this app) |
+| **Slack teammate** | **Tandem** (`@Tandem`) | Team channels and DMs |
+| **Browser** | **Lens** | Chrome extension for page-aware Q&A |
 | **Brain** | PM OS | Skills, knowledge, and memory on disk |
 
 ## Run (macOS)
@@ -16,11 +18,15 @@ not a task board.
 npm start          # from this directory, or: npm run clippy (from repo root)
 ```
 
-- **Click** Pip to open the ask card · **right-click** for menu
+- **Click** Pip (top-right) to open the ask bar · **right-click** for menu
 - **⌘⇧T** — snip any region of your screen and get an answer
 - Type a question and press ↵ — Pip runs against PM OS on disk
 
 Tasks still live in `tasks.md` (editable via right-click → Open tasks.md) but are not shown in the UI.
+
+**Placement:** Pip sits in the **top-right** (below the menu bar). The ask bar extends left;
+replies drop **down** underneath so they're easy to read. Override in `config.json`:
+`{ "placement": { "corner": "bottom-right", "margin": 18 } }`.
 
 ## Point it at your tasks
 By default it reads `tasks.example.md` at the repo root. To use your own file, create

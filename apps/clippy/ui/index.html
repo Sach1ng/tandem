@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="mode-collapsed mood-rest">
-    <!-- Collapsed: circular glass orb — fills the entire window, no bleed-through -->
     <div id="collapsed" class="orb-shell" aria-label="Pip">
       <div class="buddy">
         <span class="antenna left" aria-hidden="true"></span>
@@ -22,43 +21,45 @@
       </div>
     </div>
 
-    <!-- Expanded: glass assistant card -->
+    <!-- Expanded: bar top row, reply drops below (top-right anchor) -->
     <div id="expanded" class="card glass" hidden>
-      <div class="card-top">
-        <div class="card-brand">
-          <div class="buddy buddy-sm">
-            <span class="antenna left" aria-hidden="true"></span>
-            <span class="antenna right" aria-hidden="true"></span>
-            <div class="buddy-face">
-              <span class="eye left"><span class="iris"></span><span class="shine"></span></span>
-              <span class="eye right"><span class="iris"></span><span class="shine"></span></span>
-              <span class="blush left" aria-hidden="true"></span>
-              <span class="blush right" aria-hidden="true"></span>
-              <span class="smile" aria-hidden="true"></span>
+      <div class="card-shell">
+        <div class="card-row">
+          <div class="card-main">
+            <form id="ask-form" class="ask-form">
+              <input id="ask-input" type="text" placeholder="Ask Pip…" autocomplete="off" spellcheck="true" />
+              <button type="button" id="btn-snip" class="icon-btn snip-btn" title="Snip screen (⌘⇧T)" aria-label="Snip">◫</button>
+            </form>
+          </div>
+          <button type="button" id="btn-close" class="orb-dock" title="Minimize Pip" aria-label="Minimize Pip">
+            <div class="buddy buddy-sm">
+              <span class="antenna left" aria-hidden="true"></span>
+              <span class="antenna right" aria-hidden="true"></span>
+              <div class="buddy-face">
+                <span class="eye left"><span class="iris"></span><span class="shine"></span></span>
+                <span class="eye right"><span class="iris"></span><span class="shine"></span></span>
+                <span class="blush left" aria-hidden="true"></span>
+                <span class="blush right" aria-hidden="true"></span>
+                <span class="smile" aria-hidden="true"></span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div id="card-extras" class="card-extras" hidden>
+          <div id="snip-panel" class="snip-panel glass-inset" hidden>
+            <div class="snip-preview-wrap">
+              <img id="snip-preview" alt="Screenshot preview" />
+              <div id="snip-processing" class="snip-processing" hidden>
+                <span class="snip-spinner" aria-hidden="true"></span>
+                <span id="snip-status-text">Analyzing…</span>
+              </div>
             </div>
           </div>
-          <span class="buddy-name">Pip</span>
-        </div>
-        <button id="btn-close" class="icon-btn" title="Minimize" aria-label="Minimize">×</button>
-      </div>
-
-      <form id="ask-form" class="ask-form">
-        <input id="ask-input" type="text" placeholder="Ask Pip anything…" autocomplete="off" spellcheck="true" />
-        <button type="button" id="btn-snip" class="icon-btn snip-btn" title="Snip screen (⌘⇧T)" aria-label="Snip">◫</button>
-      </form>
-
-      <div id="snip-panel" class="snip-panel glass-inset" hidden>
-        <div class="snip-preview-wrap">
-          <img id="snip-preview" alt="Screenshot preview" />
-          <div id="snip-processing" class="snip-processing" hidden>
-            <span class="snip-spinner" aria-hidden="true"></span>
-            <span id="snip-status-text">Analyzing…</span>
-          </div>
+          <div id="nudge-hint" class="hint glass-inset" hidden></div>
+          <div id="reply" class="reply glass-inset" hidden></div>
         </div>
       </div>
-
-      <div id="nudge-hint" class="hint glass-inset" hidden></div>
-      <div id="reply" class="reply glass-inset" hidden></div>
     </div>
 
     <script src="app.js"></script>

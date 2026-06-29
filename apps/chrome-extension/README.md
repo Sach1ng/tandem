@@ -1,8 +1,17 @@
-# Tandem — Chrome extension
+# Lens — Tandem's browser surface
 
-Ambient, page-aware prompts. Tandem reads the page you're on (a ticket, a doc, a dashboard) and
-answers questions about it — through a tiny local bridge that calls the Cursor CLI against your
-PM OS workspace.
+**Lens** is Tandem's page-aware Chrome extension — it reads whatever tab you're on (a ticket, a doc,
+a dashboard) and answers questions through a local bridge that calls the Cursor CLI against PM OS.
+
+## Naming
+
+| Layer | Name |
+|---|---|
+| Product | **Tandem** |
+| This extension | **Lens** (shows in Chrome as *Tandem Lens*) |
+| Desktop buddy | **Pip** |
+| Slack teammate | **Tandem** (`@Tandem`) |
+| Brain | **PM OS** |
 
 ## Run
 
@@ -18,7 +27,7 @@ npm run bridge             # → http://127.0.0.1:8765
 Then load it in Chrome:
 1. `chrome://extensions` → enable **Developer mode**
 2. **Load unpacked** → select `apps/chrome-extension/dist`
-3. Pin Tandem, open any page, click the icon. Or select text → right-click → *Ask Tandem*.
+3. Pin **Tandem Lens**, open any page, click the icon. Or select text → right-click → *Ask Lens*.
 
 ## How it works
 - `content.ts` extracts page context (title, URL, selection, excerpt).

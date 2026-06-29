@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Tandem",
+  "name": "Tandem Lens",
+  "short_name": "Lens",
   "version": "0.1.0",
-  "description": "An ambient AI coworker in your browser — ask about whatever page you're on, answered by the Cursor CLI against your PM OS workspace.",
+  "description": "Lens — Tandem's page-aware browser surface. Ask about whatever tab you're on, answered by the Cursor CLI against your PM OS workspace.",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Ask Tandem about this page"
+    "default_title": "Lens — ask about this page"
   },
   "background": {
     "service_worker": "background.js"

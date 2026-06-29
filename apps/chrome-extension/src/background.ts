@@ -3,7 +3,7 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "tandem-ask",
-    title: "Ask Tandem about “%s”",
+    title: "Ask Lens about “%s”",
     contexts: ["selection"],
   });
 });

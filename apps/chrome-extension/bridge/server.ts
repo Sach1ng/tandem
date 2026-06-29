@@ -12,7 +12,7 @@ const WORKDIR = process.env.CURSOR_WORKDIR?.trim() || REPO_ROOT;
 const MODEL = process.env.CURSOR_MODEL?.trim() || "auto";
 const CURSOR_BIN = process.env.CURSOR_BIN?.trim() || "cursor-agent";
 
-const BROWSER_PERSONA = `You are Tandem, an AI coworker embedded in the user's browser. The user is looking at a web
+const BROWSER_PERSONA = `You are Lens, Tandem's page-aware browser surface. The user is looking at a web
 page and has asked you something about it. Lead with the answer. Be concise and skimmable.
 Use the page context provided. If it is a PM artifact (PRD, ticket, dashboard, doc), apply the
 relevant PM OS skill from the workspace. Never invent facts; if the page context is insufficient, say so.`;
@@ -86,7 +86,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", async () => {
-  console.log(`Tandem bridge on http://127.0.0.1:${PORT}`);
+  console.log(`Lens bridge (Tandem) on http://127.0.0.1:${PORT}`);
   console.log(`Workspace: ${WORKDIR}  ·  Model: ${MODEL}`);
   const version = await checkCli(CURSOR_BIN);
   console.log(version ? `Engine: ${version}` : `⚠ ${CURSOR_BIN} not found — install + cursor-agent login`);

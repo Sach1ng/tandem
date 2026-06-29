@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Tandem in the browser — ambient, contextual prompts about whatever page you're on, answered by the Cursor CLI against the PM OS workspace.",
+  "description": "Lens — Tandem's page-aware Chrome extension. Ambient prompts about whatever page you're on.",
   "scripts": {
     "build": "node build.mjs",
     "bridge": "node --env-file=.env --import tsx bridge/server.ts"

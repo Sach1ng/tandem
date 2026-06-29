@@ -5,16 +5,23 @@
   "agentModel": "auto",
   "agentFlags": ["-p", "--trust", "--output-format", "text"],
   "panel": {
-    "minW": 280,
-    "minH": 160,
-    "maxW": 340,
-    "maxH": 420,
-    "defaultW": 320,
-    "defaultH": 360
+    "minW": 300,
+    "minH": 56,
+    "maxW": 520,
+    "maxH": 220,
+    "defaultW": 400,
+    "defaultH": 58,
+    "compactH": 58,
+    "tallH": 156,
+    "snipH": 172
   },
   "collapsed": {
     "w": 56,
     "h": 56
+  },
+  "placement": {
+    "corner": "top-right",
+    "margin": 16
   },
   "hotkey": {
     "snip": "Command+Shift+T",

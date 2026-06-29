@@ -17,7 +17,13 @@ async function main() {
 
   const auth = await bot.auth.test();
   if (!auth.ok) throw new Error("Bot auth failed: " + auth.error);
-  console.log(`✓ bot connected: ${auth.user} @ ${auth.team}`);
+  const botUser = auth.user ?? "";
+  console.log(`✓ bot connected: ${botUser} @ ${auth.team}`);
+  if (botUser.toLowerCase() !== "tandem") {
+    console.warn(
+      `⚠ bot username is @${botUser}, not @Tandem — rename in api.slack.com → Basic Information → App Name, or reinstall from manifest.json`,
+    );
+  }
 
   const ownerId = cfg.allowedUsers[0];
   if (!ownerId) throw new Error("ALLOWED_USERS is empty");

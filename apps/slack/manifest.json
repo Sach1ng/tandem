@@ -1,8 +1,9 @@
 {
   "display_information": {
     "name": "Tandem",
-    "description": "An ambient AI coworker powered by the Cursor CLI + PM OS.",
-    "background_color": "#1a1a2e"
+    "description": "Your team's AI coworker in Slack — tag @Tandem in any channel. Powered by the Cursor CLI and PM OS.",
+    "background_color": "#242428",
+    "long_description": "Tandem is the Slack surface of your ambient AI coworker. Mention @Tandem or DM it to run tasks against your PM OS workspace. Same brain as Pip (desktop) and Lens (browser)."
   },
   "features": {
     "bot_user": {

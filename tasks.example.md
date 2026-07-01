@@ -1,12 +1,12 @@
 # My Tasks
 
-Tandem Clippy reads this file live. Edit it by hand, in Clippy, or let `capture`/`groom` update it.
-Point Clippy at your real file by setting `tasksFile` in `apps/clippy/config.json`.
+Pip reads this file live. Edit it by hand, in Pip, or let `capture`/`groom` update it.
+Point Pip at your real file by setting `tasksFile` in `apps/pip/config.json`.
 
 ## Active (priority today)
 - [ ] Ship the Tandem launch post #project/tandem #p0
   - Due: 2026-07-02
-  - Next action: record the 60s Slack + Clippy demo
+  - Next action: record the 60s Slack + Pip demo
 - [ ] Reply to design feedback on the widget #project/tandem #p1
   - Source: thread with @design
 

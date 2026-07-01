@@ -7,7 +7,7 @@ as a `cursor-agent` task in the workspace (with PM OS on disk) and the answer po
 |---|---|---|
 | Product | **Tandem** | The ambient coworker |
 | Slack | **Pip** (`@Pip`) | Team channels & DMs |
-| Desktop | **Pip** | Buddy orb on your screen |
+| Desktop | **Pip** | Pip on your screen |
 | Browser | **Pip** | Chrome extension |
 | Brain | **PM OS** | Skills, knowledge, memory |
 

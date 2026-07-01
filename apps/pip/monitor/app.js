@@ -1,4 +1,4 @@
-/** Pip monitor dashboard — live + historical Clippy requests. */
+/** Pip monitor dashboard — live + historical Pip requests. */
 const els = {
   stats: document.getElementById("stats"),
   activeList: document.getElementById("active-list"),

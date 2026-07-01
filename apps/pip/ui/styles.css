@@ -42,17 +42,17 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Clip collapsed window to a circle — on orb only (body clip-path breaks clicks on macOS). */
+/* Clip collapsed window to a circle — on Pip only (body clip-path breaks clicks on macOS). */
 body.mode-collapsed {
   overflow: hidden;
 }
 
-body.mode-collapsed:not(.pip-transitioning) .orb-shell {
+body.mode-collapsed:not(.pip-transitioning) .pip-shell {
   border-radius: 50%;
   clip-path: circle(50% at 50% 50%);
 }
 
-body.pip-transitioning.mode-collapsed .orb-shell {
+body.pip-transitioning.mode-collapsed .pip-shell {
   border-radius: 22px;
   clip-path: none;
   transition: border-radius var(--pip-transition-ms) var(--pip-ease-spring);
@@ -141,7 +141,7 @@ body.pip-transitioning {
 }
 
 /* ── Collapsed: circular glass shell (entire window) ── */
-.orb-shell {
+.pip-shell {
   width: 100%;
   height: 100%;
   display: flex;
@@ -165,7 +165,7 @@ body.pip-transitioning {
     clip-path var(--pip-transition-ms) ease;
 }
 
-.orb-shell:hover {
+.pip-shell:hover {
   box-shadow:
     0 8px 28px rgba(0, 0, 0, 0.55),
     0 0 20px var(--pip-warm-glow),
@@ -332,7 +332,7 @@ body.mode-collapsed:not(.pip-transitioning) .pip-surface-collapsed .buddy {
 
 /* Ember comes alive when Pip is engaged. */
 body.mood-awake .ember,
-.orb-shell:hover .ember,
+.pip-shell:hover .ember,
 body.mood-thinking .ember {
   animation-duration: 1.7s;
 }
@@ -344,18 +344,18 @@ body.mood-alert .ember {
 }
 
 body.mood-awake .eye,
-.orb-shell:hover .eye {
+.pip-shell:hover .eye {
   height: 11px;
   top: 0;
   opacity: 1;
   animation: blink 5s ease-in-out infinite;
 }
 body.mood-awake .iris,
-.orb-shell:hover .iris {
+.pip-shell:hover .iris {
   height: 7px;
 }
 body.mood-awake .smile,
-.orb-shell:hover .smile {
+.pip-shell:hover .smile {
   transform: scaleX(1.05);
 }
 
@@ -377,7 +377,7 @@ body.mood-alert .smile {
   transform: scaleX(1.15);
   border-bottom-color: var(--pip-warm-soft);
 }
-body.mood-alert .orb-shell {
+body.mood-alert .pip-shell {
   box-shadow:
     0 0 24px var(--pip-warm-glow),
     0 6px 24px rgba(0, 0, 0, 0.5),
@@ -461,7 +461,7 @@ body.mode-expanded .card {
   min-height: 56px;
 }
 
-.orb-dock {
+.pip-dock {
   width: 56px;
   flex-shrink: 0;
   display: flex;
@@ -479,7 +479,7 @@ body.mode-expanded .card {
   -webkit-app-region: no-drag;
 }
 
-.orb-dock:hover {
+.pip-dock:hover {
   background:
     radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.07) 0%, transparent 46%),
     linear-gradient(155deg, #38383e 0%, var(--pip-mid) 48%, var(--pip-deep) 100%);
@@ -490,7 +490,7 @@ body.mode-expanded .card {
   min-width: 0;
   display: flex;
   align-items: center;
-  padding: 8px 8px 8px 10px;
+  padding: 9px 6px 6px 11px;
 }
 
 .card-extras {
@@ -534,25 +534,27 @@ body.dock-bottom .card-extras {
 .ask-form textarea {
   flex: 1;
   min-width: 0;
-  min-height: 36px;
-  max-height: 72px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.28);
+  min-height: 42px;
+  max-height: 128px;
+  padding: 11px 14px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(8px);
   color: var(--fg);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 14.5px;
+  line-height: 1.4;
   outline: none;
   resize: none;
   overflow-y: auto;
   font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 .ask-form textarea::placeholder { color: var(--muted); }
 .ask-form textarea:focus {
-  border-color: rgba(196, 160, 106, 0.45);
-  box-shadow: 0 0 0 3px rgba(196, 160, 106, 0.1);
+  border-color: rgba(196, 160, 106, 0.5);
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: 0 0 0 3px rgba(196, 160, 106, 0.12);
 }
 
 .icon-btn {
@@ -576,61 +578,63 @@ body.dock-bottom .card-extras {
   color: var(--fg);
 }
 
-/* Snip button — icon + label so it's obvious it captures a screen area. */
-.snip-btn {
-  display: inline-flex;
+/*
+ * Action toolbar — sits UNDER the ask box so the input stays the hero. Each action is a labeled
+ * pill (icon + word) so voice/snip/model are discoverable at a glance, not hidden behind mystery icons.
+ */
+.pip-toolbar {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 5px;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
-  background: rgba(0, 0, 0, 0.22);
-  color: var(--muted);
-  cursor: pointer;
+  padding: 0 10px 9px 11px;
   -webkit-app-region: no-drag;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.snip-btn:hover {
-  background: rgba(196, 160, 106, 0.16);
-  border-color: rgba(196, 160, 106, 0.4);
-  color: var(--fg);
-}
-.snip-ico {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-.snip-label {
-  line-height: 1;
+.tool-spacer {
+  flex: 1;
+  min-width: 0;
+  -webkit-app-region: drag;
 }
 
-/* Mic (push-to-talk) — icon-only, matches the snip button family. */
-.mic-btn {
+.tool-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.22);
   color: var(--muted);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   -webkit-app-region: no-drag;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.mic-btn:hover {
+.tool-btn:hover {
   background: rgba(196, 160, 106, 0.16);
   border-color: rgba(196, 160, 106, 0.4);
   color: var(--fg);
 }
-.mic-ico {
-  width: 16px;
-  height: 16px;
+.tool-ico {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
+.tool-label {
+  line-height: 1;
+  white-space: nowrap;
+}
+.tool-icon-only {
+  padding: 0;
+  width: 28px;
+  justify-content: center;
+}
+
 /* Listening: pulse the mic red so it's obvious Pip is hearing you. */
 body.pip-listening .mic-btn {
   color: #ff6b6b;
@@ -642,7 +646,7 @@ body.pip-listening .mic-btn {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.45); }
   50% { box-shadow: 0 0 0 5px rgba(255, 107, 107, 0); }
 }
-/* Speaking: ring the orb's ember so you can see Pip is talking (and tap to hush). */
+/* Speaking: ring Pip's ember so you can see Pip is talking (and tap to hush). */
 body.pip-speaking .buddy .ember {
   animation: ember-speak 0.5s ease-in-out infinite !important;
 }
@@ -655,31 +659,6 @@ body.pip-speaking .buddy .ember {
   body.pip-speaking .buddy .ember { animation: none !important; }
 }
 
-/* Speaker toggle (spoken replies) — always visible so voice is discoverable. */
-.speak-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
-  background: rgba(0, 0, 0, 0.22);
-  color: var(--muted);
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.speak-btn:hover {
-  background: rgba(196, 160, 106, 0.16);
-  border-color: rgba(196, 160, 106, 0.4);
-  color: var(--fg);
-}
-.speak-ico {
-  width: 16px;
-  height: 16px;
-}
 .speak-btn .speak-wave {
   opacity: 0.35;
   transition: opacity 0.15s;
@@ -692,32 +671,6 @@ body.pip-speaking .buddy .ember {
 }
 .speak-btn[aria-pressed="true"] .speak-wave {
   opacity: 1;
-}
-
-/* Explicit collapse (×) so it's always obvious how to close Pip. */
-.pip-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--muted);
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-  transition: background 0.15s, color 0.15s;
-}
-.pip-close svg {
-  width: 13px;
-  height: 13px;
-}
-.pip-close:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--fg);
 }
 
 .hint {
@@ -929,11 +882,11 @@ body.pip-working .card.glass {
   animation: pip-work-pulse 1.4s ease-in-out infinite;
 }
 
-body.pip-working .orb-shell {
+body.pip-working .pip-shell {
   animation: pip-work-pulse 1.4s ease-in-out infinite;
 }
 
-body.pip-working .orb-dock .buddy {
+body.pip-working .pip-dock .buddy {
   animation: pip-work-bob 1.1s ease-in-out infinite;
 }
 
@@ -1004,7 +957,7 @@ body.mood-awake.mode-collapsed:not(.pip-transitioning) .pip-surface-collapsed .b
 
 /* Blink variety: a single blink, then a rare double-blink, so the eyes feel alive. */
 body.mood-awake .eye,
-.orb-shell:hover .eye {
+.pip-shell:hover .eye {
   animation: eye-life 6.5s ease-in-out infinite;
 }
 @keyframes eye-life {
@@ -1100,28 +1053,7 @@ body.pip-peeking .buddy:hover {
 }
 
 /* ── Model switcher pill (model-agnostic, made visible) ── */
-/* Compact model indicator — a warm dot (name on hover + right-click menu) to keep the bar uncluttered. */
-.model-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9px;
-  background: rgba(0, 0, 0, 0.22);
-  color: var(--muted);
-  font-family: inherit;
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.model-pill:hover {
-  background: rgba(196, 160, 106, 0.16);
-  border-color: rgba(196, 160, 106, 0.4);
-  color: var(--fg);
-}
+/* Lives in the toolbar as a labeled pill so the "runs on any model" story is always on screen. */
 .model-dot {
   width: 8px;
   height: 8px;
@@ -1131,8 +1063,10 @@ body.pip-peeking .buddy:hover {
   box-shadow: 0 0 6px var(--pip-warm-glow);
   animation: model-dot-pulse 2.4s ease-in-out infinite;
 }
-.model-name {
-  display: none;
+.model-pill .model-name {
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 @keyframes model-dot-pulse {
   0%, 100% { opacity: 0.65; }

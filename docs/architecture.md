@@ -52,8 +52,8 @@ workspace `AGENTS.md` + `.cursor/rules/*.mdc` are **auto-loaded** by the CLI.
 - **Continuity:** `channel:threadTs → chatId` in `sessions.json`, passed back as `--resume`. Work per
   thread is serialized through a promise queue so follow-ups don't race the file.
 
-### Clippy (`apps/clippy`)
-- **Window:** frameless, transparent, always-on-top, visible across spaces; collapsed paperclip ↔
+### Pip (`apps/pip`)
+- **Window:** frameless, transparent, always-on-top, visible across spaces; collapsed Pip ↔
   expanded panel. Window state persists to `userData` (the app dir is read-only once packaged).
 - **`tasks.md` contract:** exactly four `##` sections. The parser keys tasks by **1-based line
   number** so mutations are line-faithful — `moveTaskInFile` extracts a task block + its indented
@@ -81,7 +81,7 @@ workspace `AGENTS.md` + `.cursor/rules/*.mdc` are **auto-loaded** by the CLI.
 | `apps/slack/state/processed.json` | handled message ts (dedupe) | no |
 | `apps/slack/state/open-threads.json` | non-owner grants (TTL) | no |
 | `apps/*/.env` | tokens + config | no |
-| `~/Library/Application Support/Tandem/window-state.json` | Clippy window state | n/a (userData) |
+| `~/Library/Application Support/Tandem/window-state.json` | Pip window state | n/a (userData) |
 
 `--force` is required for the agent to act, and it means shell access on the host. The Slack
 allow-list is mandatory. The browser bridge is localhost-bound, `Host`- and `Origin`-restricted to

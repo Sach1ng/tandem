@@ -84,28 +84,28 @@ function cmdWorkspace(): void {
   console.log(resolveWorkspace());
 }
 
-function findClippyRoot(): string {
+function findPipRoot(): string {
   try {
-    return dirname(require.resolve("@tandem/clippy/package.json"));
+    return dirname(require.resolve("@tandem/pip/package.json"));
   } catch {
     // Dev: running from monorepo packages/cli
-    const dev = resolve(__dirname, "../../../apps/clippy");
+    const dev = resolve(__dirname, "../../../apps/pip");
     if (existsSync(join(dev, "package.json"))) return dev;
-    throw new Error("@tandem/clippy is not installed. Run: npm install -g @tandem/cli @tandem/clippy");
+    throw new Error("@tandem/pip is not installed. Run: npm install -g @tandem/cli @tandem/pip");
   }
 }
 
-function findElectronBin(clippyRoot: string): string {
-  const local = join(clippyRoot, "node_modules", ".bin", "electron");
+function findElectronBin(pipRoot: string): string {
+  const local = join(pipRoot, "node_modules", ".bin", "electron");
   if (existsSync(local)) return local;
   try {
     return require.resolve("electron/cli.js");
   } catch {
-    throw new Error("electron not found. Reinstall: npm install -g @tandem/clippy");
+    throw new Error("electron not found. Reinstall: npm install -g @tandem/pip");
   }
 }
 
-async function cmdClippy(): Promise<void> {
+async function cmdPip(): Promise<void> {
   let ws = resolveWorkspace();
   if (!existsSync(join(ws, "AGENTS.md"))) {
     console.log(`No workspace at ${ws} yet — setting one up (this is a one-time step)…`);
@@ -116,15 +116,15 @@ async function cmdClippy(): Promise<void> {
 
   process.env.TANDEM_WORKSPACE = ws;
 
-  const clippyRoot = findClippyRoot();
-  const distMain = join(clippyRoot, "dist", "main.cjs");
+  const pipRoot = findPipRoot();
+  const distMain = join(pipRoot, "dist", "main.cjs");
   if (!existsSync(distMain)) {
-    console.error("@tandem/clippy is not built. Reinstall the package or run npm run build in apps/clippy.");
+    console.error("@tandem/pip is not built. Reinstall the package or run npm run build in apps/pip.");
     process.exit(1);
   }
 
-  const electron = findElectronBin(clippyRoot);
-  const child = spawn(electron, [clippyRoot], {
+  const electron = findElectronBin(pipRoot);
+  const child = spawn(electron, [pipRoot], {
     stdio: "inherit",
     env: { ...process.env, TANDEM_WORKSPACE: ws },
   });
@@ -176,7 +176,7 @@ async function main(): Promise<void> {
       break;
     case "pip":
     case "clippy": // back-compat alias
-      await cmdClippy();
+      await cmdPip();
       break;
     case "workspace":
       cmdWorkspace();

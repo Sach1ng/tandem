@@ -24,7 +24,7 @@ function readUserConfig(): Record<string, unknown> {
   }
 }
 
-/** Persist chosen knowledge base for future Clippy / Tandem runs. */
+/** Persist chosen knowledge base for future Pip / Tandem runs. */
 export function saveKnowledgeBase(dir: string): void {
   const path = userConfigPath();
   mkdirSync(join(homedir(), ".tandem"), { recursive: true });

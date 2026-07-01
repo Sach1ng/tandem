@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import chokidar from "chokidar";
-import { loadConfig, type ClippyConfig } from "./config.ts";
+import { loadConfig, type PipConfig } from "./config.ts";
 import { parseTasksMarkdown, type ParsedTasks, type SectionKey, type Task } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
 import { ask, askAboutScreenshot, askStream, capture, groom } from "./agent.ts";
@@ -15,10 +15,10 @@ import { startMonitorServer } from "./monitor-server.ts";
 import { loadPipChatId, savePipChatId, warmAgentSession } from "./agent-session.ts";
 import { logActivity } from "@tandem/core";
 
-const APP_DIR = resolve(__dirname, ".."); // apps/clippy
+const APP_DIR = resolve(__dirname, ".."); // apps/pip
 const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS submodule)
 
-let cfg: ClippyConfig;
+let cfg: PipConfig;
 let win: BrowserWindow;
 let expanded = false;
 let expandAnimating = false;
@@ -117,7 +117,7 @@ function broadcast(): void {
   if (!win?.isDestroyed()) win.webContents.send("tasks:updated", readTasks());
 }
 
-// Lens-assigned tasks we've already surfaced, so a re-parse doesn't re-pop the orb.
+// Lens-assigned tasks we've already surfaced, so a re-parse doesn't re-pop Pip.
 const seenLensTasks = new Set<string>();
 
 /** Stable-ish key for a Lens task across line shifts (title + source + outcome head). */
@@ -127,7 +127,7 @@ function lensTaskKey(t: Task): string {
 
 /**
  * Find tasks assigned from Lens that have completed (have an Outcome) and surface any new ones in
- * the orb. On the initial pass we only record existing keys so old tasks don't pop on launch.
+ * Pip. On the initial pass we only record existing keys so old tasks don't pop on launch.
  */
 async function detectLensTasks(initial = false): Promise<void> {
   if (!win || win.isDestroyed()) return;
@@ -714,7 +714,7 @@ function startGazeWatcher(): void {
   if (gazeTimer) clearInterval(gazeTimer);
   if (!cfg.personality.gaze || !cfg.personality.motion) return;
 
-  const REACH = 260; // px from the orb center that maps to a full eye deflection
+  const REACH = 260; // px from Pip's center that maps to a full eye deflection
   gazeTimer = setInterval(() => {
     if (!win || win.isDestroyed() || !win.isVisible()) return;
     const pt = screen.getCursorScreenPoint();
@@ -824,7 +824,7 @@ function registerHotkey(): void {
   }
 }
 
-function restartClippy(): void {
+function restartPip(): void {
   void dialog
     .showMessageBox(win, {
       type: "question",
@@ -946,7 +946,7 @@ function showContextMenu(): void {
       label: `Hide Pip${cfg.hotkey.hide ? `  (${prettyAccelerator(cfg.hotkey.hide)})` : ""}`,
       click: () => setHidden(true),
     },
-    { label: "Restart Pip", click: () => restartClippy() },
+    { label: "Restart Pip", click: () => restartPip() },
     { label: "Quit Pip", click: () => app.quit() },
   ]);
   menu.popup({ window: win });
@@ -1141,7 +1141,7 @@ function createWindow(): void {
   });
   win.on("closed", () => watcher.close());
 
-  // Snapshot existing Lens tasks so only ones assigned from now on pop the orb.
+  // Snapshot existing Lens tasks so only ones assigned from now on pop Pip.
   void detectLensTasks(true);
 }
 

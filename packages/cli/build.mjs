@@ -11,7 +11,7 @@ await build({
   format: "esm",
   target: "node20",
   sourcemap: true,
-  external: ["@tandem/clippy", "@tandem/slack", "@tandem/pm-os", "@tandem/core", "@tandem/engine"],
+  external: ["@tandem/pip", "@tandem/slack", "@tandem/pm-os", "@tandem/core", "@tandem/engine"],
   logLevel: "info",
 });
 

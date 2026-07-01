@@ -1,14 +1,14 @@
 /**
  * Live screenshot/vision smoke — needs cursor-agent logged in.
  * Captures a tiny region (top-left menu bar sliver, privacy-safe) and asks the agent to read it,
- * verifying whether the selected model can actually view images. Run: npm run clippy:screenshot-smoke
+ * verifying whether the selected model can actually view images. Run: npm run pip:screenshot-smoke
  */
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { askAboutScreenshot } from "../src/agent.ts";
-import type { ClippyConfig } from "../src/config.ts";
+import type { PipConfig } from "../src/config.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../..");
@@ -43,7 +43,7 @@ async function main() {
 
   const kb =
     process.env.TANDEM_KNOWLEDGE_BASE || join(REPO_ROOT, "external", "pm-operating-os");
-  const cfg: ClippyConfig = {
+  const cfg: PipConfig = {
     workspace: REPO_ROOT,
     agentWorkspace: kb,
     knowledgeBase: kb,

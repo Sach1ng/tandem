@@ -28,7 +28,7 @@ surface. Tandem flips that:
 ┌──────────────────────────────────────────────────────────────────┐
 │  SURFACES                                                          │
 │   Pip · Slack          Pip · desktop           Pip · Chrome      │
-│   tag @Pip             buddy orb               page-aware Q&A     │
+│   tag @Pip             on-screen               page-aware Q&A     │
 └─────────┬──────────────────────┬──────────────────────┬───────────┘
           │                      │                      │
           ▼                      ▼                      ▼
@@ -50,7 +50,7 @@ surface. Tandem flips that:
 | Surface | Name | What it does | Where |
 |---|---|---|---|
 | **Slack** | **Pip** (`@Pip`) | Tag or DM your team's coworker. Runs `cursor-agent` in the workspace, replies in-thread. | `apps/slack` |
-| **Desktop** | **Pip** | Buddy orb on your screen. Click to ask; **⌘⇧T** to snip and get an answer. | `apps/clippy` |
+| **Desktop** | **Pip** | Pip lives on your screen. Click to ask; **⌘⇧T** to snip and get an answer. | `apps/pip` |
 | **Browser** | **Pip** | Page-aware prompts about whatever tab you're on, via a local bridge to the engine. | `apps/chrome-extension` |
 
 All three import `@tandem/engine`. One product (**Tandem**), one coworker (**Pip**) in three places, one brain (**PM OS**).
@@ -82,7 +82,7 @@ have a PM OS brain, `tandem init` picks it up automatically as a rich starting p
 ### Manual install (npm)
 
 ```bash
-npm install -g @tandem/cli @tandem/clippy @tandem/slack
+npm install -g @tandem/cli @tandem/pip @tandem/slack
 
 tandem pip               # self-initializes ~/.tandem on first run, then launches
 tandem doctor            # optional: verify Node + cursor-agent
@@ -124,8 +124,8 @@ Then start a surface:
 cd apps/slack && cp .env.example .env   # fill tokens + ALLOWED_USERS
 npm start
 
-# Clippy (macOS)
-npm run clippy
+# Pip (macOS)
+npm run pip
 
 # Chrome extension: build it, run the bridge, load dist/ as an unpacked extension
 npm run chrome:build
@@ -175,11 +175,11 @@ Two deliberate design choices, both from hard-won experience:
 packages/
   engine/   Cursor CLI adapter — runAgent, extractResult, resume, smoke test
   core/     shared utils — Slack mrkdwn, atomic JSON state, charter loader, workspace resolution
-  cli/      `tandem` CLI — init, doctor, clippy (npm-installable, no git required)
+  cli/      `tandem` CLI — init, doctor, pip (npm-installable, no git required)
   pm-os/    PM OS brain bundle for `tandem init` (npm publish artifact)
 apps/
   slack/             Bolt coworker (Socket Mode + polling fallback)
-  clippy/            Electron task widget (tasks.md contract, parser, groom/capture)
+  pip/               Electron desktop coworker (tasks.md contract, parser, groom/capture)
   chrome-extension/  MV3 extension + local bridge server
 external/
   pm-operating-os/   PM OS — the brain (git submodule for dev; bundled in @tandem/pm-os for install)
@@ -195,7 +195,7 @@ npm run build
 npm publish --workspace @tandem/core
 npm publish --workspace @tandem/engine
 npm publish --workspace @tandem/pm-os
-npm publish --workspace @tandem/clippy
+npm publish --workspace @tandem/pip
 npm publish --workspace @tandem/cli
 ```
 
@@ -224,8 +224,8 @@ All four surfaces are live-tested against a local `cursor-agent`:
 npm run verify              # 16 offline checks
 npm run engine:smoke        # CLI + JSON parse
 npm run slack:smoke         # agent + Slack DM reply
-npm run clippy:agent-smoke  # groom + capture
-npm run clippy:screenshot-smoke  # vision (set TEST_IMG=… if no Screen Recording)
+npm run pip:agent-smoke  # groom + capture
+npm run pip:screenshot-smoke  # vision (set TEST_IMG=… if no Screen Recording)
 ```
 
 Slack setup wizard: `npm run slack:setup` → http://127.0.0.1:8766

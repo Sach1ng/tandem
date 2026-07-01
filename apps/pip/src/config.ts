@@ -3,7 +3,7 @@ import { isAbsolute, join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { resolveWorkspace } from "@tandem/core";
 
-export interface ClippyHotkeyConfig {
+export interface PipHotkeyConfig {
   /** Electron accelerator, e.g. Command+Shift+T. null = disabled. */
   snip: string | null;
   /** Global hotkey that warps Pip next to the cursor. null = disabled. */
@@ -16,7 +16,7 @@ export interface ClippyHotkeyConfig {
   question: string;
 }
 
-export interface ClippyPersonalityConfig {
+export interface PipPersonalityConfig {
   /** Master switch for idle motion (breathing, float, gaze). Honors prefers-reduced-motion too. */
   motion: boolean;
   /** Eyes follow the cursor when awake. */
@@ -31,15 +31,15 @@ export interface ClippyPersonalityConfig {
   sleepyIdleSeconds: number;
 }
 
-export interface ClippyNudgeConfig {
+export interface PipNudgeConfig {
   enabled: boolean;
-  /** System idle (no mouse/keyboard) before the orb pulses. */
+  /** System idle (no mouse/keyboard) before Pip pulses. */
   idleSeconds: number;
   /** Min time between nudges. */
   cooldownSeconds: number;
 }
 
-export interface ClippyVoiceConfig {
+export interface PipVoiceConfig {
   enabled: boolean;
   /** Submit as soon as speech is recognized. */
   autoSend: boolean;
@@ -47,23 +47,23 @@ export interface ClippyVoiceConfig {
   speakReplies: boolean;
 }
 
-export interface ClippyPlacementConfig {
+export interface PipPlacementConfig {
   corner: "top-center" | "top-right" | "bottom-right";
   margin: number;
   /** Drop-within-this-many px of an edge to magnetically snap Pip flush to it. */
   snapThreshold: number;
 }
 
-export interface ClippyPeekConfig {
+export interface PipPeekConfig {
   /** When idle, slide Pip mostly off the nearest edge, leaving a peeking sliver. */
   enabled: boolean;
   /** Seconds of system idle before Pip peeks away. */
   idleSeconds: number;
-  /** Fraction of the orb hidden past the edge (0..0.9). 0.62 leaves ~38% showing. */
+  /** Fraction of Pip hidden past the edge (0..0.9). 0.62 leaves ~38% showing. */
   insetPct: number;
 }
 
-export interface ClippyConfig {
+export interface PipConfig {
   workspace: string; // absolute — tasks, screenshots, local config
   agentWorkspace: string; // absolute — cursor-agent --workspace (PM OS or Tandem root)
   knowledgeBase: string; // absolute — PM OS brain directory
@@ -79,16 +79,16 @@ export interface ClippyConfig {
   agentFlags: string[];
   panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number; compactH?: number; tallH?: number; snipH?: number };
   collapsed: { w: number; h: number };
-  placement: ClippyPlacementConfig;
-  peek: ClippyPeekConfig;
-  hotkey: ClippyHotkeyConfig;
-  personality: ClippyPersonalityConfig;
-  nudge: ClippyNudgeConfig;
-  voice: ClippyVoiceConfig;
-  monitor: ClippyMonitorConfig;
+  placement: PipPlacementConfig;
+  peek: PipPeekConfig;
+  hotkey: PipHotkeyConfig;
+  personality: PipPersonalityConfig;
+  nudge: PipNudgeConfig;
+  voice: PipVoiceConfig;
+  monitor: PipMonitorConfig;
 }
 
-export interface ClippyMonitorConfig {
+export interface PipMonitorConfig {
   enabled: boolean;
   port: number;
 }
@@ -111,7 +111,7 @@ function readJson(path: string): Record<string, any> {
  *
  * Config file lookup: appDir/config.json first, then ~/.tandem/config.json.
  */
-export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
+export function loadConfig(appDir: string, repoRoot: string): PipConfig {
   const defaults = readJson(join(appDir, "config.default.json"));
   const userApp = readJson(join(appDir, "config.json"));
   const userHome = readJson(join(homedir(), ".tandem", "config.json"));

@@ -1,10 +1,10 @@
 {
-  "name": "@tandem/clippy",
+  "name": "@tandem/pip",
   "version": "0.1.0",
-  "description": "Tandem Clippy — a frameless always-on-top task widget backed by tasks.md, with AI groom/capture via the Cursor CLI.",
+  "description": "Pip — a frameless always-on-top AI coworker on your screen, backed by tasks.md, with ask/snip/groom/capture via the Cursor CLI.",
   "main": "dist/main.cjs",
   "bin": {
-    "tandem-clippy": "bin/clippy.mjs"
+    "tandem-pip": "bin/pip.mjs"
   },
   "files": [
     "dist",

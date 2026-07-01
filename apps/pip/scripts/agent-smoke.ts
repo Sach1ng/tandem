@@ -1,14 +1,14 @@
 /**
- * Live Clippy agent smoke — needs cursor-agent installed + logged in.
+ * Live Pip agent smoke — needs cursor-agent installed + logged in.
  * Exercises groom (read-only) and capture (write) against a throwaway copy of tasks, so it never
- * touches your real board. Run from repo root: npm run clippy:agent-smoke
+ * touches your real board. Run from repo root: npm run pip:agent-smoke
  */
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkCli } from "@tandem/engine";
 import { capture, groom } from "../src/agent.ts";
-import type { ClippyConfig } from "../src/config.ts";
+import type { PipConfig } from "../src/config.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../..");
@@ -26,7 +26,7 @@ async function main() {
   const testFile = join(dir, "test-tasks.md");
   copyFileSync(join(REPO_ROOT, "tasks.example.md"), testFile);
 
-  const cfg: ClippyConfig = {
+  const cfg: PipConfig = {
     workspace: REPO_ROOT,
     agentWorkspace: process.env.TANDEM_KNOWLEDGE_BASE || join(REPO_ROOT, "external", "pm-operating-os"),
     knowledgeBase: process.env.TANDEM_KNOWLEDGE_BASE || join(REPO_ROOT, "external", "pm-operating-os"),

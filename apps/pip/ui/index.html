@@ -8,7 +8,7 @@
   </head>
   <body class="mode-collapsed mood-rest dock-bottom">
     <div id="pip-stage" class="pip-stage">
-    <div id="collapsed" class="orb-shell pip-surface pip-surface-collapsed" aria-label="Pip">
+    <div id="collapsed" class="pip-shell pip-surface pip-surface-collapsed" aria-label="Pip">
       <div class="buddy">
         <span class="ember" aria-hidden="true"></span>
         <div class="buddy-face">
@@ -27,26 +27,10 @@
         <div class="card-row">
           <div class="card-main">
             <form id="ask-form" class="ask-form">
-              <textarea id="ask-input" rows="1" placeholder="Ask Pip…" autocomplete="off" spellcheck="true"></textarea>
-              <button type="button" id="btn-mic" class="mic-btn" title="Click to talk to Pip" aria-label="Talk to Pip" hidden>
-                <svg class="mic-ico" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="7.5" y="2.5" width="5" height="9" rx="2.5" />
-                  <path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" />
-                </svg>
-              </button>
-              <button type="button" id="btn-snip" class="snip-btn" title="Snip a screen area and ask Pip about it  (⌘⇧T)" aria-label="Snip a screen area">
-                <svg class="snip-ico" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 6.5V4.5A1.5 1.5 0 0 1 4.5 3h2M13.5 3h2A1.5 1.5 0 0 1 17 4.5v2M17 13.5v2A1.5 1.5 0 0 1 15.5 17h-2M6.5 17h-2A1.5 1.5 0 0 1 3 15.5v-2" />
-                </svg>
-              </button>
-              <button type="button" id="btn-collapse" class="pip-close" title="Collapse Pip (Esc)" aria-label="Collapse Pip">
-                <svg viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-                  <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" />
-                </svg>
-              </button>
+              <textarea id="ask-input" rows="1" placeholder="Ask Pip anything…" autocomplete="off" spellcheck="true"></textarea>
             </form>
           </div>
-          <button type="button" id="btn-close" class="orb-dock" title="Pip — drag to move, click to minimize" aria-label="Minimize Pip">
+          <button type="button" id="btn-close" class="pip-dock" title="Pip — drag to move, click to minimize" aria-label="Minimize Pip">
             <div class="buddy buddy-sm">
               <span class="ember" aria-hidden="true"></span>
               <div class="buddy-face">
@@ -57,6 +41,39 @@
                 <span class="smile" aria-hidden="true"></span>
               </div>
             </div>
+          </button>
+        </div>
+
+        <div class="pip-toolbar">
+          <button type="button" id="btn-mic" class="tool-btn mic-btn" title="Click to talk to Pip" aria-label="Talk to Pip" hidden>
+            <svg class="tool-ico" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="7.5" y="2.5" width="5" height="9" rx="2.5" />
+              <path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" />
+            </svg>
+            <span class="tool-label">Talk</span>
+          </button>
+          <button type="button" id="btn-snip" class="tool-btn snip-btn" title="Snip a screen area and ask Pip about it  (⌘⇧T)" aria-label="Snip a screen area">
+            <svg class="tool-ico" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6.5V4.5A1.5 1.5 0 0 1 4.5 3h2M13.5 3h2A1.5 1.5 0 0 1 17 4.5v2M17 13.5v2A1.5 1.5 0 0 1 15.5 17h-2M6.5 17h-2A1.5 1.5 0 0 1 3 15.5v-2" />
+            </svg>
+            <span class="tool-label">Snip</span>
+          </button>
+          <button type="button" id="btn-speak" class="tool-btn speak-btn" title="Speak replies aloud — off" aria-label="Toggle spoken replies" aria-pressed="false">
+            <svg class="tool-ico" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 7.5v5h3l4 3.5v-12l-4 3.5z" />
+              <path class="speak-wave" d="M13 7.5a4 4 0 0 1 0 5M15.2 5.5a7 7 0 0 1 0 9" />
+            </svg>
+            <span class="tool-label">Speak</span>
+          </button>
+          <button type="button" id="model-pill" class="tool-btn model-pill" title="Switch model — Pip runs on any model" aria-label="Switch model">
+            <span class="model-dot" aria-hidden="true"></span>
+            <span id="model-name" class="tool-label">auto</span>
+          </button>
+          <span class="tool-spacer"></span>
+          <button type="button" id="btn-collapse" class="tool-btn tool-icon-only pip-close" title="Collapse Pip (Esc)" aria-label="Collapse Pip">
+            <svg viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" />
+            </svg>
           </button>
         </div>
 

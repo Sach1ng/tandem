@@ -17,4 +17,4 @@ const common = {
 await build({ ...common, entryPoints: ["src/main.ts"], outfile: "dist/main.cjs" });
 await build({ ...common, entryPoints: ["src/preload.ts"], outfile: "dist/preload.cjs" });
 
-console.log("clippy: built dist/main.cjs + dist/preload.cjs");
+console.log("pip: built dist/main.cjs + dist/preload.cjs");

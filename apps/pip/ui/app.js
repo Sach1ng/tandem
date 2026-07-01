@@ -34,13 +34,13 @@ let pendingSnipPath = null;
 let pendingSnipPreviewUrl = null;
 let panelSizes = {
   minW: 390,
-  minH: 73,
+  minH: 100,
   maxW: 676,
-  maxH: 520,
+  maxH: 540,
   defaultW: 520,
-  compactH: 75,
-  tallH: 148,
-  snipH: 220,
+  compactH: 108,
+  tallH: 184,
+  snipH: 272,
 };
 let lastPanelW = 0;
 let lastPanelH = 0;
@@ -665,7 +665,7 @@ if (w) {
     onTap: () => {
       ping();
       if (document.body.classList.contains("pip-speaking")) {
-        void w.stopSpeaking?.(); // tap the orb to hush Pip mid-reply
+        void w.stopSpeaking?.(); // tap Pip to hush mid-reply
         return;
       }
       void w.toggleExpand();

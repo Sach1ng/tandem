@@ -150,7 +150,7 @@ async function assign(): Promise<void> {
       answerEl.textContent = `Error: ${data.error}`;
     } else {
       assignedEl.hidden = false;
-      assignedEl.textContent = `Added to Pip's board · ${data.taskId ?? "task"} · check the desktop orb`;
+      assignedEl.textContent = `Added to Pip's board · ${data.taskId ?? "task"} · check Pip on your desktop`;
       answerEl.textContent = data.text || "(no output)";
     }
   } catch {

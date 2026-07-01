@@ -14,7 +14,7 @@
     "packages/*/scripts/**/*.ts",
     "apps/slack/src/**/*.ts",
     "apps/slack/scripts/**/*.ts",
-    "apps/clippy/src/**/*.ts",
+    "apps/pip/src/**/*.ts",
     "apps/chrome-extension/src/**/*.ts"
   ]
 }

@@ -9,14 +9,14 @@
   "agentFlags": ["-p", "--trust", "--output-format", "text"],
   "panel": {
     "minW": 390,
-    "minH": 73,
+    "minH": 100,
     "maxW": 676,
-    "maxH": 520,
+    "maxH": 540,
     "defaultW": 520,
-    "defaultH": 75,
-    "compactH": 75,
-    "tallH": 148,
-    "snipH": 240
+    "defaultH": 108,
+    "compactH": 108,
+    "tallH": 184,
+    "snipH": 272
   },
   "collapsed": {
     "w": 73,

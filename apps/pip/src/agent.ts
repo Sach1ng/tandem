@@ -1,6 +1,6 @@
 import { runAgent, runAgentStream } from "@tandem/engine";
 import { hasBrainSkills, readMemory } from "@tandem/core";
-import type { ClippyConfig } from "./config.ts";
+import type { PipConfig } from "./config.ts";
 import {
   isPmQuestion,
   isShortQuestion,
@@ -9,7 +9,7 @@ import {
 } from "./agent-session.ts";
 
 /** Absolute path to the task file for use inside prompts (agent cwd may be PM OS). */
-function taskFileRef(cfg: ClippyConfig): string {
+function taskFileRef(cfg: PipConfig): string {
   return cfg.tasksFile;
 }
 
@@ -33,13 +33,13 @@ const PM_OS_HINT = (kb: string) =>
   `PM OS: ${kb} — Read/Grep or @paths only if needed for this question.`;
 
 /** Fold saved memory into a prompt so context compounds across sessions. "" when nothing learned yet. */
-function memoryContext(cfg: ClippyConfig): string {
+function memoryContext(cfg: PipConfig): string {
   const mem = readMemory(cfg.workspace);
   if (!mem) return "";
   return `\n\n--- MEMORY (yours; use it, and append durable learnings to memory/) ---\n${mem}`;
 }
 
-function engineCfg(cfg: ClippyConfig, model?: string) {
+function engineCfg(cfg: PipConfig, model?: string) {
   return {
     cliBin: cfg.agent,
     model: model ?? cfg.agentModel,
@@ -48,7 +48,7 @@ function engineCfg(cfg: ClippyConfig, model?: string) {
   };
 }
 
-function askPrompt(cfg: ClippyConfig, question: string): string {
+function askPrompt(cfg: PipConfig, question: string): string {
   const q = question.trim();
   const usePmHint = isPmQuestion(q) && hasBrainSkills(cfg.workspace, cfg.knowledgeBase);
   const pm = usePmHint ? `\n${PM_OS_HINT(cfg.knowledgeBase)}` : "";
@@ -59,7 +59,7 @@ function askPrompt(cfg: ClippyConfig, question: string): string {
   return `You are Pip, a concise desktop buddy. Lead with the answer.${pm}${mem}\n\nQ: ${q}`;
 }
 
-function screenshotPrompt(cfg: ClippyConfig, imagePath: string, question: string): string {
+function screenshotPrompt(cfg: PipConfig, imagePath: string, question: string): string {
   const q = question.trim() || "What's on screen? If there's an error, explain the fix.";
   const usePmHint = isPmQuestion(q) && hasBrainSkills(cfg.workspace, cfg.knowledgeBase);
   const pm = usePmHint ? `\nPM OS (only if relevant): ${cfg.knowledgeBase}` : "";
@@ -73,7 +73,7 @@ export interface AgentReply {
 }
 
 /** Review the board. Returns the raw model output (expected to be JSON). */
-export async function groom(cfg: ClippyConfig): Promise<{ raw: string }> {
+export async function groom(cfg: PipConfig): Promise<{ raw: string }> {
   const result = await runAgent(engineCfg(cfg), {
     prompt: groomPrompt(taskFileRef(cfg)),
     outputFormat: "json",
@@ -82,7 +82,7 @@ export async function groom(cfg: ClippyConfig): Promise<{ raw: string }> {
 }
 
 /** Writes one task into Needs triage. Needs write access, so force is on. */
-export async function capture(cfg: ClippyConfig, text: string): Promise<void> {
+export async function capture(cfg: PipConfig, text: string): Promise<void> {
   await runAgent(engineCfg(cfg, cfg.agentFastModel), {
     prompt: capturePrompt(taskFileRef(cfg), text),
     outputFormat: "json",
@@ -92,7 +92,7 @@ export async function capture(cfg: ClippyConfig, text: string): Promise<void> {
 
 /** Visual help: analyze a captured screenshot. */
 export async function askAboutScreenshot(
-  cfg: ClippyConfig,
+  cfg: PipConfig,
   imagePath: string,
   question: string,
   opts: { resumeChatId?: string | null } = {},
@@ -108,7 +108,7 @@ export async function askAboutScreenshot(
 
 /** General ask — desktop assistant (no screenshot). */
 export async function ask(
-  cfg: ClippyConfig,
+  cfg: PipConfig,
   question: string,
   opts: { resumeChatId?: string | null } = {},
 ): Promise<AgentReply> {
@@ -131,7 +131,7 @@ export async function ask(
  * instead of after the full round-trip. Resolves with the final reply.
  */
 export async function askStream(
-  cfg: ClippyConfig,
+  cfg: PipConfig,
   question: string,
   onDelta: (delta: string) => void,
   opts: { resumeChatId?: string | null; model?: string | null } = {},

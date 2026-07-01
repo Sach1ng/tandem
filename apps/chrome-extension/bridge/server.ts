@@ -219,7 +219,7 @@ const server = createServer(async (req, res) => {
         { prompt: buildAssignPrompt(body), outputFormat: "json" },
       );
 
-      // 3. Persist the outcome back onto the same task (Clippy's watcher picks it up).
+      // 3. Persist the outcome back onto the same task (Pip's watcher picks it up).
       const outcome = result.text?.trim() || "(no output)";
       appendTaskSubBullet(TASKS_FILE, id, "Outcome", outcome);
 

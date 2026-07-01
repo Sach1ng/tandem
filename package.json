@@ -9,21 +9,21 @@
   "workspaces": [
     "packages/*",
     "apps/slack",
-    "apps/clippy",
+    "apps/pip",
     "apps/chrome-extension"
   ],
   "scripts": {
-    "build": "npm run build --workspace @tandem/core && npm run build --workspace @tandem/engine && npm run prepare --workspace @tandem/pm-os && npm run build --workspace @tandem/cli && npm run build --workspace @tandem/clippy && npm run build --workspace @tandem/slack",
+    "build": "npm run build --workspace @tandem/core && npm run build --workspace @tandem/engine && npm run prepare --workspace @tandem/pm-os && npm run build --workspace @tandem/cli && npm run build --workspace @tandem/pip && npm run build --workspace @tandem/slack",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "tsx scripts/verify-offline.ts",
     "engine:smoke": "tsx packages/engine/scripts/smoke.ts",
-    "clippy:agent-smoke": "tsx apps/clippy/scripts/agent-smoke.ts",
-    "clippy:screenshot-smoke": "tsx apps/clippy/scripts/screenshot-smoke.ts",
+    "pip:agent-smoke": "tsx apps/pip/scripts/agent-smoke.ts",
+    "pip:screenshot-smoke": "tsx apps/pip/scripts/screenshot-smoke.ts",
     "slack": "npm run start --workspace @tandem/slack",
     "slack:setup": "npm run setup --workspace @tandem/slack",
     "slack:smoke": "npm run smoke --workspace @tandem/slack",
     "slack:reinstall": "npm run reinstall --workspace @tandem/slack",
-    "clippy": "npm run build --workspace @tandem/clippy && npm run start --workspace @tandem/clippy",
+    "pip": "npm run build --workspace @tandem/pip && npm run start --workspace @tandem/pip",
     "chrome:build": "npm run build --workspace @tandem/chrome-extension",
     "tandem:init": "node packages/cli/bin/tandem.mjs init",
     "tandem:doctor": "node packages/cli/bin/tandem.mjs doctor"

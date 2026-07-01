@@ -41,11 +41,11 @@ const slackResume = buildArgs({ workspace: ws }, { prompt: "p", resumeChatId: "c
 check("Slack: passes --resume <chatId>", slackResume.includes("--resume") && slackResume.includes("chat_42"));
 
 const groomArgs = buildArgs({ workspace: ws }, { prompt: "groom", outputFormat: "text" });
-check("Clippy groom: --force (full tool access)", groomArgs.includes("--force") && !groomArgs.includes("--mode"));
+check("Pip groom: --force (full tool access)", groomArgs.includes("--force") && !groomArgs.includes("--mode"));
 const captureArgs = buildArgs({ workspace: ws }, { prompt: "capture", outputFormat: "text", force: true });
-check("Clippy capture: --force + text output", captureArgs.includes("--force") && captureArgs.includes("text"));
+check("Pip capture: --force + text output", captureArgs.includes("--force") && captureArgs.includes("text"));
 const screenArgs = buildArgs({ workspace: ws }, { prompt: "screenshot", outputFormat: "text" });
-check("Clippy screenshot: --force (full tool access)", screenArgs.includes("--force") && !screenArgs.includes("--mode"));
+check("Pip screenshot: --force (full tool access)", screenArgs.includes("--force") && !screenArgs.includes("--mode"));
 
 const chromeAskArgs = buildArgs(
   { workspace: ws },
@@ -103,16 +103,16 @@ check(
   /mode:\s*"ask"/.test(chromeBridge) && /force:\s*false/.test(chromeBridge),
 );
 
-const pipAgent = readFileSync(join(ROOT, "apps/clippy/src/agent.ts"), "utf8");
+const pipAgent = readFileSync(join(ROOT, "apps/pip/src/agent.ts"), "utf8");
 check("Pip assistant persona", /You are Pip/.test(pipAgent));
 check("Pip screenshot @-path prompt", /@\$\{imagePath\}/.test(pipAgent));
 
-const pipHtml = readFileSync(join(ROOT, "apps/clippy/ui/index.html"), "utf8");
+const pipHtml = readFileSync(join(ROOT, "apps/pip/ui/index.html"), "utf8");
 check("Pip UI title", pipHtml.includes("Pip · Tandem"));
 check("Pip placeholder", pipHtml.includes("Ask Pip"));
 
-const clippyConfig = JSON.parse(readFileSync(join(ROOT, "apps/clippy/config.default.json"), "utf8"));
-check("Pip placement: bottom-right", clippyConfig.placement?.corner === "bottom-right");
+const pipConfig = JSON.parse(readFileSync(join(ROOT, "apps/pip/config.default.json"), "utf8"));
+check("Pip placement: bottom-right", pipConfig.placement?.corner === "bottom-right");
 
 console.log("\n[5] Zero-context / grow-as-you-go (PM OS optional)\n");
 
@@ -147,10 +147,10 @@ try {
 }
 
 console.log("\n[6] Presence config (peek / magnetic snap / hide)\n");
-check("peek-when-idle enabled by default", clippyConfig.peek?.enabled === true);
-check("peek leaves a visible sliver (insetPct < 1)", Number(clippyConfig.peek?.insetPct) > 0 && Number(clippyConfig.peek?.insetPct) < 1);
-check("magnetic snap threshold configured", Number(clippyConfig.placement?.snapThreshold) > 0);
-check("hide/show hotkey configured", typeof clippyConfig.hotkey?.hide === "string" && clippyConfig.hotkey.hide.length > 0);
+check("peek-when-idle enabled by default", pipConfig.peek?.enabled === true);
+check("peek leaves a visible sliver (insetPct < 1)", Number(pipConfig.peek?.insetPct) > 0 && Number(pipConfig.peek?.insetPct) < 1);
+check("magnetic snap threshold configured", Number(pipConfig.placement?.snapThreshold) > 0);
+check("hide/show hotkey configured", typeof pipConfig.hotkey?.hide === "string" && pipConfig.hotkey.hide.length > 0);
 
 console.log(`\n${fail === 0 ? "✅" : "❌"} offline checks: ${pass} passed, ${fail} failed\n`);
 process.exit(fail === 0 ? 0 : 1);

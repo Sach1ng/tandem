@@ -5,7 +5,7 @@ import { isAbsolute, join, resolve } from "node:path";
 /**
  * Deterministic, line-faithful writes to a Tandem `tasks.md` board, usable from any surface
  * (Pip's web bridge, the CLI, tests) without importing Electron. Mirrors the section contract and
- * line-id scheme of Clippy's parser/task-file so Clippy's watcher and parser stay in sync.
+ * line-id scheme of Pip's parser/task-file so Pip's watcher and parser stay in sync.
  */
 
 const TASK_RE = /^-\s+\[([ xX])\]/;
@@ -140,7 +140,7 @@ function readJsonSafe(path: string): Record<string, unknown> {
 }
 
 /**
- * Resolve the absolute `tasks.md` path a surface should write to, matching Clippy's resolution so
+ * Resolve the absolute `tasks.md` path a surface should write to, matching Pip's resolution so
  * both point at the same board:
  *   1. TANDEM_TASKS_FILE env (absolute, or relative to the workspace)
  *   2. ~/.tandem/config.json `tasksFile` (absolute, or relative to the workspace)

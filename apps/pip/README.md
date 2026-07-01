@@ -1,6 +1,6 @@
-# Pip — Tandem's desktop buddy
+# Pip — Tandem's desktop coworker
 
-A frameless buddy orb on your desktop — Pip is Tandem's **visual** surface: a general AI assistant,
+A frameless AI coworker on your desktop — Pip is Tandem's **visual** surface: a general AI assistant,
 not a task board.
 
 ## Naming
@@ -8,7 +8,7 @@ not a task board.
 | Layer | Name | What it is |
 |---|---|---|
 | **Product** | Tandem | Ambient AI coworker across Slack, desktop, and Chrome |
-| **Desktop buddy** | **Pip** | The orb on your screen (this app) |
+| **Desktop** | **Pip** | Pip on your screen (this app) |
 | **Slack teammate** | **Pip** (`@Pip`) | Team channels and DMs |
 | **Browser** | **Pip** | Chrome extension for page-aware Q&A |
 | **Brain** | PM OS | Skills, knowledge, and memory on disk |
@@ -16,7 +16,7 @@ not a task board.
 ## Install (no GitHub required)
 
 ```bash
-npm install -g @tandem/cli @tandem/clippy
+npm install -g @tandem/cli @tandem/pip
 tandem init
 tandem pip
 ```
@@ -24,7 +24,7 @@ tandem pip
 ## Run from source (macOS)
 
 ```bash
-npm start          # from this directory, or: npm run clippy (from repo root)
+npm start          # from this directory, or: npm run pip (from repo root)
 # or after building packages:
 tandem pip
 ```
@@ -38,7 +38,7 @@ tandem pip
 ## Voice
 
 - **Spoken replies** (macOS `say`): right-click Pip → **Speak replies**. The ember pulses while Pip
-  talks; **tap the orb to hush** it. Persisted across restarts; seed the default with `voice.speakReplies`.
+  talks; **tap Pip to hush** it. Persisted across restarts; seed the default with `voice.speakReplies`.
 - **Push-to-talk** (opt-in): set `voice.enabled: true` in config to show a mic button. Uses the Web
   Speech API; auto-sends on a final transcript when `voice.autoSend`. Falls back to typing if the
   runtime can't do speech recognition.

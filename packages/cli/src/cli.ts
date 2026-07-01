@@ -106,10 +106,12 @@ function findElectronBin(clippyRoot: string): string {
 }
 
 async function cmdClippy(): Promise<void> {
-  const ws = resolveWorkspace();
+  let ws = resolveWorkspace();
   if (!existsSync(join(ws, "AGENTS.md"))) {
-    console.error(`No Tandem workspace at ${ws}. Run: tandem init`);
-    process.exit(1);
+    console.log(`No workspace at ${ws} yet — setting one up (this is a one-time step)…`);
+    const result = initWorkspace({ dir: ws });
+    ws = result.dir;
+    console.log(`✓ Workspace ready at ${ws}\n`);
   }
 
   process.env.TANDEM_WORKSPACE = ws;
@@ -131,6 +133,8 @@ async function cmdClippy(): Promise<void> {
 
 async function main(): Promise<void> {
   const [cmd, sub, ...rest] = process.argv.slice(2);
+  // Args after the top-level command (e.g. `tandem init <dir> --force`).
+  const cmdArgs = process.argv.slice(3);
 
   if (!cmd || cmd === "--help" || cmd === "-h") {
     usage();
@@ -165,7 +169,7 @@ async function main(): Promise<void> {
 
   switch (cmd) {
     case "init":
-      await cmdInit(rest);
+      await cmdInit(cmdArgs);
       break;
     case "doctor":
       await cmdDoctor();

@@ -1,10 +1,12 @@
 # Tandem
 
-**An ambient AI coworker that lives where you work.** Tandem takes a capability OS you own —
-[PM OS](https://github.com/hardiktiwari/PM-operating-OS) — out of the IDE and into Slack, your screen,
-and your browser. It's powered by the **Cursor CLI**, so the same coworker runs on *any* model.
+**An ambient AI coworker that lives where you work.** Tandem is **Pip** — one coworker who shows up
+in Slack, on your screen, and in your browser. Pip starts with a blank memory and **builds your
+context as you go**, or mounts a capability OS you own (like
+[PM OS](https://github.com/hardiktiwari/PM-operating-OS)) if you have one. It's powered by the
+**Cursor CLI**, so the same coworker runs on *any* model.
 
-> One brain. Many surfaces. Your models, your machine, your context.
+> One coworker. Many surfaces. Your models, your machine, your context — that compounds as you work.
 
 ---
 
@@ -13,10 +15,10 @@ and your browser. It's powered by the **Cursor CLI**, so the same coworker runs 
 Most "AI in your tools" products are a model wrapped in a chat box, locked to one vendor and one
 surface. Tandem flips that:
 
-1. **The brain is something you own and version.** PM OS is a self-serve Cursor/Codex setup full of
-   PM skills, domain knowledge, and compounding memory. Tandem mounts it as a git submodule and runs
-   every request *inside* it — so the coworker already knows your strategy, your metrics, and how you
-   write PRDs.
+1. **The brain is yours, and it compounds.** Pip works from day one with zero setup — it saves what
+   it learns to a local `memory/` and reuses it on every surface, so context grows as you work. Bring
+   a capability OS you own (like PM OS — PM skills, domain knowledge, memory) and Pip mounts it as a
+   rich starting point, but nothing is required to begin.
 2. **The engine is model-agnostic.** Every surface shells out to one shared adapter around
    `cursor-agent`. Switch from `gpt-5` to `sonnet-4` to `auto` with an env var — no new integration.
 3. **The surfaces meet you where you already are.** A Slack teammate, a floating desktop task widget,
@@ -57,22 +59,35 @@ All three import `@tandem/engine`. One product (**Tandem**), one coworker (**Pip
 
 ## Quickstart
 
-**Prerequisites**
-- Node ≥ 20.6
-- The **Cursor CLI**: `curl https://cursor.com/install -fsS | bash`, then `cursor-agent login`
+### One-command install
 
-### Install without GitHub (recommended for third-party users)
+```bash
+curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash
+```
 
-No git clone or submodules required — everything ships via npm:
+That checks Node, grabs the code, builds it, puts the `tandem` command on your PATH, installs the
+Cursor CLI if needed, and initializes your workspace. Then:
+
+```bash
+cursor-agent login     # one-time model auth
+tandem clippy          # launch Pip on your desktop
+```
+
+**No PM OS required.** Pip starts with a blank memory and **builds your context as you go** — as you
+work, it saves durable facts to `~/.tandem/memory/` and reuses them on every surface. If you *do*
+have a PM OS brain, `tandem init` picks it up automatically as a rich starting point.
+
+**Prerequisites:** Node ≥ 20.6 and the Cursor CLI (the installer handles the Cursor CLI for you).
+
+### Manual install (npm)
 
 ```bash
 npm install -g @tandem/cli @tandem/clippy @tandem/slack
 
-tandem init              # creates ~/.tandem with PM OS brain + AGENTS.md + tasks.md
-tandem doctor            # verify Node, cursor-agent, and workspace
-tandem clippy            # launch the desktop widget
+tandem clippy            # self-initializes ~/.tandem on first run, then launches
+tandem doctor            # optional: verify Node + cursor-agent
 
-# Slack (after Tandem OAuth app is configured — see apps/slack/README.md)
+# Slack (after the Tandem OAuth app is configured — see apps/slack/README.md)
 tandem slack connect     # one-click OAuth install into your workspace
 tandem slack start       # run the coworker bot locally
 ```
@@ -148,7 +163,7 @@ Two deliberate design choices, both from hard-won experience:
 |---|---|---|
 | Models | One vendor's models | **Any** model the Cursor CLI supports |
 | Surfaces | Slack only | **Slack + desktop + browser**, one shared engine |
-| Brain / memory | Closed, hosted | **PM OS you own + version** (a git submodule) |
+| Brain / memory | Closed, hosted | **Yours, local, grows as you go** (optional PM OS you own) |
 | Hosting | Vendor cloud | **Your machine**, local-first |
 | Access | Enterprise-gated | **Open source**, works solo |
 

@@ -14,3 +14,9 @@ export {
   resolveTasksFile,
   type WebTaskMeta,
 } from "./tasks.ts";
+export {
+  ensureBrainScaffold,
+  readMemory,
+  memoryDir,
+  hasBrainSkills,
+} from "./brain.ts";

@@ -1,4 +1,5 @@
 import { runAgent } from "@tandem/engine";
+import { hasBrainSkills, readMemory } from "@tandem/core";
 import type { ClippyConfig } from "./config.ts";
 import {
   isPmQuestion,
@@ -31,6 +32,13 @@ Do NOT modify, reorder, or reformat any existing tasks. Task to add: "${text.rep
 const PM_OS_HINT = (kb: string) =>
   `PM OS: ${kb} — Read/Grep or @paths only if needed for this question.`;
 
+/** Fold saved memory into a prompt so context compounds across sessions. "" when nothing learned yet. */
+function memoryContext(cfg: ClippyConfig): string {
+  const mem = readMemory(cfg.workspace);
+  if (!mem) return "";
+  return `\n\n--- MEMORY (yours; use it, and append durable learnings to memory/) ---\n${mem}`;
+}
+
 function engineCfg(cfg: ClippyConfig, model?: string) {
   return {
     cliBin: cfg.agent,
@@ -42,16 +50,19 @@ function engineCfg(cfg: ClippyConfig, model?: string) {
 
 function askPrompt(cfg: ClippyConfig, question: string): string {
   const q = question.trim();
-  const pm = isPmQuestion(q) ? `\n${PM_OS_HINT(cfg.knowledgeBase)}` : "";
+  const usePmHint = isPmQuestion(q) && hasBrainSkills(cfg.workspace, cfg.knowledgeBase);
+  const pm = usePmHint ? `\n${PM_OS_HINT(cfg.knowledgeBase)}` : "";
+  const mem = memoryContext(cfg);
   if (isShortQuestion(q)) {
-    return `You are Pip, a concise desktop buddy. Reply in 1–3 sentences.${pm}\n\nQ: ${q}`;
+    return `You are Pip, a concise desktop buddy. Reply in 1–3 sentences.${pm}${mem}\n\nQ: ${q}`;
   }
-  return `You are Pip, a concise desktop buddy. Lead with the answer.${pm}\n\nQ: ${q}`;
+  return `You are Pip, a concise desktop buddy. Lead with the answer.${pm}${mem}\n\nQ: ${q}`;
 }
 
-function screenshotPrompt(imagePath: string, question: string, kb: string): string {
+function screenshotPrompt(cfg: ClippyConfig, imagePath: string, question: string): string {
   const q = question.trim() || "What's on screen? If there's an error, explain the fix.";
-  const pm = isPmQuestion(q) ? `\nPM OS (only if relevant): ${kb}` : "";
+  const usePmHint = isPmQuestion(q) && hasBrainSkills(cfg.workspace, cfg.knowledgeBase);
+  const pm = usePmHint ? `\nPM OS (only if relevant): ${cfg.knowledgeBase}` : "";
   return `@${imagePath}\n\n${q}${pm}`;
 }
 
@@ -88,7 +99,7 @@ export async function askAboutScreenshot(
 ): Promise<AgentReply> {
   const model = cfg.agentVisionModel?.trim() || cfg.agentFastModel || cfg.agentModel;
   const result = await runAgent(engineCfg(cfg, model), {
-    prompt: screenshotPrompt(imagePath, question, cfg.knowledgeBase),
+    prompt: screenshotPrompt(cfg, imagePath, question),
     outputFormat: "json",
     resumeChatId: opts.resumeChatId,
   });

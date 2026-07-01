@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { readCharter, readPersona } from "@tandem/core";
+import { readCharter, readMemory, readPersona } from "@tandem/core";
 import { SLACK_PKG_DIR } from "./paths.ts";
 
 const PERSONA_PATH = join(SLACK_PKG_DIR, "persona.md");
@@ -27,6 +27,13 @@ export function assemblePrompt(input: PromptInput): string {
 
   const parts = [persona];
   if (charter) parts.push(`--- WORKSPACE CHARTER ---\n${charter}`);
+
+  const memory = readMemory(input.workspace);
+  if (memory) {
+    parts.push(
+      `--- MEMORY (durable context Pip has saved; use it, and append new durable learnings to memory/) ---\n${memory}`,
+    );
+  }
 
   const context = [`Slack channel: ${input.channelName} (infer the project from this)`];
   if (input.threadHistory) context.push(`Thread so far:\n${input.threadHistory}`);

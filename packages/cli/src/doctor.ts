@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { checkCli } from "@tandem/engine";
-import { defaultWorkspaceHome, resolveWorkspace } from "@tandem/core";
+import { defaultWorkspaceHome, hasBrainSkills, resolveWorkspace } from "@tandem/core";
 
 export interface DoctorCheck {
   name: string;
@@ -30,15 +30,24 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
   });
 
   const ws = resolveWorkspace();
-  const agents = join(ws, "AGENTS.md");
-  const brain = join(ws, "external", "pm-operating-os", "skills");
-  const wsOk = existsSync(agents) && existsSync(brain);
+  const initialized = existsSync(join(ws, "AGENTS.md"));
+  // Not a hard failure: `tandem clippy` (and the installer) create the workspace automatically.
   checks.push({
     name: "Tandem workspace",
-    ok: wsOk,
-    detail: wsOk
+    ok: true,
+    detail: initialized
       ? ws
-      : `Not initialized at ${ws}. Run: tandem init (or tandem init ${defaultWorkspaceHome()})`,
+      : `Will be created on first launch at ${ws} (or run: tandem init ${defaultWorkspaceHome()})`,
+  });
+
+  // Optional. Absence is not a failure — Pip builds your context as you go.
+  const richBrain = hasBrainSkills(ws);
+  checks.push({
+    name: "Brain (PM OS)",
+    ok: true,
+    detail: richBrain
+      ? "PM OS skills available"
+      : "none yet — optional; Pip grows your memory/ as you work",
   });
 
   return checks;

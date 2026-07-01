@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
-  defaultPmOsDir,
+  ensureBrainScaffold,
   isPmOsDir,
   resolveKnowledgeBase,
 } from "@tandem/core";
@@ -32,44 +32,27 @@ export function saveKnowledgeBase(dir: string): void {
   writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
 }
 
-function validateKnowledgeBase(dir: string): void {
-  if (!existsSync(dir)) {
-    throw new Error(`Folder does not exist: ${dir}`);
-  }
-  if (!isPmOsDir(dir)) {
-    throw new Error(
-      `"${dir}" does not look like a PM OS knowledge base (expected a skills/ folder inside).`,
-    );
-  }
-}
-
 /**
- * Resolve PM OS for Pip.
+ * Resolve the brain for Pip. PM OS is optional.
  *
- * `knowledgeBase` — PM OS brain on disk (skills, knowledge, memory).
- * `agentWorkspace` — cursor-agent `--workspace` (kept at the Tandem workspace so every
- *   ask doesn't boot the full PM OS tree; the agent reads PM OS via tools / @paths on demand).
+ * `knowledgeBase` — the brain on disk. A full PM OS (skills/knowledge/memory) if one is available,
+ *   otherwise the workspace itself in grow-as-you-go mode (Pip reads/writes `memory/` there).
+ * `agentWorkspace` — cursor-agent `--workspace` (kept at the Tandem workspace so every ask doesn't
+ *   boot the full PM OS tree; the agent reads skills/knowledge via tools / @paths on demand).
+ *
+ * Never throws and never blocks on a folder picker: a first-time user with no context still gets a
+ * working coworker that builds their brain as they go.
  */
 export async function ensureKnowledgeBase(
   workspace: string,
   configured: string | undefined,
-  pickFolder: () => Promise<string | null>,
 ): Promise<KnowledgeBaseResolution> {
   const existing = resolveKnowledgeBase(workspace, configured);
-  if (existing) {
+  if (existing && isPmOsDir(existing)) {
     return { knowledgeBase: existing, agentWorkspace: workspace };
   }
 
-  const bundled = defaultPmOsDir(workspace);
-  const picked = await pickFolder();
-  if (!picked) {
-    throw new Error(
-      `PM OS not found at ${bundled}. Run "tandem init" or choose a knowledge base folder.`,
-    );
-  }
-
-  validateKnowledgeBase(picked);
-  saveKnowledgeBase(picked);
-
-  return { knowledgeBase: picked, agentWorkspace: workspace };
+  // No PM OS brain — run against the workspace itself and seed a self-growing memory scaffold.
+  ensureBrainScaffold(workspace);
+  return { knowledgeBase: workspace, agentWorkspace: workspace };
 }

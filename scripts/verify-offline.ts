@@ -3,10 +3,18 @@
  * Proves the per-endpoint LOGIC is correct: how each surface configures the engine differently,
  * Slack prompt assembly, mrkdwn conversion, and ecosystem naming. Run: npm run verify
  */
-import { readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildArgs } from "@tandem/engine";
-import { toSlackMrkdwn, chunkText } from "@tandem/core";
+import {
+  chunkText,
+  ensureBrainScaffold,
+  hasBrainSkills,
+  readMemory,
+  resolveKnowledgeBase,
+  toSlackMrkdwn,
+} from "@tandem/core";
 import { assemblePrompt } from "../apps/slack/src/prompt.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -104,6 +112,29 @@ check("Pip placeholder", pipHtml.includes("Ask Pip"));
 
 const clippyConfig = JSON.parse(readFileSync(join(ROOT, "apps/clippy/config.default.json"), "utf8"));
 check("Pip placement: top-right", clippyConfig.placement?.corner === "top-right");
+
+console.log("\n[5] Zero-context / grow-as-you-go (PM OS optional)\n");
+
+const tmp = mkdtempSync(join(tmpdir(), "tandem-brain-"));
+try {
+  // A brand-new workspace has no PM OS skills — that must be fine, not an error.
+  check("empty workspace: no PM OS skills detected", hasBrainSkills(tmp) === false);
+  check("empty workspace: resolveKnowledgeBase doesn't throw / returns none", resolveKnowledgeBase(tmp) === undefined);
+  check("empty workspace: memory is empty", readMemory(tmp) === "");
+
+  // Seeding creates a self-growing memory scaffold.
+  const created = ensureBrainScaffold(tmp);
+  check("scaffold creates memory/profile.md", created.some((p) => p.endsWith("profile.md")) && existsSync(join(tmp, "memory", "profile.md")));
+  check("scaffold is idempotent", ensureBrainScaffold(tmp).length === 0);
+
+  // Seed-only memory injects nothing (no placeholder noise), but real notes do.
+  check("seed-only memory injects nothing", readMemory(tmp) === "");
+  writeFileSync(join(tmp, "memory", "profile.md"), "# Profile\n\nUser ships on Fridays.\n");
+  const mem = readMemory(tmp);
+  check("learned memory is injected", mem.includes("ships on Fridays"));
+} finally {
+  rmSync(tmp, { recursive: true, force: true });
+}
 
 console.log(`\n${fail === 0 ? "✅" : "❌"} offline checks: ${pass} passed, ${fail} failed\n`);
 process.exit(fail === 0 ? 0 : 1);

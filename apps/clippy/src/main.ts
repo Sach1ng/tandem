@@ -727,27 +727,16 @@ app.whenReady().then(async () => {
   const loaded = loadConfig(APP_DIR, REPO_ROOT);
 
   try {
-    const kb = await ensureKnowledgeBase(loaded.workspace, loaded.knowledgeBase || undefined, async () => {
-      const { canceled, filePaths } = await dialog.showOpenDialog({
-        title: "Choose knowledge base",
-        message:
-          "PM OS was not found in your workspace. Select the folder that contains your PM OS brain (a skills/ directory — e.g. external/pm-operating-os after tandem init, or a PM-operating-OS clone).",
-        properties: ["openDirectory", "createDirectory"],
-        buttonLabel: "Use this folder",
-      });
-      return canceled || !filePaths[0] ? null : filePaths[0];
-    });
-
+    const kb = await ensureKnowledgeBase(loaded.workspace, loaded.knowledgeBase || undefined);
     cfg = {
       ...loaded,
       knowledgeBase: kb.knowledgeBase,
       agentWorkspace: kb.agentWorkspace,
     };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    dialog.showErrorBox("Pip — knowledge base required", msg);
-    app.quit();
-    return;
+    // ensureKnowledgeBase self-seeds and shouldn't throw; fall back to the workspace as the brain.
+    console.error("Brain setup warning:", err instanceof Error ? err.message : String(err));
+    cfg = { ...loaded, knowledgeBase: loaded.workspace, agentWorkspace: loaded.workspace };
   }
 
   console.log(`Clippy workspace: ${cfg.workspace}`);

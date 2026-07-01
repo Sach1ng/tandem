@@ -70,7 +70,7 @@ Cursor CLI if needed, and initializes your workspace. Then:
 
 ```bash
 cursor-agent login     # one-time model auth
-tandem clippy          # launch Pip on your desktop
+tandem pip             # launch Pip on your desktop
 ```
 
 **No PM OS required.** Pip starts with a blank memory and **builds your context as you go** — as you
@@ -84,7 +84,7 @@ have a PM OS brain, `tandem init` picks it up automatically as a rich starting p
 ```bash
 npm install -g @tandem/cli @tandem/clippy @tandem/slack
 
-tandem clippy            # self-initializes ~/.tandem on first run, then launches
+tandem pip               # self-initializes ~/.tandem on first run, then launches
 tandem doctor            # optional: verify Node + cursor-agent
 
 # Slack (after the Tandem OAuth app is configured — see apps/slack/README.md)

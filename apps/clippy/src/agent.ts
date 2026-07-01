@@ -1,4 +1,4 @@
-import { runAgent } from "@tandem/engine";
+import { runAgent, runAgentStream } from "@tandem/engine";
 import { hasBrainSkills, readMemory } from "@tandem/core";
 import type { ClippyConfig } from "./config.ts";
 import {
@@ -122,6 +122,32 @@ export async function ask(
     outputFormat: "json",
     resumeChatId: opts.resumeChatId,
   });
+  return { text: result.text, chatId: result.chatId, durationMs: result.durationMs };
+}
+
+/**
+ * Streaming variant of {@link ask}. Same prompt/model/session, but text is
+ * emitted via `onDelta` as the model produces it so the answer appears live
+ * instead of after the full round-trip. Resolves with the final reply.
+ */
+export async function askStream(
+  cfg: ClippyConfig,
+  question: string,
+  onDelta: (delta: string) => void,
+  opts: { resumeChatId?: string | null } = {},
+): Promise<AgentReply> {
+  const q = question.trim();
+  if (isTrivialGreeting(q)) {
+    const reply = localGreetingReply();
+    onDelta(reply.text);
+    return { ...reply, chatId: opts.resumeChatId ?? null, durationMs: 0 };
+  }
+  const model = cfg.agentFastModel?.trim() || cfg.agentModel;
+  const result = await runAgentStream(
+    engineCfg(cfg, model),
+    { prompt: askPrompt(cfg, q), resumeChatId: opts.resumeChatId },
+    onDelta,
+  );
   return { text: result.text, chatId: result.chatId, durationMs: result.durationMs };
 }
 

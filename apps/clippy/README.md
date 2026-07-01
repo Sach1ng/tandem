@@ -18,7 +18,7 @@ not a task board.
 ```bash
 npm install -g @tandem/cli @tandem/clippy
 tandem init
-tandem clippy
+tandem pip
 ```
 
 ## Run from source (macOS)
@@ -26,10 +26,10 @@ tandem clippy
 ```bash
 npm start          # from this directory, or: npm run clippy (from repo root)
 # or after building packages:
-tandem clippy
+tandem pip
 ```
 
-- **Click** Pip (top-right) to open the ask bar · **right-click** for menu
+- **Click** Pip (bottom-right) to open the ask bar · **right-click** for menu
 - **⌘⇧T** — snip any region of your screen and get an answer
 - Type a question and press ↵ — Pip runs against PM OS on disk
 

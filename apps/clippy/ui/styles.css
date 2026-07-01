@@ -190,46 +190,31 @@ body.pip-transitioning {
   justify-content: center;
 }
 
-.antenna {
+/* Ember spark — a warm, living flame above Pip's face (replaces the antennae). */
+.ember {
   position: absolute;
-  top: 1px;
-  width: 2px;
-  height: 6px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, rgba(80, 80, 88, 0.9), rgba(40, 40, 46, 0.8));
-  transform-origin: bottom center;
-  animation: antenna-wiggle 3.2s ease-in-out infinite;
-}
-.antenna::after {
-  content: "";
-  position: absolute;
-  top: -5px;
+  top: -4px;
   left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, var(--pip-warm-soft) 60%, var(--pip-warm));
-  box-shadow: 0 0 5px var(--pip-warm-glow);
-}
-.antenna.left {
-  left: 10px;
-  transform: rotate(-12deg);
-  animation-delay: -0.4s;
-}
-.antenna.right {
-  right: 10px;
-  transform: rotate(12deg);
-  animation-delay: -1.8s;
+  width: 7px;
+  height: 8px;
+  margin-left: -3.5px;
+  /* teardrop/flame: pointed top, round bottom */
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(circle at 42% 62%, #fff 0%, var(--pip-warm-soft) 34%, var(--pip-warm) 66%, var(--pip-warm-deep) 100%);
+  box-shadow:
+    0 0 5px var(--pip-warm),
+    0 0 11px var(--pip-warm-glow);
+  transform-origin: 50% 100%;
+  animation: ember-flicker 2.6s ease-in-out infinite;
+  z-index: 3;
 }
 
-@keyframes antenna-wiggle {
-  0%, 88%, 100% { transform: rotate(var(--ant-tilt, 0deg)); }
-  92% { transform: rotate(calc(var(--ant-tilt, 0deg) + 6deg)); }
-  96% { transform: rotate(calc(var(--ant-tilt, 0deg) - 5deg)); }
+@keyframes ember-flicker {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.9; }
+  28% { transform: translateY(-1.5px) scale(1.1) rotate(-3deg); opacity: 1; }
+  52% { transform: translateY(0.5px) scale(0.92) rotate(2deg); opacity: 0.82; }
+  76% { transform: translateY(-0.5px) scale(1.04) rotate(-1deg); opacity: 0.96; }
 }
-.antenna.left { --ant-tilt: -14deg; }
-.antenna.right { --ant-tilt: 14deg; }
 
 .buddy-face {
   position: relative;
@@ -305,10 +290,7 @@ body.pip-transitioning {
   height: 26px;
   flex-shrink: 0;
 }
-.buddy-sm .antenna { top: 0; height: 4px; }
-.buddy-sm .antenna::after { width: 3px; height: 3px; top: -3px; margin-left: -1.5px; }
-.buddy-sm .antenna.left { left: 6px; }
-.buddy-sm .antenna.right { right: 6px; }
+.buddy-sm .ember { width: 5px; height: 6px; margin-left: -2.5px; top: -3px; }
 .buddy-sm .buddy-face { width: 16px; height: 10px; }
 .buddy-sm .eye { width: 6px; height: 7px; border-width: 1px; }
 .buddy-sm .iris { height: 4.5px; }
@@ -318,18 +300,47 @@ body.pip-transitioning {
 
 /* Moods */
 body.mood-rest .eye {
-  height: 3px;
-  top: 4px;
-  opacity: 0.75;
-  border-radius: 3px;
+  height: 9px;
+  top: 1px;
+  opacity: 0.95;
+  border-radius: 50%;
 }
-body.mood-rest .iris,
+body.mood-rest .iris {
+  opacity: 1;
+  height: 6px;
+}
 body.mood-rest .shine {
-  opacity: 0;
+  opacity: 0.9;
 }
 body.mood-rest .smile {
-  opacity: 0.35;
-  transform: scaleX(0.85);
+  opacity: 0.6;
+  transform: scaleX(0.95);
+}
+body.mood-rest .ember {
+  animation-duration: 3.8s;
+  opacity: 0.8;
+}
+
+/* Gentle idle float so Pip feels alive even at rest. */
+body.mode-collapsed:not(.pip-transitioning) .pip-surface-collapsed .buddy {
+  animation: buddy-float 4.2s ease-in-out infinite;
+}
+@keyframes buddy-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.6px); }
+}
+
+/* Ember comes alive when Pip is engaged. */
+body.mood-awake .ember,
+.orb-shell:hover .ember,
+body.mood-thinking .ember {
+  animation-duration: 1.7s;
+}
+body.mood-alert .ember {
+  animation-duration: 1.1s;
+  box-shadow:
+    0 0 8px var(--pip-warm),
+    0 0 20px var(--pip-warm-glow);
 }
 
 body.mood-awake .eye,
@@ -497,6 +508,19 @@ body.mode-expanded .card {
   display: none !important;
 }
 
+/*
+ * Edge-aware stacking: when Pip is docked at the BOTTOM of the screen, the window grows upward, so put
+ * the ask row at the bottom (next to the dock) and let replies/snip stack ABOVE it — you never have to
+ * drag Pip up to read an answer. Docked at the top, keep the natural top-down order.
+ */
+body.dock-bottom .card-shell {
+  flex-direction: column-reverse;
+}
+body.dock-bottom .card-extras {
+  border-top: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .ask-form {
   display: flex;
   align-items: center;
@@ -546,6 +570,65 @@ body.mode-expanded .card {
 }
 .icon-btn:hover {
   background: rgba(255, 255, 255, 0.1);
+  color: var(--fg);
+}
+
+/* Snip button — icon + label so it's obvious it captures a screen area. */
+.snip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 10px 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.snip-btn:hover {
+  background: rgba(196, 160, 106, 0.16);
+  border-color: rgba(196, 160, 106, 0.4);
+  color: var(--fg);
+}
+.snip-ico {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.snip-label {
+  line-height: 1;
+}
+
+/* Explicit collapse (×) so it's always obvious how to close Pip. */
+.pip-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, color 0.15s;
+}
+.pip-close svg {
+  width: 13px;
+  height: 13px;
+}
+.pip-close:hover {
+  background: rgba(255, 255, 255, 0.16);
   color: var(--fg);
 }
 

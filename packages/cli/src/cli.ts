@@ -19,13 +19,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 function usage(): void {
-  console.log(`Tandem — ambient AI coworker (Slack, Clippy, browser)
+  console.log(`Tandem — ambient AI coworker, Pip (Slack, desktop, browser)
 
 Usage:
   tandem init [dir]       Initialize workspace (~/.tandem by default)
   tandem init --force     Overwrite existing workspace files
   tandem doctor           Check prerequisites (Node, cursor-agent, workspace)
-  tandem clippy           Launch the Clippy desktop widget
+  tandem pip              Launch Pip on your desktop
   tandem workspace        Print the resolved workspace path
 
   tandem slack connect    Connect Slack via OAuth (recommended)
@@ -64,7 +64,7 @@ async function cmdInit(args: string[]): Promise<void> {
 Next steps:
   export TANDEM_WORKSPACE=${result.dir}
   tandem doctor
-  tandem clippy
+  tandem pip
 `);
 }
 
@@ -174,7 +174,8 @@ async function main(): Promise<void> {
     case "doctor":
       await cmdDoctor();
       break;
-    case "clippy":
+    case "pip":
+    case "clippy": // back-compat alias
       await cmdClippy();
       break;
     case "workspace":

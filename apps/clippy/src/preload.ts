@@ -36,6 +36,8 @@ const taskWidget = {
     ipcRenderer.on("tasks:updated", (_e, tasks) => cb(tasks)),
   onExpanded: (cb: (v: boolean) => void) =>
     ipcRenderer.on("widget:expanded", (_e, v) => cb(v)),
+  onDock: (cb: (p: { edge: "top" | "bottom" }) => void) =>
+    ipcRenderer.on("widget:dock", (_e, p) => cb(p)),
   onShowTriage: (cb: () => void) => ipcRenderer.on("widget:show-triage", () => cb()),
   onSnip: (cb: () => void) => ipcRenderer.on("widget:snip", () => cb()),
   onSnipResult: (cb: (p: { path: string; status: string; text?: string }) => void) =>
@@ -47,6 +49,11 @@ const taskWidget = {
   onNudgeClear: (cb: () => void) => ipcRenderer.on("widget:nudge-clear", () => cb()),
   onWorking: (cb: (p: { active: boolean; label?: string }) => void) =>
     ipcRenderer.on("widget:working", (_e, p) => cb(p)),
+  onAskStart: (cb: () => void) => ipcRenderer.on("widget:ask-start", () => cb()),
+  onAskDelta: (cb: (p: { delta: string }) => void) =>
+    ipcRenderer.on("widget:ask-delta", (_e, p) => cb(p)),
+  onAskEnd: (cb: (p: { text: string; error?: boolean }) => void) =>
+    ipcRenderer.on("widget:ask-end", (_e, p) => cb(p)),
   onLensTask: (
     cb: (p: {
       id: string;

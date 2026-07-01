@@ -6,12 +6,11 @@
     <title>Pip · Tandem</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body class="mode-collapsed mood-rest">
+  <body class="mode-collapsed mood-rest dock-bottom">
     <div id="pip-stage" class="pip-stage">
     <div id="collapsed" class="orb-shell pip-surface pip-surface-collapsed" aria-label="Pip">
       <div class="buddy">
-        <span class="antenna left" aria-hidden="true"></span>
-        <span class="antenna right" aria-hidden="true"></span>
+        <span class="ember" aria-hidden="true"></span>
         <div class="buddy-face">
           <span class="eye left"><span class="iris"></span><span class="shine"></span></span>
           <span class="eye right"><span class="iris"></span><span class="shine"></span></span>
@@ -29,13 +28,22 @@
           <div class="card-main">
             <form id="ask-form" class="ask-form">
               <textarea id="ask-input" rows="1" placeholder="Ask Pip…" autocomplete="off" spellcheck="true"></textarea>
-              <button type="button" id="btn-snip" class="icon-btn snip-btn" title="Snip screen (⌘⇧T)" aria-label="Snip">◫</button>
+              <button type="button" id="btn-snip" class="snip-btn" title="Snip a screen area and ask Pip about it  (⌘⇧T)" aria-label="Snip a screen area">
+                <svg class="snip-ico" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6.5V4.5A1.5 1.5 0 0 1 4.5 3h2M13.5 3h2A1.5 1.5 0 0 1 17 4.5v2M17 13.5v2A1.5 1.5 0 0 1 15.5 17h-2M6.5 17h-2A1.5 1.5 0 0 1 3 15.5v-2" />
+                </svg>
+                <span class="snip-label">Snip</span>
+              </button>
+              <button type="button" id="btn-collapse" class="pip-close" title="Collapse Pip (Esc)" aria-label="Collapse Pip">
+                <svg viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                  <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" />
+                </svg>
+              </button>
             </form>
           </div>
-          <button type="button" id="btn-close" class="orb-dock" title="Minimize Pip" aria-label="Minimize Pip">
+          <button type="button" id="btn-close" class="orb-dock" title="Pip — drag to move, click to minimize" aria-label="Minimize Pip">
             <div class="buddy buddy-sm">
-              <span class="antenna left" aria-hidden="true"></span>
-              <span class="antenna right" aria-hidden="true"></span>
+              <span class="ember" aria-hidden="true"></span>
               <div class="buddy-face">
                 <span class="eye left"><span class="iris"></span><span class="shine"></span></span>
                 <span class="eye right"><span class="iris"></span><span class="shine"></span></span>

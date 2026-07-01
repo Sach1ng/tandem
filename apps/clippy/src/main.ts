@@ -7,7 +7,7 @@ import chokidar from "chokidar";
 import { loadConfig, type ClippyConfig } from "./config.ts";
 import { parseTasksMarkdown, type ParsedTasks, type SectionKey, type Task } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
-import { ask, askAboutScreenshot, capture, groom } from "./agent.ts";
+import { ask, askAboutScreenshot, askStream, capture, groom } from "./agent.ts";
 import { ensureKnowledgeBase } from "./knowledge-base.ts";
 import { makeScreenshotPreview, type CapturedScreenshot } from "./screenshot.ts";
 import { RequestLog, type RequestSource } from "./request-log.ts";
@@ -29,6 +29,9 @@ let monitorPort = 8791;
 let pipChatId: string | null = null;
 
 interface WindowState {
+  corner?: Corner;
+  anchorX?: number;
+  anchorY?: number;
   x?: number;
   y?: number;
   expanded: boolean;
@@ -45,6 +48,9 @@ function normalizeState(raw: Partial<WindowState>): WindowState {
   const panelW = Number(raw.panelW);
   const panelH = Number(raw.panelH);
   return {
+    corner: raw.corner,
+    anchorX: raw.anchorX,
+    anchorY: raw.anchorY,
     x: raw.x,
     y: raw.y,
     expanded: Boolean(raw.expanded),
@@ -140,43 +146,88 @@ async function detectLensTasks(initial = false): Promise<void> {
   }
 }
 
-function moveWindow(x: number, y: number, persist = false): void {
+function moveWindow(x: number, y: number): void {
   if (!win || win.isDestroyed()) return;
   skipMovedSave++;
   win.setPosition(Math.round(x), Math.round(y));
-  if (persist) {
-    state.x = Math.round(x);
-    state.y = Math.round(y);
-    saveState();
-  }
 }
 
-/** Pin a screen corner when the user hasn't dragged Pip elsewhere. */
-function anchorWindow(): void {
+type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
+function normalizeCorner(c: string | undefined): Corner {
+  return c === "top-left" || c === "top-right" || c === "bottom-left" || c === "bottom-right"
+    ? c
+    : "bottom-right";
+}
+
+function workAreaFor(): { x: number; y: number; width: number; height: number } {
+  return screen.getDisplayMatching(win.getBounds()).workArea;
+}
+
+/**
+ * Record which corner Pip is glued to (from its current position) so later resizes grow inward.
+ * The anchor is the screen point of that corner — size-independent, so it survives expand/collapse.
+ */
+function rememberDock(): void {
   if (!win || win.isDestroyed()) return;
-  const bounds = win.getBounds();
-  const work = screen.getDisplayMatching(bounds).workArea;
-  const margin = cfg.placement?.margin ?? 16;
-  const corner = cfg.placement?.corner ?? "top-right";
-  const x = Math.round(work.x + work.width - bounds.width - margin);
-  const y =
-    corner === "bottom-right"
-      ? Math.round(work.y + work.height - bounds.height - margin)
-      : Math.round(work.y + margin);
-  moveWindow(x, y);
+  const b = win.getBounds();
+  const work = workAreaFor();
+  const right = b.x + b.width / 2 >= work.x + work.width / 2;
+  const bottom = b.y + b.height / 2 >= work.y + work.height / 2;
+  state.corner = `${bottom ? "bottom" : "top"}-${right ? "right" : "left"}` as Corner;
+  state.anchorX = right ? b.x + b.width : b.x;
+  state.anchorY = bottom ? b.y + b.height : b.y;
+  saveState();
 }
 
-function hasUserPlacement(): boolean {
-  return Number.isFinite(state.x) && Number.isFinite(state.y);
-}
-
+/**
+ * Position Pip for its CURRENT size, keeping the docked corner fixed so the panel always opens toward
+ * screen center, and clamped fully inside the work area (never off-screen, never under the menu bar).
+ */
 function applyPlacement(): void {
   if (!win || win.isDestroyed()) return;
-  if (hasUserPlacement()) {
-    moveWindow(state.x!, state.y!);
-    return;
+  const b = win.getBounds();
+  const work = workAreaFor();
+  const margin = cfg.placement?.margin ?? 16;
+  const corner = normalizeCorner(state.corner ?? cfg.placement?.corner);
+
+  let ax: number;
+  let ay: number;
+  if (Number.isFinite(state.anchorX) && Number.isFinite(state.anchorY)) {
+    ax = state.anchorX!;
+    ay = state.anchorY!;
+  } else if (Number.isFinite(state.x) && Number.isFinite(state.y)) {
+    // Migrate legacy top-left state → corner anchor point.
+    ax = corner.endsWith("right") ? state.x! + cfg.collapsed.w : state.x!;
+    ay = corner.startsWith("bottom") ? state.y! + cfg.collapsed.h : state.y!;
+  } else {
+    ax = corner.endsWith("right") ? work.x + work.width - margin : work.x + margin;
+    ay = corner.startsWith("bottom") ? work.y + work.height - margin : work.y + margin;
   }
-  anchorWindow();
+
+  let x = corner.endsWith("right") ? ax - b.width : ax;
+  let y = corner.startsWith("bottom") ? ay - b.height : ay;
+
+  // Clamp so the whole window stays inside the work area.
+  const maxX = work.x + work.width - b.width - margin;
+  const maxY = work.y + work.height - b.height - margin;
+  x = Math.min(Math.max(x, work.x + margin), Math.max(work.x + margin, maxX));
+  y = Math.min(Math.max(y, work.y + margin), Math.max(work.y + margin, maxY));
+
+  moveWindow(x, y);
+  sendDock();
+}
+
+let lastDockEdge: "top" | "bottom" | null = null;
+
+/** Tell the renderer which vertical edge Pip is docked to, so replies stack away from it. */
+function sendDock(): void {
+  if (!win || win.isDestroyed()) return;
+  const corner = normalizeCorner(state.corner ?? cfg.placement?.corner);
+  const edge = corner.startsWith("bottom") ? "bottom" : "top";
+  if (edge === lastDockEdge) return;
+  lastDockEdge = edge;
+  win.webContents.send("widget:dock", { edge });
 }
 
 function clampPanel(w: number, h: number): { w: number; h: number } {
@@ -422,6 +473,34 @@ async function runLoggedAsk(text: string, source: RequestSource): Promise<{ text
   }
 }
 
+/** Streaming ask: pushes text deltas to the renderer as the model generates them. */
+async function runLoggedAskStream(text: string, source: RequestSource): Promise<{ text: string }> {
+  const entry = requestLog.start({ kind: "ask", question: text, source });
+  const send = (channel: string, payload?: unknown) => {
+    if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
+  };
+  send("widget:ask-start");
+  try {
+    const result = await askStream(cfg, text, (delta) => send("widget:ask-delta", { delta }), {
+      resumeChatId: pipChatId,
+    });
+    rememberChatId(result.chatId);
+    requestLog.finish(entry.id, {
+      status: "done",
+      response: result.text,
+      chatId: result.chatId,
+      durationMs: result.durationMs,
+    });
+    send("widget:ask-end", { text: result.text });
+    return { text: result.text };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    requestLog.finish(entry.id, { status: "error", error: msg });
+    send("widget:ask-end", { text: msg, error: true });
+    return { text: msg };
+  }
+}
+
 function rememberChatId(chatId: string | null | undefined): void {
   if (!chatId) return;
   pipChatId = chatId;
@@ -588,7 +667,7 @@ function registerIpc(): void {
   ipcMain.handle("agent:ask", async (_e, p: { text: string }) => {
     signalWorking(true, "Thinking…");
     try {
-      return await runLoggedAsk(p.text, "ui");
+      return await runLoggedAskStream(p.text, "ui");
     } finally {
       signalWorking(false);
     }
@@ -626,7 +705,8 @@ function registerIpc(): void {
 
   ipcMain.handle("window:drag-by", (_e, p: { dx: number; dy: number }) => {
     const [x = 0, y = 0] = win.getPosition();
-    moveWindow(x + p.dx, y + p.dy, true);
+    moveWindow(x + p.dx, y + p.dy);
+    rememberDock();
   });
   ipcMain.handle("window:resize-by", (_e, p: { dw: number; dh: number }) => {
     const { w, h } = clampPanel(state.panelW + p.dw, state.panelH + p.dh);
@@ -686,10 +766,7 @@ function createWindow(): void {
       skipMovedSave--;
       return;
     }
-    const [x, y] = win.getPosition();
-    state.x = x;
-    state.y = y;
-    saveState();
+    rememberDock();
   });
 
   win.loadFile(join(APP_DIR, "ui", "index.html"));
@@ -706,7 +783,7 @@ function createWindow(): void {
   });
 
   screen.on("display-metrics-changed", () => {
-    if (!hasUserPlacement()) applyPlacement();
+    applyPlacement();
   });
 
   const watcher = chokidar.watch(cfg.tasksFile, {
@@ -739,10 +816,10 @@ app.whenReady().then(async () => {
     cfg = { ...loaded, knowledgeBase: loaded.workspace, agentWorkspace: loaded.workspace };
   }
 
-  console.log(`Clippy workspace: ${cfg.workspace}`);
-  console.log(`Clippy knowledge base: ${cfg.knowledgeBase}`);
-  console.log(`Clippy agent workspace: ${cfg.agentWorkspace}`);
-  console.log(`Clippy tasksFile: ${cfg.tasksFile}`);
+  console.log(`Pip workspace: ${cfg.workspace}`);
+  console.log(`Pip knowledge base: ${cfg.knowledgeBase}`);
+  console.log(`Pip agent workspace: ${cfg.agentWorkspace}`);
+  console.log(`Pip tasksFile: ${cfg.tasksFile}`);
 
   requestLog = new RequestLog(cfg.workspace);
   monitorPort = cfg.monitor.port;

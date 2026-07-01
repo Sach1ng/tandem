@@ -235,6 +235,39 @@ function clearReply() {
   syncLayout();
 }
 
+// --- Live streaming of the assistant's answer -----------------------------
+let streamingText = "";
+let streamLayoutQueued = false;
+
+/** Coalesce the ~30ms delta updates into one layout pass per animation frame. */
+function syncLayoutSoon() {
+  if (streamLayoutQueued) return;
+  streamLayoutQueued = true;
+  requestAnimationFrame(() => {
+    streamLayoutQueued = false;
+    syncLayout();
+  });
+}
+
+function beginStream() {
+  streamingText = "";
+}
+
+function appendStreamDelta(delta) {
+  if (!askInFlight || !delta) return;
+  // First token: drop the "Thinking…" placeholder and start showing the answer.
+  if (els.reply.classList.contains("thinking")) {
+    els.reply.classList.remove("thinking");
+    els.reply.textContent = "";
+    setWorking(true, "Answering…");
+  }
+  streamingText += delta;
+  els.reply.hidden = false;
+  els.reply.textContent = streamingText;
+  setMood("thinking");
+  syncLayoutSoon();
+}
+
 let lensTaskId = null;
 
 function showLensTask(payload) {
@@ -478,6 +511,11 @@ document.getElementById("btn-snip")?.addEventListener("click", () => {
   void runSnip();
 });
 
+document.getElementById("btn-collapse")?.addEventListener("click", () => {
+  ping();
+  void w?.setExpanded(false);
+});
+
 els.lensOpen?.addEventListener("click", () => {
   ping();
   void w?.openTasksFile?.();
@@ -618,6 +656,12 @@ async function runSnip() {
 }
 
 if (w) {
+  w.onDock?.(({ edge }) => {
+    const bottom = edge === "bottom";
+    document.body.classList.toggle("dock-bottom", bottom);
+    document.body.classList.toggle("dock-top", !bottom);
+    syncLayout();
+  });
   w.onExpanded((open) => {
     document.body.classList.add("pip-transitioning");
     document.body.classList.toggle("mode-expanded", open);
@@ -677,6 +721,11 @@ if (w) {
     if (active) setWorking(true, label || "Working…");
     else if (!askInFlight) setWorking(false);
   });
+  w.onAskStart?.(() => {
+    if (askInFlight) beginStream();
+  });
+  w.onAskDelta?.(({ delta }) => appendStreamDelta(delta));
+  // Final authoritative text is applied when w.ask() resolves in runAsk().
 
   const shell = els.expanded?.querySelector(".card-shell");
   if (shell && "ResizeObserver" in window) {

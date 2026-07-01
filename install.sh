@@ -88,7 +88,7 @@ fi
 echo
 bold "Done. Next:"
 info "1. cursor-agent login        # if you haven't already"
-info "2. tandem clippy             # launch Pip on your desktop"
+info "2. tandem pip                # launch Pip on your desktop"
 info "   (Slack:  tandem slack connect && tandem slack start)"
 echo
 info "No PM OS needed — Pip starts with a blank memory and grows it as you work."

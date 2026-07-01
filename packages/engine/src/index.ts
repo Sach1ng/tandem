@@ -1,4 +1,4 @@
-export { runAgent, buildArgs, checkCli, EngineError } from "./cli.ts";
+export { runAgent, runAgentStream, buildArgs, checkCli, EngineError } from "./cli.ts";
 export { extractResult } from "./extract.ts";
 export type {
   AgentMode,

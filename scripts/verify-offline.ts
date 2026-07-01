@@ -111,7 +111,7 @@ check("Pip UI title", pipHtml.includes("Pip · Tandem"));
 check("Pip placeholder", pipHtml.includes("Ask Pip"));
 
 const clippyConfig = JSON.parse(readFileSync(join(ROOT, "apps/clippy/config.default.json"), "utf8"));
-check("Pip placement: top-right", clippyConfig.placement?.corner === "top-right");
+check("Pip placement: bottom-right", clippyConfig.placement?.corner === "bottom-right");
 
 console.log("\n[5] Zero-context / grow-as-you-go (PM OS optional)\n");
 

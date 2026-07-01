@@ -1,6 +1,6 @@
 import boltPkg from "@slack/bolt";
 import webApiPkg from "@slack/web-api";
-import { KeyedQueue } from "@tandem/core";
+import { KeyedQueue, logActivity } from "@tandem/core";
 import { EngineError, runAgent, checkCli } from "@tandem/engine";
 import { loadConfig } from "./config.ts";
 import { AccessGate, parseAccessCommand } from "./access.ts";
@@ -118,6 +118,7 @@ async function runTask(
     if (result.chatId) sessions.setChatId(key, result.chatId);
     await clearAck();
     await postReply(botClient, m.channel, threadTs, result.text || "_(the agent returned no output)_");
+    logActivity(cfg.workdir, { surface: "slack", ask: task, outcome: result.text });
   } catch (err) {
     const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
     console.error(`[task] ${key} failed:`, msg);

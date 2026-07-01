@@ -24,11 +24,18 @@
   },
   "placement": {
     "corner": "bottom-right",
-    "margin": 16
+    "margin": 16,
+    "snapThreshold": 64
+  },
+  "peek": {
+    "enabled": true,
+    "idleSeconds": 25,
+    "insetPct": 0.62
   },
   "hotkey": {
     "snip": "Command+Shift+T",
     "summon": "Command+Shift+Space",
+    "hide": "Command+Shift+H",
     "autoAsk": false,
     "question": "What's on my screen? If there's an error, tell me how to fix it."
   },

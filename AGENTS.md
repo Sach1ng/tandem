@@ -28,6 +28,10 @@ There may be **no prebuilt context yet, and that's fine** — you build it as yo
 - **Write as you learn.** When you learn something durable about the user, their goals, projects,
   preferences, or vocabulary, append it to `memory/profile.md`. Log notable decisions and outcomes
   to `memory/log.md` as one dated line. This is how context compounds across sessions.
+- **Same brain, every window.** `memory/activity.md` is a shared, auto-written log of recent
+  interactions across all surfaces (Slack, desktop, browser). Consult it to answer "what was I just
+  working on?" and to carry a thread from one surface to another. It's maintained automatically —
+  don't hand-edit it.
 - Keep memory terse and high-signal. Prune contradictions instead of piling on.
 
 ## If PM OS skills are present

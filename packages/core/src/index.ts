@@ -18,5 +18,6 @@ export {
   ensureBrainScaffold,
   readMemory,
   memoryDir,
+  logActivity,
   hasBrainSkills,
 } from "./brain.ts";

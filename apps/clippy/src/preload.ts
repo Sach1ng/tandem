@@ -27,6 +27,7 @@ const taskWidget = {
   showContextMenu: () => ipcRenderer.invoke("widget:context-menu"),
   openTasksFile: () => ipcRenderer.invoke("shell:open-tasks"),
   dragBy: (dx: number, dy: number) => ipcRenderer.invoke("window:drag-by", { dx, dy }),
+  snapDock: () => ipcRenderer.invoke("window:snap"),
   resizeBy: (dw: number, dh: number) => ipcRenderer.invoke("window:resize-by", { dw, dh }),
   setPanelSize: (w: number, h: number) => ipcRenderer.invoke("window:set-panel-size", { w, h }),
   getWindowBounds: () => ipcRenderer.invoke("window:get-bounds"),
@@ -59,6 +60,8 @@ const taskWidget = {
   onGaze: (cb: (p: { dx: number; dy: number }) => void) =>
     ipcRenderer.on("widget:gaze", (_e, p) => cb(p)),
   onSummon: (cb: () => void) => ipcRenderer.on("widget:summon", () => cb()),
+  onPeek: (cb: (p: { peeking: boolean }) => void) =>
+    ipcRenderer.on("widget:peek", (_e, p) => cb(p)),
   onModel: (cb: (p: { model: string }) => void) =>
     ipcRenderer.on("widget:model", (_e, p) => cb(p)),
   onLensTask: (

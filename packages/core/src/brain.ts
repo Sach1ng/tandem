@@ -1,4 +1,13 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { isPmOsDir, resolveKnowledgeBase } from "./pm-os.ts";
 
@@ -106,6 +115,62 @@ function stripSeedNoise(raw: string): string {
     .filter((l) => l.trim() !== "")
     .join("\n")
     .trim();
+}
+
+const ACTIVITY_FILE = "activity.md";
+const ACTIVITY_HEADER = `# Activity
+
+A shared, cross-surface log of what you've been working on. Every surface (desktop Pip, Slack, browser)
+appends one line here after an interaction, so any surface can answer "what was I just working on?".
+
+<!-- Format: - <ISO timestamp> · <surface> · <ask> · <outcome> -->
+`;
+
+/** Keep the log bounded so reads stay cheap; trim to the newest entries past this. */
+const ACTIVITY_MAX_LINES = 400;
+const ACTIVITY_KEEP_LINES = 300;
+
+function oneLine(s: string, cap = 160): string {
+  return (s || "").replace(/\s+/g, " ").trim().slice(0, cap);
+}
+
+/**
+ * Append one entry to the shared cross-surface activity log at `memory/activity.md`. Best-effort and
+ * never throws — a failed log must never break a reply. readMemory() picks this file up automatically,
+ * so the log compounds into every surface's context ("same brain, every window").
+ */
+export function logActivity(
+  workspace: string,
+  entry: { surface: string; ask: string; outcome: string },
+): void {
+  try {
+    const dir = memoryDir(workspace);
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, ACTIVITY_FILE);
+    if (!existsSync(path)) writeFileSync(path, ACTIVITY_HEADER);
+    const ts = new Date().toISOString();
+    const line = `- ${ts} · ${oneLine(entry.surface, 24)} · ${oneLine(entry.ask)} · ${oneLine(entry.outcome)}\n`;
+    appendFileSync(path, line);
+    trimActivity(path);
+  } catch {
+    /* best-effort: memory logging must never break a reply */
+  }
+}
+
+/** Rewrite the log with only the newest entries when it grows too large (atomic via temp+rename). */
+function trimActivity(path: string): void {
+  try {
+    const lines = readFileSync(path, "utf8").split("\n");
+    const entries = lines.filter((l) => l.startsWith("- "));
+    if (entries.length <= ACTIVITY_MAX_LINES) return;
+    const kept = entries.slice(-ACTIVITY_KEEP_LINES);
+    const next = `${ACTIVITY_HEADER}\n${kept.join("\n")}\n`;
+    const tmp = `${path}.${process.pid}.tmp`;
+    writeFileSync(tmp, next);
+    renameSync(tmp, path);
+  } catch {
+    /* leave the log as-is on any trim failure */
+  }
 }
 
 /** True when a real PM OS skills brain is available (configured knowledge base or bundled). */

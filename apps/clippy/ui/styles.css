@@ -999,6 +999,18 @@ body.pip-warp .pip-surface-expanded { animation: pip-warp 0.32s var(--pip-ease-s
   100% { transform: scale(1); opacity: 1; }
 }
 
+/* Peek-when-idle: Pip has slid to hug the edge. Dim + settle so it reads as resting, not broken. */
+body.pip-peeking .buddy {
+  opacity: 0.72;
+  filter: saturate(0.85);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+body.pip-peeking .collapsed { cursor: pointer; }
+body.pip-peeking .buddy:hover {
+  opacity: 1;
+  filter: none;
+}
+
 /* ── Model switcher pill (model-agnostic, made visible) ── */
 .model-pill {
   display: inline-flex;

@@ -40,3 +40,6 @@ packages/pm-os/tasks.template.md
 
 # clippy screenshot scratch (visual context sent to the agent)
 .tandem/
+
+# cross-surface activity log (may contain user data — never commit)
+**/memory/activity.md

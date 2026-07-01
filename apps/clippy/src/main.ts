@@ -13,6 +13,7 @@ import { makeScreenshotPreview, type CapturedScreenshot } from "./screenshot.ts"
 import { RequestLog, type RequestSource } from "./request-log.ts";
 import { startMonitorServer } from "./monitor-server.ts";
 import { loadPipChatId, savePipChatId, warmAgentSession } from "./agent-session.ts";
+import { logActivity } from "@tandem/core";
 
 const APP_DIR = resolve(__dirname, ".."); // apps/clippy
 const REPO_ROOT = resolve(APP_DIR, "..", ".."); // repo root (AGENTS.md + PM OS submodule)
@@ -33,6 +34,12 @@ let selectedModel: string | null = null;
 let preSummonDock: { corner?: Corner; anchorX?: number; anchorY?: number } | null = null;
 let gazeTimer: ReturnType<typeof setInterval> | null = null;
 let lastGaze = { dx: 0, dy: 0 };
+/** Peek-when-idle bookkeeping: the on-screen position to restore to when Pip un-peeks. */
+let peekTimer: ReturnType<typeof setInterval> | null = null;
+let peeking = false;
+let peekHome: { x: number; y: number } | null = null;
+/** Manual hide (meeting/screen-share safety). When true, Pip is fully hidden and quiet. */
+let hidden = false;
 
 interface WindowState {
   corner?: Corner;
@@ -228,6 +235,46 @@ function applyPlacement(): void {
   sendDock();
 }
 
+/** Ease the window to (x, y) over ~180ms — used for magnetic snap so it feels physical, not teleporty. */
+async function animateMoveTo(x: number, y: number, ms = 180): Promise<void> {
+  if (!win || win.isDestroyed()) return;
+  const start = win.getBounds();
+  const tx = Math.round(x);
+  const ty = Math.round(y);
+  if (start.x === tx && start.y === ty) return;
+  const t0 = Date.now();
+  while (true) {
+    const t = Math.min(1, (Date.now() - t0) / ms);
+    const e = easeOutCubic(t);
+    moveWindow(start.x + (tx - start.x) * e, start.y + (ty - start.y) * e);
+    if (t >= 1) break;
+    await sleep(16);
+  }
+}
+
+/**
+ * Magnetic edge snap: on drop, if Pip is within snapThreshold of a work-area edge, glide it flush to
+ * that edge (with margin). Dropped far from every edge, it stays where you put it. Records the new dock.
+ */
+async function snapToNearestEdge(): Promise<void> {
+  if (!win || win.isDestroyed() || expanded) return;
+  const b = win.getBounds();
+  const work = workAreaFor();
+  const margin = cfg.placement?.margin ?? 16;
+  const T = cfg.placement?.snapThreshold ?? 64;
+
+  let x = b.x;
+  let y = b.y;
+  if (b.x - work.x <= T) x = work.x + margin;
+  else if (work.x + work.width - (b.x + b.width) <= T) x = work.x + work.width - b.width - margin;
+  if (b.y - work.y <= T) y = work.y + margin;
+  else if (work.y + work.height - (b.y + b.height) <= T) y = work.y + work.height - b.height - margin;
+
+  if (x !== b.x || y !== b.y) await animateMoveTo(x, y);
+  rememberDock();
+  peekHome = null; // new home; next peek recomputes
+}
+
 let lastDockEdge: "top" | "bottom" | null = null;
 
 /** Tell the renderer which vertical edge Pip is docked to, so replies stack away from it. */
@@ -293,6 +340,13 @@ async function setExpanded(v: boolean, opts: { animate?: boolean } = {}): Promis
   expanded = v;
   state.expanded = v;
   win.setBackgroundColor("#00000000");
+
+  // Expanding out of a peek: drop the peek bookkeeping; applyPlacement below re-docks on-screen.
+  if (v && peeking) {
+    peeking = false;
+    peekHome = null;
+    win.webContents.send("widget:peek", { peeking: false });
+  }
 
   // Collapsing after a summon: restore the real dock so the final applyPlacement glides Pip home.
   if (!v && preSummonDock) {
@@ -465,6 +519,7 @@ function signalWorking(active: boolean, label = "Working…"): void {
 
 function pingActivity(): void {
   lastNudgeAt = Date.now(); // reset nudge cooldown on any interaction
+  if (peeking) peekIn(); // any interaction brings Pip back from a peek
   if (win && !win.isDestroyed()) win.webContents.send("widget:nudge-clear");
 }
 
@@ -511,6 +566,7 @@ async function runLoggedAskStream(text: string, source: RequestSource): Promise<
       durationMs: result.durationMs,
     });
     send("widget:ask-end", { text: result.text });
+    logActivity(cfg.workspace, { surface: "desktop", ask: text, outcome: result.text });
     return { text: result.text };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -547,6 +603,11 @@ async function runLoggedScreenshotAsk(
       response: result.text,
       chatId: result.chatId,
       durationMs: result.durationMs,
+    });
+    logActivity(cfg.workspace, {
+      surface: "desktop (screen)",
+      ask: question,
+      outcome: result.text,
     });
     return { text: result.text };
   } catch (err) {
@@ -587,7 +648,7 @@ function startNudgeWatcher(): void {
   if (!cfg.nudge.enabled) return;
 
   nudgeTimer = setInterval(() => {
-    if (!win || win.isDestroyed()) return;
+    if (!win || win.isDestroyed() || hidden) return;
     const idle = powerMonitor.getSystemIdleTime();
     const sinceNudge = (Date.now() - lastNudgeAt) / 1000;
     if (idle >= cfg.nudge.idleSeconds && sinceNudge >= cfg.nudge.cooldownSeconds) {
@@ -659,6 +720,70 @@ function startGazeWatcher(): void {
   }, 60);
 }
 
+/** Slide Pip mostly off the nearest edge, leaving a peeking sliver, after a stretch of idle. */
+function peekOut(): void {
+  if (!cfg.peek.enabled || peeking || hidden || expanded || expandAnimating) return;
+  if (!win || win.isDestroyed() || !win.isVisible()) return;
+  const b = win.getBounds();
+  const work = workAreaFor();
+  const dl = b.x - work.x;
+  const dr = work.x + work.width - (b.x + b.width);
+  const dt = b.y - work.y;
+  const db = work.y + work.height - (b.y + b.height);
+  const min = Math.min(dl, dr, dt, db);
+  const inset = Math.round(Math.min(b.width, b.height) * cfg.peek.insetPct);
+  peekHome = { x: b.x, y: b.y };
+  let x = b.x;
+  let y = b.y;
+  if (min === dr) x = b.x + inset;
+  else if (min === dl) x = b.x - inset;
+  else if (min === db) y = b.y + inset;
+  else y = b.y - inset;
+  peeking = true;
+  if (!win.isDestroyed()) win.webContents.send("widget:peek", { peeking: true });
+  void animateMoveTo(x, y, 220);
+}
+
+/** Bring Pip fully back on-screen from a peek (on hover or when the user returns). */
+function peekIn(): void {
+  if (!peeking) return;
+  peeking = false;
+  const home = peekHome;
+  peekHome = null;
+  if (!win || win.isDestroyed()) return;
+  win.webContents.send("widget:peek", { peeking: false });
+  if (home) void animateMoveTo(home.x, home.y, 200);
+}
+
+function startPeekWatcher(): void {
+  if (peekTimer) clearInterval(peekTimer);
+  if (!cfg.peek.enabled) return;
+  peekTimer = setInterval(() => {
+    if (!win || win.isDestroyed() || hidden || expanded || expandAnimating) return;
+    const idle = powerMonitor.getSystemIdleTime();
+    if (!peeking && idle >= cfg.peek.idleSeconds) peekOut();
+    else if (peeking && idle < 2) peekIn();
+  }, 4000);
+}
+
+/** Meeting/screen-share safety: fully hide (or restore) Pip. Also silences peek + nudges. */
+function setHidden(v: boolean): void {
+  hidden = v;
+  if (!win || win.isDestroyed()) return;
+  if (v) {
+    peeking = false;
+    peekHome = null;
+    win.hide();
+  } else {
+    applyPlacement();
+    win.show();
+  }
+}
+
+function toggleHidden(): void {
+  setHidden(!hidden);
+}
+
 function registerHotkey(): void {
   globalShortcut.unregisterAll();
 
@@ -679,6 +804,13 @@ function registerHotkey(): void {
     });
     if (ok) console.log(`Hotkey registered: ${summon} → summon Pip to cursor`);
     else console.warn(`⚠ Could not register hotkey ${summon}`);
+  }
+
+  const hide = cfg.hotkey.hide?.trim();
+  if (hide) {
+    const ok = globalShortcut.register(hide, () => toggleHidden());
+    if (ok) console.log(`Hotkey registered: ${hide} → hide/show Pip`);
+    else console.warn(`⚠ Could not register hotkey ${hide}`);
   }
 }
 
@@ -728,6 +860,16 @@ function showModelMenu(): void {
   menu.popup({ window: win });
 }
 
+/** "Command+Shift+H" → "⌘⇧H" for menu hints. */
+function prettyAccelerator(acc: string): string {
+  return acc
+    .replace(/Command|Cmd/gi, "⌘")
+    .replace(/Shift/gi, "⇧")
+    .replace(/Option|Alt/gi, "⌥")
+    .replace(/Control|Ctrl/gi, "⌃")
+    .replace(/\+/g, "");
+}
+
 function showContextMenu(): void {
   const menu = Menu.buildFromTemplate([
     { label: "Snip screen", click: () => void runHotkeySnip() },
@@ -735,6 +877,10 @@ function showContextMenu(): void {
     { label: "Open monitor", click: () => openMonitorDashboard() },
     { type: "separator" },
     { label: expanded ? "Minimize" : "Open", click: () => void setExpanded(!expanded) },
+    {
+      label: `Hide Pip${cfg.hotkey.hide ? `  (${prettyAccelerator(cfg.hotkey.hide)})` : ""}`,
+      click: () => setHidden(true),
+    },
     { label: "Restart Pip", click: () => restartClippy() },
     { label: "Quit Pip", click: () => app.quit() },
   ]);
@@ -834,6 +980,7 @@ function registerIpc(): void {
     moveWindow(x + p.dx, y + p.dy);
     rememberDock();
   });
+  ipcMain.handle("window:snap", () => snapToNearestEdge());
   ipcMain.handle("window:resize-by", (_e, p: { dw: number; dh: number }) => {
     const { w, h } = clampPanel(state.panelW + p.dw, state.panelH + p.dh);
     state.panelW = w; state.panelH = h;
@@ -970,12 +1117,14 @@ app.whenReady().then(async () => {
   registerHotkey();
   startNudgeWatcher();
   startGazeWatcher();
+  startPeekWatcher();
 });
 
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
   if (nudgeTimer) clearInterval(nudgeTimer);
   if (gazeTimer) clearInterval(gazeTimer);
+  if (peekTimer) clearInterval(peekTimer);
 });
 
 app.on("window-all-closed", () => app.quit());

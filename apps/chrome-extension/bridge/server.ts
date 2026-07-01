@@ -8,6 +8,7 @@ import {
   appendWebTask,
   appendTaskSubBullet,
   resolveTasksFile,
+  logActivity,
 } from "@tandem/core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -178,6 +179,11 @@ const server = createServer(async (req, res) => {
       );
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ text: result.text }));
+      logActivity(WORKDIR, {
+        surface: "browser",
+        ask: body.question || `about ${body.title || body.url || "a page"}`,
+        outcome: result.text,
+      });
     } catch (err) {
       const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
       res.writeHead(500, { "Content-Type": "application/json" });
@@ -219,6 +225,11 @@ const server = createServer(async (req, res) => {
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ taskId: id, text: outcome, tasksFile: TASKS_FILE }));
+      logActivity(WORKDIR, {
+        surface: "browser (assign)",
+        ask: deriveTitle(body),
+        outcome,
+      });
     } catch (err) {
       const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
       res.writeHead(500, { "Content-Type": "application/json" });

@@ -98,8 +98,10 @@ function bindDrag(el, { onTap } = {}) {
       /* capture already released */
     }
     pointerId = null;
-    if (!dragging && onTap) onTap(e);
+    const didDrag = dragging;
+    if (!didDrag && onTap) onTap(e);
     dragging = false;
+    if (didDrag) void w.snapDock?.(); // magnetic snap to the nearest edge on drop
   };
 
   el.addEventListener("pointerup", finish);
@@ -561,7 +563,7 @@ if (w) {
 }
 
 els.collapsed.addEventListener("mouseenter", () => {
-  wakeFromSleep();
+  ping(); // also un-peeks Pip if it had slid to the edge
   if (mood === "rest") setMood("awake");
 });
 els.collapsed.addEventListener("mouseleave", () => {
@@ -817,6 +819,10 @@ if (w) {
     playBodyOnce("pip-warp", 340);
     setMood("awake");
     els.askInput?.focus();
+  });
+  w.onPeek?.(({ peeking }) => {
+    document.body.classList.toggle("pip-peeking", !!peeking);
+    if (peeking) setMood("rest");
   });
 
   const shell = els.expanded?.querySelector(".card-shell");

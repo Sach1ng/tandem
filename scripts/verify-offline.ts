@@ -11,6 +11,7 @@ import {
   chunkText,
   ensureBrainScaffold,
   hasBrainSkills,
+  logActivity,
   readMemory,
   resolveKnowledgeBase,
   toSlackMrkdwn,
@@ -132,9 +133,24 @@ try {
   writeFileSync(join(tmp, "memory", "profile.md"), "# Profile\n\nUser ships on Fridays.\n");
   const mem = readMemory(tmp);
   check("learned memory is injected", mem.includes("ships on Fridays"));
+
+  // Cross-surface memory: any surface's activity is logged and flows back into every surface's context.
+  logActivity(tmp, { surface: "slack", ask: "draft the launch note", outcome: "posted the draft" });
+  logActivity(tmp, { surface: "desktop", ask: "what did I just do?", outcome: "recapped it" });
+  const activity = readFileSync(join(tmp, "memory", "activity.md"), "utf8");
+  check("activity log records the surface", activity.includes("slack") && activity.includes("desktop"));
+  check("activity log records the ask", activity.includes("draft the launch note"));
+  const memWithActivity = readMemory(tmp);
+  check("activity flows back into shared context", memWithActivity.includes("draft the launch note"));
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
+
+console.log("\n[6] Presence config (peek / magnetic snap / hide)\n");
+check("peek-when-idle enabled by default", clippyConfig.peek?.enabled === true);
+check("peek leaves a visible sliver (insetPct < 1)", Number(clippyConfig.peek?.insetPct) > 0 && Number(clippyConfig.peek?.insetPct) < 1);
+check("magnetic snap threshold configured", Number(clippyConfig.placement?.snapThreshold) > 0);
+check("hide/show hotkey configured", typeof clippyConfig.hotkey?.hide === "string" && clippyConfig.hotkey.hide.length > 0);
 
 console.log(`\n${fail === 0 ? "✅" : "❌"} offline checks: ${pass} passed, ${fail} failed\n`);
 process.exit(fail === 0 ? 0 : 1);

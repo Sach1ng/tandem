@@ -8,6 +8,8 @@ export interface ClippyHotkeyConfig {
   snip: string | null;
   /** Global hotkey that warps Pip next to the cursor. null = disabled. */
   summon: string | null;
+  /** Global hotkey that hides/shows Pip (meeting/screen-share safety). null = disabled. */
+  hide: string | null;
   /** When true, the hotkey captures then immediately asks the agent (no extra click). */
   autoAsk: boolean;
   /** Question sent with autoAsk. */
@@ -48,6 +50,17 @@ export interface ClippyVoiceConfig {
 export interface ClippyPlacementConfig {
   corner: "top-center" | "top-right" | "bottom-right";
   margin: number;
+  /** Drop-within-this-many px of an edge to magnetically snap Pip flush to it. */
+  snapThreshold: number;
+}
+
+export interface ClippyPeekConfig {
+  /** When idle, slide Pip mostly off the nearest edge, leaving a peeking sliver. */
+  enabled: boolean;
+  /** Seconds of system idle before Pip peeks away. */
+  idleSeconds: number;
+  /** Fraction of the orb hidden past the edge (0..0.9). 0.62 leaves ~38% showing. */
+  insetPct: number;
 }
 
 export interface ClippyConfig {
@@ -67,6 +80,7 @@ export interface ClippyConfig {
   panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number; compactH?: number; tallH?: number; snipH?: number };
   collapsed: { w: number; h: number };
   placement: ClippyPlacementConfig;
+  peek: ClippyPeekConfig;
   hotkey: ClippyHotkeyConfig;
   personality: ClippyPersonalityConfig;
   nudge: ClippyNudgeConfig;
@@ -108,6 +122,7 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     panel: { ...defaults.panel, ...user.panel },
     collapsed: { ...defaults.collapsed, ...user.collapsed },
     placement: { ...defaults.placement, ...user.placement },
+    peek: { ...defaults.peek, ...user.peek },
     hotkey: { ...defaults.hotkey, ...user.hotkey },
     personality: { ...defaults.personality, ...user.personality },
     nudge: { ...defaults.nudge, ...user.nudge },
@@ -152,11 +167,18 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     placement: {
       corner: merged.placement?.corner === "bottom-right" ? "bottom-right" : "top-right",
       margin: Number(merged.placement?.margin ?? 16),
+      snapThreshold: Number(merged.placement?.snapThreshold ?? 64),
+    },
+    peek: {
+      enabled: merged.peek?.enabled !== false,
+      idleSeconds: Number(merged.peek?.idleSeconds ?? 25),
+      insetPct: Math.max(0, Math.min(0.9, Number(merged.peek?.insetPct ?? 0.62))),
     },
     hotkey: {
       snip: merged.hotkey?.snip ?? "Command+Shift+T",
       summon:
         merged.hotkey?.summon === null ? null : merged.hotkey?.summon ?? "Command+Shift+Space",
+      hide: merged.hotkey?.hide === null ? null : merged.hotkey?.hide ?? "Command+Shift+H",
       autoAsk: merged.hotkey?.autoAsk === true,
       question:
         merged.hotkey?.question?.trim() ||

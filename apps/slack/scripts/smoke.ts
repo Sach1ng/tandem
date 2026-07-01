@@ -19,9 +19,9 @@ async function main() {
   if (!auth.ok) throw new Error("Bot auth failed: " + auth.error);
   const botUser = auth.user ?? "";
   console.log(`✓ bot connected: ${botUser} @ ${auth.team}`);
-  if (botUser.toLowerCase() !== "tandem") {
+  if (botUser.toLowerCase() !== "pip") {
     console.warn(
-      `⚠ bot username is @${botUser}, not @Tandem — rename in api.slack.com → Basic Information → App Name, or reinstall from manifest.json`,
+      `⚠ bot username is @${botUser}, not @Pip — rename in api.slack.com → Basic Information → App Name, or reinstall from manifest.json`,
     );
   }
 

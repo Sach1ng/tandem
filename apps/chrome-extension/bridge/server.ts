@@ -19,12 +19,12 @@ const TASKS_FILE = resolveTasksFile(WORKDIR);
 const MODEL = process.env.CURSOR_MODEL?.trim() || "auto";
 const CURSOR_BIN = process.env.CURSOR_BIN?.trim() || "cursor-agent";
 
-const BROWSER_PERSONA = `You are Lens, Tandem's page-aware browser surface. The user is looking at a web
+const BROWSER_PERSONA = `You are Pip, Tandem's page-aware browser surface. The user is looking at a web
 page and has asked you something about it. Lead with the answer. Be concise and skimmable.
 Use the page context provided. If it is a PM artifact (PRD, ticket, dashboard, doc), apply the
 relevant PM OS skill from the workspace. Never invent facts; if the page context is insufficient, say so.`;
 
-const ASSIGN_PERSONA = `You are Lens, Tandem's page-aware browser surface, acting on a task the user
+const ASSIGN_PERSONA = `You are Pip, Tandem's page-aware browser surface, acting on a task the user
 just assigned from a web page. Do the task now using the page context provided, then lead with the
 result. Be concise and skimmable — this answer is saved to the user's task board and shown on their
 desktop. If the page context is insufficient to fully complete the task, do what you can and state
@@ -231,7 +231,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", async () => {
-  console.log(`Lens bridge (Tandem) on http://127.0.0.1:${PORT}`);
+  console.log(`Pip bridge (Tandem) on http://127.0.0.1:${PORT}`);
   console.log(`Workspace: ${WORKDIR}  ·  Model: ${MODEL}`);
   console.log(`Tasks file: ${TASKS_FILE}`);
   const version = await checkCli(CURSOR_BIN);

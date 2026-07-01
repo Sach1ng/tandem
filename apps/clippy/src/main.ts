@@ -114,7 +114,8 @@ async function detectLensTasks(initial = false): Promise<void> {
 
   for (const t of all) {
     if (t.done) continue;
-    if (!t.tags.includes("from/lens")) continue;
+    // Web-assigned tasks are tagged `from/web` (legacy: `from/lens`).
+    if (!t.tags.includes("from/web") && !t.tags.includes("from/lens")) continue;
     if (!t.meta.outcome) continue; // wait until the agent's outcome is written
     const key = lensTaskKey(t);
     if (seenLensTasks.has(key)) continue;
@@ -728,11 +729,9 @@ app.whenReady().then(async () => {
   try {
     const kb = await ensureKnowledgeBase(loaded.workspace, loaded.knowledgeBase || undefined, async () => {
       const { canceled, filePaths } = await dialog.showOpenDialog({
-        type: "question",
         title: "Choose knowledge base",
-        message: "PM OS was not found in your workspace.",
-        detail:
-          "Select the folder that contains your PM OS brain (a skills/ directory — e.g. external/pm-operating-os after tandem init, or a PM-operating-OS clone).",
+        message:
+          "PM OS was not found in your workspace. Select the folder that contains your PM OS brain (a skills/ directory — e.g. external/pm-operating-os after tandem init, or a PM-operating-OS clone).",
         properties: ["openDirectory", "createDirectory"],
         buttonLabel: "Use this folder",
       });

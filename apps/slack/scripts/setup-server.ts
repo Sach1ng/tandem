@@ -233,7 +233,7 @@ const server = createServer(async (req, res) => {
       res.end(
         JSON.stringify({
           ok: true,
-          message: "Bot started. In Slack: /invite @Tandem, then @Tandem say hi.",
+          message: "Bot started. In Slack: /invite @Pip, then @Pip say hi.",
         }),
       );
     } catch (err: any) {

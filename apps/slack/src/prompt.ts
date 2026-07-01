@@ -6,7 +6,7 @@ const PERSONA_PATH = join(SLACK_PKG_DIR, "persona.md");
 
 /** Hardcoded fallback so the bot still has a voice if persona.md is missing. */
 const PERSONA_FALLBACK =
-  "You are Tandem, an AI coworker in Slack. Lead with the answer, act end-to-end, cite workspace " +
+  "You are Pip, Tandem's AI coworker in Slack. Lead with the answer, act end-to-end, cite workspace " +
   "files, never invent facts, and reply in Slack mrkdwn (*bold*, _italic_, `code`, <url|label>; no # headings, no tables).";
 
 export interface PromptInput {

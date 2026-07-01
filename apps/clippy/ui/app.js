@@ -240,7 +240,7 @@ let lensTaskId = null;
 function showLensTask(payload) {
   if (!payload) return;
   lensTaskId = payload.id ?? null;
-  els.lensTaskTitle.textContent = payload.title || "New task from Lens";
+  els.lensTaskTitle.textContent = payload.title || "New task from the web";
   if (payload.source) {
     els.lensTaskSource.hidden = false;
     els.lensTaskSource.textContent = payload.page || payload.source;

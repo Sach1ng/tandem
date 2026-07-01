@@ -4,7 +4,7 @@ import { isAbsolute, join, resolve } from "node:path";
 
 /**
  * Deterministic, line-faithful writes to a Tandem `tasks.md` board, usable from any surface
- * (the Lens bridge, the CLI, tests) without importing Electron. Mirrors the section contract and
+ * (Pip's web bridge, the CLI, tests) without importing Electron. Mirrors the section contract and
  * line-id scheme of Clippy's parser/task-file so Clippy's watcher and parser stay in sync.
  */
 
@@ -35,8 +35,11 @@ export interface WebTaskMeta {
   page?: string; // page/document title
   context?: string; // excerpt or selection
   nextAction?: string; // the user's instruction
-  via?: string; // provenance label, e.g. "Lens"
+  via?: string; // human-readable provenance label, e.g. "Pip · web"
 }
+
+/** Stable machine tag slug for web-assigned tasks (independent of the display label in `via`). */
+const WEB_TASK_TAG = "from/web";
 
 const CONTEXT_CAP = 500;
 
@@ -57,7 +60,7 @@ export function appendWebTask(file: string, meta: WebTaskMeta): { id: string; li
 
   const tags: string[] = [];
   if (meta.project) tags.push(`#project/${meta.project}`);
-  tags.push(`#from/${(meta.via ?? "lens").toLowerCase()}`);
+  tags.push(`#${WEB_TASK_TAG}`);
   if (meta.priority) tags.push(`#${meta.priority}`);
 
   const block: string[] = [`- [ ] ${meta.title} ${tags.join(" ")}`.trimEnd()];
@@ -65,7 +68,7 @@ export function appendWebTask(file: string, meta: WebTaskMeta): { id: string; li
   if (meta.page) block.push(`  - Page: ${oneLine(meta.page, 200)}`);
   if (meta.context) block.push(`  - Context: ${oneLine(meta.context)}`);
   if (meta.nextAction) block.push(`  - Next action: ${oneLine(meta.nextAction, 300)}`);
-  block.push(`  - Assigned: ${new Date().toISOString().slice(0, 10)} via ${meta.via ?? "Lens"}`);
+  block.push(`  - Assigned: ${new Date().toISOString().slice(0, 10)} via ${meta.via ?? "Pip · web"}`);
 
   // Locate the Needs triage header.
   let headerIdx = -1;

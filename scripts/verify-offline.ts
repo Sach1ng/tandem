@@ -38,8 +38,14 @@ check("Clippy capture: --force + text output", captureArgs.includes("--force") &
 const screenArgs = buildArgs({ workspace: ws }, { prompt: "screenshot", outputFormat: "text" });
 check("Clippy screenshot: --force (full tool access)", screenArgs.includes("--force") && !screenArgs.includes("--mode"));
 
-const chromeArgs = buildArgs({ workspace: ws }, { prompt: "page", outputFormat: "json" });
-check("Chrome Lens: --force (full tool access)", chromeArgs.includes("--force") && !chromeArgs.includes("--mode"));
+const chromeAskArgs = buildArgs(
+  { workspace: ws },
+  { prompt: "page", outputFormat: "json", mode: "ask", force: false },
+);
+check(
+  "Chrome Pip /ask: read-only (--mode ask, no --force)",
+  chromeAskArgs.includes("--mode") && chromeAskArgs.includes("ask") && !chromeAskArgs.includes("--force"),
+);
 
 console.log("\n[2] Slack mrkdwn conversion\n");
 const md = "# Heading\n**bold** and [link](https://x.com)\n* item";
@@ -68,21 +74,25 @@ check("includes workspace charter (AGENTS.md)", prompt.includes("WORKSPACE CHART
 console.log("\n[4] Ecosystem naming (repo manifests & personas)\n");
 
 const slackManifest = JSON.parse(readFileSync(join(ROOT, "apps/slack/manifest.json"), "utf8"));
-check("Slack app name: Tandem", slackManifest.display_information?.name === "Tandem");
-check("Slack bot display_name: Tandem", slackManifest.features?.bot_user?.display_name === "Tandem");
-check("Slack manifest mentions Pip + Lens", /Pip/.test(slackManifest.display_information?.long_description ?? ""));
+check("Slack app name: Pip", slackManifest.display_information?.name === "Pip");
+check("Slack bot display_name: Pip", slackManifest.features?.bot_user?.display_name === "Pip");
+check("Slack manifest mentions Pip", /Pip/.test(slackManifest.display_information?.long_description ?? ""));
 
 const chromeManifest = JSON.parse(readFileSync(join(ROOT, "apps/chrome-extension/public/manifest.json"), "utf8"));
-check("Chrome extension name: Tandem Lens", chromeManifest.name === "Tandem Lens");
-check("Chrome short_name: Lens", chromeManifest.short_name === "Lens");
+check("Chrome extension name: Tandem Pip", chromeManifest.name === "Tandem Pip");
+check("Chrome short_name: Pip", chromeManifest.short_name === "Pip");
 
 const chromePopup = readFileSync(join(ROOT, "apps/chrome-extension/public/popup.html"), "utf8");
-check("Chrome popup brand: Lens", chromePopup.includes(">Lens<"));
+check("Chrome popup brand: Pip", chromePopup.includes(">Pip<"));
 check("Chrome popup: by Tandem", chromePopup.includes("by Tandem"));
-check("Chrome popup CTA: Ask Lens", chromePopup.includes("Ask Lens"));
+check("Chrome popup CTA: Ask Pip", chromePopup.includes("Ask Pip"));
 
 const chromeBridge = readFileSync(join(ROOT, "apps/chrome-extension/bridge/server.ts"), "utf8");
-check("Lens bridge persona", /You are Lens, Tandem's page-aware browser surface/.test(chromeBridge));
+check("Pip bridge persona", /You are Pip, Tandem's page-aware browser surface/.test(chromeBridge));
+check(
+  "Pip bridge /ask runs read-only",
+  /mode:\s*"ask"/.test(chromeBridge) && /force:\s*false/.test(chromeBridge),
+);
 
 const pipAgent = readFileSync(join(ROOT, "apps/clippy/src/agent.ts"), "utf8");
 check("Pip assistant persona", /You are Pip/.test(pipAgent));

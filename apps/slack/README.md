@@ -1,17 +1,17 @@
-# Tandem — Slack coworker
+# Pip — Tandem's Slack coworker
 
-**Tandem** is the team surface of the ecosystem — tag `@Tandem` in a channel or DM it. Your message runs
+**Pip** is the team surface of Tandem — tag `@Pip` in a channel or DM it. Your message runs
 as a `cursor-agent` task in the workspace (with PM OS on disk) and the answer posts back in-thread.
 
 | Surface | Name | Where |
 |---|---|---|
 | Product | **Tandem** | The ambient coworker |
-| Slack | **Tandem** (`@Tandem`) | Team channels & DMs |
+| Slack | **Pip** (`@Pip`) | Team channels & DMs |
 | Desktop | **Pip** | Buddy orb on your screen |
-| Browser | **Lens** | Chrome extension |
+| Browser | **Pip** | Chrome extension |
 | Brain | **PM OS** | Skills, knowledge, memory |
 
-> If your Slack sidebar still says **demo_app**, rename it under [api.slack.com/apps](https://api.slack.com/apps) → your app → **Basic Information** → **App Name** → **Tandem**.
+> If your Slack sidebar still says **demo_app**, rename it under [api.slack.com/apps](https://api.slack.com/apps) → your app → **Basic Information** → **App Name** → **Pip**.
 
 ## Install (no GitHub required)
 
@@ -26,7 +26,7 @@ tandem slack start
 
 Prerequisites on **your machine** (once):
 
-1. Register the Tandem distributed app at [api.slack.com/apps](https://api.slack.com/apps)
+1. Register the Pip distributed app at [api.slack.com/apps](https://api.slack.com/apps)
 2. Paste [`manifest.json`](./manifest.json) → create app
 3. **OAuth & Permissions** → Redirect URLs → add `http://127.0.0.1:8767/oauth/callback`
 4. **Manage Distribution** → complete checklist → **Activate Public Distribution**
@@ -62,8 +62,8 @@ Opens a browser wizard to paste `xoxb-`, `xapp-`, and `xoxp-` tokens manually.
 
 ## Commands
 
-- `@Tandem <anything>` — run a task
-- `open thread` *(owner only)* — let non-owners use Tandem in this thread
+- `@Pip <anything>` — run a task
+- `open thread` *(owner only)* — let non-owners use Pip in this thread
 - `close thread` *(owner only)* — revoke it
 
 ## CLI reference

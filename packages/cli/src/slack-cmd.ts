@@ -48,7 +48,7 @@ export async function cmdSlackConnect(args: string[]): Promise<void> {
     console.log(`   Owner:      ${result.ownerUserId} (ALLOWED_USERS)`);
     console.log(`   Config:     ${result.envPath}\n`);
     console.log("Next: tandem slack start");
-    console.log("Then in Slack: /invite @Tandem to a channel, @Tandem say hi\n");
+    console.log("Then in Slack: /invite @Pip to a channel, @Pip say hi\n");
   } catch (err) {
     console.error("\n❌ Slack connect failed:", (err as Error).message ?? err);
     process.exit(1);

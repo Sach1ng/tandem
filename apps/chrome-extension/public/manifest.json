@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Tandem Lens",
-  "short_name": "Lens",
+  "name": "Tandem Pip",
+  "short_name": "Pip",
   "version": "0.1.0",
-  "description": "Lens — Tandem's page-aware browser surface. Ask about whatever tab you're on, answered by the Cursor CLI against your PM OS workspace.",
+  "description": "Pip — Tandem's page-aware browser surface. Ask about whatever tab you're on, answered by the Cursor CLI against your PM OS workspace.",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Lens — ask about this page"
+    "default_title": "Pip — ask about this page"
   },
   "background": {
     "service_worker": "background.js"

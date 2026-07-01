@@ -9,8 +9,8 @@ not a task board.
 |---|---|---|
 | **Product** | Tandem | Ambient AI coworker across Slack, desktop, and Chrome |
 | **Desktop buddy** | **Pip** | The orb on your screen (this app) |
-| **Slack teammate** | **Tandem** (`@Tandem`) | Team channels and DMs |
-| **Browser** | **Lens** | Chrome extension for page-aware Q&A |
+| **Slack teammate** | **Pip** (`@Pip`) | Team channels and DMs |
+| **Browser** | **Pip** | Chrome extension for page-aware Q&A |
 | **Brain** | PM OS | Skills, knowledge, and memory on disk |
 
 ## Install (no GitHub required)

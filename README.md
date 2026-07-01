@@ -25,8 +25,8 @@ surface. Tandem flips that:
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │  SURFACES                                                          │
-│   Slack · Tandem        Pip (desktop)           Lens (Chrome)   │
-│   tag @Tandem           buddy orb               page-aware Q&A  │
+│   Pip · Slack          Pip · desktop           Pip · Chrome      │
+│   tag @Pip             buddy orb               page-aware Q&A     │
 └─────────┬──────────────────────┬──────────────────────┬───────────┘
           │                      │                      │
           ▼                      ▼                      ▼
@@ -43,15 +43,15 @@ surface. Tandem flips that:
 
 ---
 
-## The three surfaces
+## The three surfaces — one coworker, Pip
 
 | Surface | Name | What it does | Where |
 |---|---|---|---|
-| **Slack** | **Tandem** (`@Tandem`) | Tag or DM your team's coworker. Runs `cursor-agent` in the workspace, replies in-thread. | `apps/slack` |
+| **Slack** | **Pip** (`@Pip`) | Tag or DM your team's coworker. Runs `cursor-agent` in the workspace, replies in-thread. | `apps/slack` |
 | **Desktop** | **Pip** | Buddy orb on your screen. Click to ask; **⌘⇧T** to snip and get an answer. | `apps/clippy` |
-| **Browser** | **Lens** | Page-aware prompts about whatever tab you're on, via a local bridge to the engine. | `apps/chrome-extension` |
+| **Browser** | **Pip** | Page-aware prompts about whatever tab you're on, via a local bridge to the engine. | `apps/chrome-extension` |
 
-All three import `@tandem/engine`. One product (**Tandem**), three surface personalities, one brain (**PM OS**).
+All three import `@tandem/engine`. One product (**Tandem**), one coworker (**Pip**) in three places, one brain (**PM OS**).
 
 ---
 

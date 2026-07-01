@@ -28,4 +28,4 @@ and memory available on disk.
 - `memory/` — decisions, feedback, weekly plans (compounding context across runs)
 
 Treat PM OS as authoritative for PM workflows. Tandem's job is to route the right request to it
-from the right surface (Tandem in Slack, Pip on desktop, Lens in the browser), and return a clean result.
+from the right surface (Pip in Slack, on desktop, and in the browser), and return a clean result.

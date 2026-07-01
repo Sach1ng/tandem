@@ -24,6 +24,7 @@ const els = {
   modelPill: document.getElementById("model-pill"),
   modelName: document.getElementById("model-name"),
   btnMic: document.getElementById("btn-mic"),
+  btnSpeak: document.getElementById("btn-speak"),
 };
 
 let pendingNudge = null;
@@ -116,18 +117,27 @@ let voiceCfg = { enabled: false, autoSend: true, speakReplies: false };
 let recognition = null;
 let listening = false;
 
+function reflectVoiceOut(on) {
+  document.body.classList.toggle("voice-on", !!on);
+  if (els.btnSpeak) {
+    els.btnSpeak.setAttribute("aria-pressed", on ? "true" : "false");
+    els.btnSpeak.title = on ? "Speak replies aloud — on (Pip reads answers)" : "Speak replies aloud — off";
+  }
+}
+
 function initVoice() {
-  // Spoken-reply state comes from main; keep the mic button controlled by config.enabled.
+  // Spoken replies (reliable): an always-visible toggle in the bar so users can discover it.
   w.onSpeaking?.(({ speaking }) => document.body.classList.toggle("pip-speaking", !!speaking));
-  w.onVoiceOut?.(({ enabled }) => document.body.classList.toggle("voice-on", !!enabled));
-  void w.getVoiceState?.().then((s) => {
-    if (s?.speakReplies) document.body.classList.add("voice-on");
+  w.onVoiceOut?.(({ enabled }) => reflectVoiceOut(enabled));
+  void w.getVoiceState?.().then((s) => reflectVoiceOut(!!s?.speakReplies));
+  els.btnSpeak?.addEventListener("click", () => {
+    ping();
+    void w.toggleVoiceOut?.().then((on) => reflectVoiceOut(on));
   });
 
-  if (!voiceCfg.enabled || !els.btnMic) return;
+  // Push-to-talk (best-effort): show the mic whenever the runtime exposes speech recognition.
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return; // no mic button if the runtime can't do speech recognition
-
+  if (!SR || !els.btnMic) return;
   els.btnMic.hidden = false;
   els.btnMic.addEventListener("click", () => {
     ping();
@@ -159,10 +169,12 @@ function startListening(SR) {
   };
   recognition.onerror = (e) => {
     stopListening();
-    if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+    if (e?.error === "not-allowed") {
       showTranscriptHint("Mic access is blocked. Enable it in System Settings → Privacy → Microphone.");
-    } else if (e?.error === "network") {
-      showTranscriptHint("Voice input needs a network connection here. Try typing instead.");
+    } else if (e?.error === "network" || e?.error === "service-not-allowed") {
+      // The speech service isn't reachable in this runtime — hide the mic so it doesn't mislead.
+      showTranscriptHint("Voice input isn't available here — you can still type, and 🔊 reads replies aloud.");
+      if (els.btnMic) els.btnMic.hidden = true;
     }
   };
   recognition.onend = () => stopListening();
@@ -206,12 +218,18 @@ function showTranscriptHint(msg) {
 void w.getConfig?.().then((cfg) => {
   if (cfg?.panel) panelSizes = { ...panelSizes, ...cfg.panel };
   if (cfg?.personality) personality = { ...personality, ...cfg.personality };
-  if (cfg?.model && els.modelName) els.modelName.textContent = cfg.model;
+  if (cfg?.model) setModelLabel(cfg.model);
   if (cfg?.voice) voiceCfg = { ...voiceCfg, ...cfg.voice };
   if (!personality.motion) document.body.classList.add("reduced-motion");
   initPersonality();
   initVoice();
 });
+
+function setModelLabel(model) {
+  if (!model) return;
+  if (els.modelName) els.modelName.textContent = model;
+  if (els.modelPill) els.modelPill.title = `Model: ${model} — click to switch (Pip runs on any model)`;
+}
 
 function setMood(next) {
   mood = next;
@@ -911,9 +929,7 @@ if (w) {
   w.onAskDelta?.(({ delta }) => appendStreamDelta(delta));
   // Final authoritative text is applied when w.ask() resolves in runAsk().
   w.onGaze?.(({ dx, dy }) => applyGaze(dx, dy));
-  w.onModel?.(({ model }) => {
-    if (model && els.modelName) els.modelName.textContent = model;
-  });
+  w.onModel?.(({ model }) => setModelLabel(model));
   w.onSummon?.(() => {
     wakeFromSleep();
     playBodyOnce("pip-warp", 340);

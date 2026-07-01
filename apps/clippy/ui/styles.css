@@ -525,6 +525,9 @@ body.dock-bottom .card-extras {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
   -webkit-app-region: no-drag;
 }
 
@@ -577,17 +580,14 @@ body.dock-bottom .card-extras {
 .snip-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
   flex-shrink: 0;
+  width: 32px;
   height: 32px;
-  padding: 0 10px 0 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 9px;
   background: rgba(0, 0, 0, 0.22);
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
   cursor: pointer;
   -webkit-app-region: no-drag;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -653,6 +653,45 @@ body.pip-speaking .buddy .ember {
 @media (prefers-reduced-motion: reduce) {
   body.pip-listening .mic-btn { animation: none; }
   body.pip-speaking .buddy .ember { animation: none !important; }
+}
+
+/* Speaker toggle (spoken replies) — always visible so voice is discoverable. */
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.speak-btn:hover {
+  background: rgba(196, 160, 106, 0.16);
+  border-color: rgba(196, 160, 106, 0.4);
+  color: var(--fg);
+}
+.speak-ico {
+  width: 16px;
+  height: 16px;
+}
+.speak-btn .speak-wave {
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+/* On: ember-warm the button and light up the sound waves. */
+.speak-btn[aria-pressed="true"] {
+  color: var(--pip-warm, #e0b978);
+  border-color: rgba(196, 160, 106, 0.55);
+  background: rgba(196, 160, 106, 0.16);
+}
+.speak-btn[aria-pressed="true"] .speak-wave {
+  opacity: 1;
 }
 
 /* Explicit collapse (×) so it's always obvious how to close Pip. */
@@ -1061,20 +1100,18 @@ body.pip-peeking .buddy:hover {
 }
 
 /* ── Model switcher pill (model-agnostic, made visible) ── */
+/* Compact model indicator — a warm dot (name on hover + right-click menu) to keep the bar uncluttered. */
 .model-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
   flex-shrink: 0;
+  width: 32px;
   height: 32px;
-  max-width: 118px;
-  padding: 0 9px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 9px;
   background: rgba(0, 0, 0, 0.22);
   color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   -webkit-app-region: no-drag;
@@ -1086,8 +1123,8 @@ body.pip-peeking .buddy:hover {
   color: var(--fg);
 }
 .model-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   flex-shrink: 0;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, var(--pip-warm-soft), var(--pip-warm));
@@ -1095,10 +1132,7 @@ body.pip-peeking .buddy:hover {
   animation: model-dot-pulse 2.4s ease-in-out infinite;
 }
 .model-name {
-  max-width: 84px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: none;
 }
 @keyframes model-dot-pulse {
   0%, 100% { opacity: 0.65; }

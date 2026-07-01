@@ -938,6 +938,7 @@ function showContextMenu(): void {
     { label: "Open tasks.md", click: () => shell.openPath(cfg.tasksFile) },
     { label: "Open monitor", click: () => openMonitorDashboard() },
     { type: "separator" },
+    { label: `Model: ${currentModel()}`, click: () => showModelMenu() },
     { label: "Speak replies", type: "checkbox", checked: voiceOut, click: () => setVoiceOut(!voiceOut) },
     { type: "separator" },
     { label: expanded ? "Minimize" : "Open", click: () => void setExpanded(!expanded) },

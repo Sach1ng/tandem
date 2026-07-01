@@ -23,6 +23,7 @@ const els = {
   lensDismiss: document.getElementById("lens-dismiss"),
   modelPill: document.getElementById("model-pill"),
   modelName: document.getElementById("model-name"),
+  btnMic: document.getElementById("btn-mic"),
 };
 
 let pendingNudge = null;
@@ -109,13 +110,107 @@ function bindDrag(el, { onTap } = {}) {
 }
 
 let personality = { motion: true, gaze: true, greet: true, celebrate: true, sleepy: true, sleepyIdleSeconds: 45 };
+let voiceCfg = { enabled: false, autoSend: true, speakReplies: false };
+
+// ── Voice: push-to-talk in (Web Speech) + spoken replies out (driven by main) ──
+let recognition = null;
+let listening = false;
+
+function initVoice() {
+  // Spoken-reply state comes from main; keep the mic button controlled by config.enabled.
+  w.onSpeaking?.(({ speaking }) => document.body.classList.toggle("pip-speaking", !!speaking));
+  w.onVoiceOut?.(({ enabled }) => document.body.classList.toggle("voice-on", !!enabled));
+  void w.getVoiceState?.().then((s) => {
+    if (s?.speakReplies) document.body.classList.add("voice-on");
+  });
+
+  if (!voiceCfg.enabled || !els.btnMic) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return; // no mic button if the runtime can't do speech recognition
+
+  els.btnMic.hidden = false;
+  els.btnMic.addEventListener("click", () => {
+    ping();
+    if (listening) stopListening();
+    else startListening(SR);
+  });
+}
+
+function startListening(SR) {
+  try {
+    recognition = new SR();
+  } catch {
+    return;
+  }
+  recognition.lang = navigator.language || "en-US";
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onresult = (e) => {
+    let text = "";
+    for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+    els.askInput.value = text;
+    autoResizeAskInput();
+    const final = e.results[e.results.length - 1]?.isFinal;
+    if (final && voiceCfg.autoSend && text.trim()) {
+      stopListening();
+      els.askForm.requestSubmit();
+    }
+  };
+  recognition.onerror = (e) => {
+    stopListening();
+    if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+      showTranscriptHint("Mic access is blocked. Enable it in System Settings → Privacy → Microphone.");
+    } else if (e?.error === "network") {
+      showTranscriptHint("Voice input needs a network connection here. Try typing instead.");
+    }
+  };
+  recognition.onend = () => stopListening();
+
+  try {
+    recognition.start();
+    listening = true;
+    document.body.classList.add("pip-listening");
+    setMood("awake");
+    els.askInput.placeholder = "Listening…";
+  } catch {
+    stopListening();
+  }
+}
+
+function stopListening() {
+  listening = false;
+  document.body.classList.remove("pip-listening");
+  if (els.askInput.placeholder === "Listening…") els.askInput.placeholder = "Ask Pip…";
+  if (recognition) {
+    try {
+      recognition.stop();
+    } catch {
+      /* already stopped */
+    }
+    recognition = null;
+  }
+}
+
+function showTranscriptHint(msg) {
+  if (!els.nudgeHint) return;
+  els.nudgeHint.textContent = msg;
+  els.nudgeHint.hidden = false;
+  syncLayout();
+  setTimeout(() => {
+    if (els.nudgeHint) els.nudgeHint.hidden = true;
+    syncLayout();
+  }, 4200);
+}
 
 void w.getConfig?.().then((cfg) => {
   if (cfg?.panel) panelSizes = { ...panelSizes, ...cfg.panel };
   if (cfg?.personality) personality = { ...personality, ...cfg.personality };
   if (cfg?.model && els.modelName) els.modelName.textContent = cfg.model;
+  if (cfg?.voice) voiceCfg = { ...voiceCfg, ...cfg.voice };
   if (!personality.motion) document.body.classList.add("reduced-motion");
   initPersonality();
+  initVoice();
 });
 
 function setMood(next) {
@@ -551,6 +646,10 @@ if (w) {
   bindDrag(els.collapsed, {
     onTap: () => {
       ping();
+      if (document.body.classList.contains("pip-speaking")) {
+        void w.stopSpeaking?.(); // tap the orb to hush Pip mid-reply
+        return;
+      }
       void w.toggleExpand();
     },
   });
@@ -649,6 +748,7 @@ els.askForm.addEventListener("submit", (e) => {
 
 async function runAsk() {
   if (askInFlight || !w) return;
+  if (listening) stopListening();
 
   const q = els.askInput.value.trim();
   const snipPath = getSnipPath();

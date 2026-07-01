@@ -40,6 +40,10 @@ let peeking = false;
 let peekHome: { x: number; y: number } | null = null;
 /** Manual hide (meeting/screen-share safety). When true, Pip is fully hidden and quiet. */
 let hidden = false;
+/** Speak replies aloud (macOS `say`). Runtime toggle, seeded from config. */
+let voiceOut = false;
+/** Handle to the running `say` process so a new reply / user action can interrupt it. */
+let sayChild: ReturnType<typeof execFile> | null = null;
 
 interface WindowState {
   corner?: Corner;
@@ -51,6 +55,7 @@ interface WindowState {
   panelW: number;
   panelH: number;
   model?: string;
+  voiceOut?: boolean;
 }
 
 function statePath(): string {
@@ -71,6 +76,7 @@ function normalizeState(raw: Partial<WindowState>): WindowState {
     panelW: Number.isFinite(panelW) && panelW >= cfg.panel.minW ? panelW : cfg.panel.defaultW,
     panelH: Number.isFinite(panelH) && panelH >= cfg.panel.minH ? panelH : cfg.panel.defaultH,
     model: typeof raw.model === "string" ? raw.model : undefined,
+    voiceOut: typeof raw.voiceOut === "boolean" ? raw.voiceOut : undefined,
   };
 }
 
@@ -552,6 +558,7 @@ async function runLoggedAskStream(text: string, source: RequestSource): Promise<
   const send = (channel: string, payload?: unknown) => {
     if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
   };
+  stopSpeaking(); // a new question interrupts any reply being read aloud
   send("widget:ask-start");
   try {
     const result = await askStream(cfg, text, (delta) => send("widget:ask-delta", { delta }), {
@@ -566,6 +573,7 @@ async function runLoggedAskStream(text: string, source: RequestSource): Promise<
       durationMs: result.durationMs,
     });
     send("widget:ask-end", { text: result.text });
+    speak(result.text);
     logActivity(cfg.workspace, { surface: "desktop", ask: text, outcome: result.text });
     return { text: result.text };
   } catch (err) {
@@ -604,6 +612,7 @@ async function runLoggedScreenshotAsk(
       chatId: result.chatId,
       durationMs: result.durationMs,
     });
+    speak(result.text);
     logActivity(cfg.workspace, {
       surface: "desktop (screen)",
       ask: question,
@@ -773,6 +782,7 @@ function setHidden(v: boolean): void {
   if (v) {
     peeking = false;
     peekHome = null;
+    stopSpeaking();
     win.hide();
   } else {
     applyPlacement();
@@ -832,6 +842,58 @@ function restartClippy(): void {
     });
 }
 
+/** Reduce reply markdown to something that sounds natural when read aloud, and keep it short. */
+function speechText(raw: string): string {
+  let s = raw || "";
+  s = s.replace(/```[\s\S]*?```/g, " (code snippet) "); // don't read code blocks char by char
+  s = s.replace(/`([^`]+)`/g, "$1");
+  s = s.replace(/!\[[^\]]*\]\([^)]*\)/g, ""); // images
+  s = s.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1"); // links → label
+  s = s.replace(/https?:\/\/\S+/g, "a link");
+  s = s.replace(/[#*_>~|]/g, " ");
+  s = s.replace(/\s+/g, " ").trim();
+  if (s.length > 700) {
+    const cut = s.slice(0, 700);
+    const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+    s = (lastStop > 300 ? cut.slice(0, lastStop + 1) : cut).trim();
+  }
+  return s;
+}
+
+/** Stop any in-flight speech immediately. */
+function stopSpeaking(): void {
+  if (sayChild) {
+    try {
+      sayChild.kill();
+    } catch {
+      /* already gone */
+    }
+    sayChild = null;
+  }
+  if (win && !win.isDestroyed()) win.webContents.send("widget:speaking", { speaking: false });
+}
+
+/** Read a reply aloud via macOS `say` (no-op unless voiceOut is on). Interrupts prior speech. */
+function speak(text: string): void {
+  if (!voiceOut) return;
+  const clean = speechText(text);
+  if (!clean) return;
+  stopSpeaking();
+  if (win && !win.isDestroyed()) win.webContents.send("widget:speaking", { speaking: true });
+  sayChild = execFile("say", [clean], () => {
+    sayChild = null;
+    if (win && !win.isDestroyed()) win.webContents.send("widget:speaking", { speaking: false });
+  });
+}
+
+function setVoiceOut(v: boolean): void {
+  voiceOut = v;
+  state.voiceOut = v;
+  saveState();
+  if (!v) stopSpeaking();
+  if (win && !win.isDestroyed()) win.webContents.send("widget:voice-out", { enabled: v });
+}
+
 /** The model text asks currently run on (selection wins, else the fast default). */
 function currentModel(): string {
   return selectedModel?.trim() || cfg.agentFastModel || cfg.agentModel || "auto";
@@ -876,6 +938,8 @@ function showContextMenu(): void {
     { label: "Open tasks.md", click: () => shell.openPath(cfg.tasksFile) },
     { label: "Open monitor", click: () => openMonitorDashboard() },
     { type: "separator" },
+    { label: "Speak replies", type: "checkbox", checked: voiceOut, click: () => setVoiceOut(!voiceOut) },
+    { type: "separator" },
     { label: expanded ? "Minimize" : "Open", click: () => void setExpanded(!expanded) },
     {
       label: `Hide Pip${cfg.hotkey.hide ? `  (${prettyAccelerator(cfg.hotkey.hide)})` : ""}`,
@@ -918,6 +982,13 @@ function registerIpc(): void {
     setSelectedModel(p?.model);
     return currentModel();
   });
+
+  ipcMain.handle("voice:toggle-out", () => {
+    setVoiceOut(!voiceOut);
+    return voiceOut;
+  });
+  ipcMain.handle("voice:stop", () => stopSpeaking());
+  ipcMain.handle("voice:state", () => ({ speakReplies: voiceOut, autoSend: cfg.voice.autoSend }));
 
   ipcMain.handle("widget:toggle", async () => {
     pingActivity();
@@ -1114,6 +1185,7 @@ app.whenReady().then(async () => {
   registerIpc();
   createWindow();
   selectedModel = state.model ?? null;
+  voiceOut = state.voiceOut ?? cfg.voice.speakReplies;
   registerHotkey();
   startNudgeWatcher();
   startGazeWatcher();
@@ -1122,6 +1194,7 @@ app.whenReady().then(async () => {
 
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
+  stopSpeaking();
   if (nudgeTimer) clearInterval(nudgeTimer);
   if (gazeTimer) clearInterval(gazeTimer);
   if (peekTimer) clearInterval(peekTimer);

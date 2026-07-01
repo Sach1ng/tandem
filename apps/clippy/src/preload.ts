@@ -15,6 +15,12 @@ const taskWidget = {
   groom: () => ipcRenderer.invoke("agent:groom"),
   openModelMenu: () => ipcRenderer.invoke("agent:model-menu"),
   setModel: (model: string) => ipcRenderer.invoke("agent:set-model", { model }),
+
+  // voice
+  toggleVoiceOut: (): Promise<boolean> => ipcRenderer.invoke("voice:toggle-out"),
+  stopSpeaking: () => ipcRenderer.invoke("voice:stop"),
+  getVoiceState: (): Promise<{ speakReplies: boolean; autoSend: boolean }> =>
+    ipcRenderer.invoke("voice:state"),
   snip: (): Promise<{ path: string; previewUrl: string } | null> =>
     ipcRenderer.invoke("screenshot:capture"),
   screenshotPreviewUrl: (path: string) => pathToFileURL(path).href,
@@ -62,6 +68,10 @@ const taskWidget = {
   onSummon: (cb: () => void) => ipcRenderer.on("widget:summon", () => cb()),
   onPeek: (cb: (p: { peeking: boolean }) => void) =>
     ipcRenderer.on("widget:peek", (_e, p) => cb(p)),
+  onSpeaking: (cb: (p: { speaking: boolean }) => void) =>
+    ipcRenderer.on("widget:speaking", (_e, p) => cb(p)),
+  onVoiceOut: (cb: (p: { enabled: boolean }) => void) =>
+    ipcRenderer.on("widget:voice-out", (_e, p) => cb(p)),
   onModel: (cb: (p: { model: string }) => void) =>
     ipcRenderer.on("widget:model", (_e, p) => cb(p)),
   onLensTask: (

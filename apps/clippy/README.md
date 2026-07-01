@@ -31,7 +31,17 @@ tandem pip
 
 - **Click** Pip (bottom-right) to open the ask bar · **right-click** for menu
 - **⌘⇧T** — snip any region of your screen and get an answer
+- **⌘⇧Space** — summon Pip to your cursor · **⌘⇧H** — hide/show Pip (meeting-safe)
 - Type a question and press ↵ — Pip runs against PM OS on disk
+- Drag Pip near any edge to **snap** it flush; leave it idle and it **peeks** to the edge, returning on hover
+
+## Voice
+
+- **Spoken replies** (macOS `say`): right-click Pip → **Speak replies**. The ember pulses while Pip
+  talks; **tap the orb to hush** it. Persisted across restarts; seed the default with `voice.speakReplies`.
+- **Push-to-talk** (opt-in): set `voice.enabled: true` in config to show a mic button. Uses the Web
+  Speech API; auto-sends on a final transcript when `voice.autoSend`. Falls back to typing if the
+  runtime can't do speech recognition.
 
 ## Monitor dashboard
 

@@ -9,14 +9,14 @@
   "agentFlags": ["-p", "--trust", "--output-format", "text"],
   "panel": {
     "minW": 390,
-    "minH": 100,
+    "minH": 116,
     "maxW": 676,
     "maxH": 540,
     "defaultW": 520,
-    "defaultH": 108,
-    "compactH": 108,
-    "tallH": 184,
-    "snipH": 272
+    "defaultH": 118,
+    "compactH": 118,
+    "tallH": 196,
+    "snipH": 280
   },
   "collapsed": {
     "w": 73,
@@ -28,9 +28,9 @@
     "snapThreshold": 64
   },
   "peek": {
-    "enabled": true,
-    "idleSeconds": 25,
-    "insetPct": 0.62
+    "enabled": false,
+    "idleSeconds": 45,
+    "insetPct": 0.34
   },
   "hotkey": {
     "snip": "Command+Shift+T",

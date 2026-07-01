@@ -71,7 +71,7 @@
           </button>
           <span class="tool-spacer"></span>
           <button type="button" id="btn-collapse" class="tool-btn tool-icon-only pip-close" title="Collapse Pip (Esc)" aria-label="Collapse Pip">
-            <svg viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <svg class="tool-ico" viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
               <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" />
             </svg>
           </button>
@@ -79,6 +79,21 @@
 
         <div id="card-extras" class="card-extras" hidden>
           <div id="snip-panel" class="snip-panel glass-inset" hidden>
+            <div class="snip-head">
+              <span class="snip-head-label">
+                <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2.5" y="4.5" width="15" height="11" rx="2" />
+                  <circle cx="10" cy="10" r="2.75" />
+                  <path d="M6.5 4.5l1-1.5h5l1 1.5" />
+                </svg>
+                Your snip
+              </span>
+              <button type="button" id="snip-clear" class="snip-clear" title="Discard this snip" aria-label="Discard snip">
+                <svg viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                  <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" />
+                </svg>
+              </button>
+            </div>
             <div class="snip-preview-wrap">
               <img id="snip-preview" alt="Screenshot preview" />
               <div id="snip-processing" class="snip-processing" hidden>

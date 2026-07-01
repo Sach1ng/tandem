@@ -14,6 +14,7 @@ const els = {
   snipPreview: document.getElementById("snip-preview"),
   snipProcessing: document.getElementById("snip-processing"),
   snipStatusText: document.getElementById("snip-status-text"),
+  snipClear: document.getElementById("snip-clear"),
   lensTask: document.getElementById("lens-task"),
   lensTaskTitle: document.getElementById("lens-task-title"),
   lensTaskSource: document.getElementById("lens-task-source"),
@@ -34,13 +35,13 @@ let pendingSnipPath = null;
 let pendingSnipPreviewUrl = null;
 let panelSizes = {
   minW: 390,
-  minH: 100,
+  minH: 116,
   maxW: 676,
   maxH: 540,
   defaultW: 520,
-  compactH: 108,
-  tallH: 184,
-  snipH: 272,
+  compactH: 118,
+  tallH: 196,
+  snipH: 280,
 };
 let lastPanelW = 0;
 let lastPanelH = 0;
@@ -50,7 +51,9 @@ let askInFlight = false;
 let workingTimer = null;
 let workingStartedAt = 0;
 const PIP_TRANSITION_MS = 280;
-const DRAG_THRESHOLD = 6;
+// A real click has a little jitter; keep this generous so a slightly-shaky click still opens Pip
+// instead of being misread as a drag (which was the "have to click 3 times" bug).
+const DRAG_THRESHOLD = 11;
 
 /** Drag with movement threshold so tap/click still works on the same surface. */
 function bindDrag(el, { onTap } = {}) {
@@ -71,7 +74,14 @@ function bindDrag(el, { onTap } = {}) {
     pointerId = e.pointerId;
     startScreenX = lastScreenX = e.screenX;
     startScreenY = lastScreenY = e.screenY;
-    el.setPointerCapture(pointerId);
+    // Pressing Pip immediately wakes it and pulls it back from an idle peek, so the target is stable
+    // under the cursor for the click that follows.
+    ping();
+    try {
+      el.setPointerCapture(pointerId);
+    } catch {
+      /* capture not supported here — tap still works via pointerup */
+    }
   });
 
   el.addEventListener("pointermove", (e) => {
@@ -344,6 +354,11 @@ function chromeHeight() {
   if (!row) return null;
   const rowH = row.getBoundingClientRect().height;
   const tbH = toolbar ? toolbar.getBoundingClientRect().height : 0;
+  // If the toolbar exists but hasn't laid out yet (height ~0), don't trust a partial measurement —
+  // returning null makes callers fall back to the safe compact height so we never size the window
+  // too short to show the toolbar (the "expanded panel with no buttons" bug).
+  if (toolbar && tbH < 16) return null;
+  if (rowH < 16) return null;
   const total = Math.ceil(rowH + tbH) + 4; // +4 safety so nothing clips at the edge
   return total > 8 ? total : null;
 }
@@ -724,6 +739,12 @@ document.getElementById("btn-collapse")?.addEventListener("click", () => {
   void w?.setExpanded(false);
 });
 
+els.snipClear?.addEventListener("click", () => {
+  ping();
+  endSnipFlow();
+  els.askInput.placeholder = "Ask Pip anything…";
+});
+
 els.modelPill?.addEventListener("click", () => {
   ping();
   void w?.openModelMenu?.();
@@ -894,9 +915,10 @@ if (w) {
         els.snipPanel.hidden = false;
         document.body.classList.add("snip-waiting");
         setSnipPreview(path, pendingSnipPreviewUrl);
-        forceLayout();
       }
-      syncLayout();
+      // Always re-measure from scratch on open so the toolbar-inclusive height is applied every time,
+      // never blocked by a stale cached size from a previous expand.
+      forceLayout();
       if (snipActive) return;
       if (pendingNudge) showHint(pendingNudge);
       setMood(pendingNudge ? "alert" : "awake");

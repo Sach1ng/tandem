@@ -204,12 +204,43 @@ function rememberDock(): void {
 }
 
 /**
- * Position Pip for its CURRENT size, keeping the docked corner fixed so the panel always opens toward
- * screen center, and clamped fully inside the work area (never off-screen, never under the menu bar).
+ * Compute the collapsed window's top-left BEFORE the window exists, so it's created already at its
+ * docked corner (no centered-then-jump on launch). Mirrors applyPlacement's anchor math.
  */
-function applyPlacement(): void {
-  if (!win || win.isDestroyed()) return;
-  const b = win.getBounds();
+function initialCornerPosition(): { x: number; y: number } {
+  const margin = cfg.placement?.margin ?? 16;
+  const corner = normalizeCorner(state?.corner ?? cfg.placement?.corner);
+  const w = cfg.collapsed.w;
+  const h = cfg.collapsed.h;
+  const pt =
+    Number.isFinite(state?.anchorX) && Number.isFinite(state?.anchorY)
+      ? { x: state.anchorX!, y: state.anchorY! }
+      : null;
+  const display = pt ? screen.getDisplayNearestPoint(pt) : screen.getPrimaryDisplay();
+  const work = display.workArea;
+
+  let ax: number;
+  let ay: number;
+  if (pt) {
+    ax = pt.x;
+    ay = pt.y;
+  } else {
+    ax = corner.endsWith("right") ? work.x + work.width - margin : work.x + margin;
+    ay = corner.startsWith("bottom") ? work.y + work.height - margin : work.y + margin;
+  }
+
+  let x = corner.endsWith("right") ? ax - w : ax;
+  let y = corner.startsWith("bottom") ? ay - h : ay;
+  x = Math.min(Math.max(x, work.x + margin), work.x + work.width - w - margin);
+  y = Math.min(Math.max(y, work.y + margin), work.y + work.height - h - margin);
+  return { x: Math.round(x), y: Math.round(y) };
+}
+
+/**
+ * Top-left position for a window of the given size, keeping the docked corner fixed so the panel opens
+ * toward screen center, clamped fully inside the work area. Pure math — no window mutation.
+ */
+function placementFor(width: number, height: number): { x: number; y: number } {
   const work = workAreaFor();
   const margin = cfg.placement?.margin ?? 16;
   const corner = normalizeCorner(state.corner ?? cfg.placement?.corner);
@@ -220,7 +251,6 @@ function applyPlacement(): void {
     ax = state.anchorX!;
     ay = state.anchorY!;
   } else if (Number.isFinite(state.x) && Number.isFinite(state.y)) {
-    // Migrate legacy top-left state → corner anchor point.
     ax = corner.endsWith("right") ? state.x! + cfg.collapsed.w : state.x!;
     ay = corner.startsWith("bottom") ? state.y! + cfg.collapsed.h : state.y!;
   } else {
@@ -228,16 +258,37 @@ function applyPlacement(): void {
     ay = corner.startsWith("bottom") ? work.y + work.height - margin : work.y + margin;
   }
 
-  let x = corner.endsWith("right") ? ax - b.width : ax;
-  let y = corner.startsWith("bottom") ? ay - b.height : ay;
-
-  // Clamp so the whole window stays inside the work area.
-  const maxX = work.x + work.width - b.width - margin;
-  const maxY = work.y + work.height - b.height - margin;
+  let x = corner.endsWith("right") ? ax - width : ax;
+  let y = corner.startsWith("bottom") ? ay - height : ay;
+  const maxX = work.x + work.width - width - margin;
+  const maxY = work.y + work.height - height - margin;
   x = Math.min(Math.max(x, work.x + margin), Math.max(work.x + margin, maxX));
   y = Math.min(Math.max(y, work.y + margin), Math.max(work.y + margin, maxY));
+  return { x: Math.round(x), y: Math.round(y) };
+}
 
-  moveWindow(x, y);
+/**
+ * Position Pip for its CURRENT size, keeping the docked corner fixed. Used for placement-only updates
+ * (display change, drag end). Size changes go through resizeWindowTo() to keep geometry atomic.
+ */
+function applyPlacement(): void {
+  if (!win || win.isDestroyed()) return;
+  const b = win.getBounds();
+  const p = placementFor(b.width, b.height);
+  moveWindow(p.x, p.y);
+  sendDock();
+}
+
+/**
+ * The ONE place window geometry (size + position) changes together, so the corner stays anchored and we
+ * make a single atomic native bounds change instead of a per-frame resize loop. Concurrent/looped
+ * resizes on a transparent window were crashing the GPU process (the "Pip vanishes / needs multiple
+ * clicks" bug); combined with hardware acceleration being off, this keeps geometry changes crash-safe.
+ */
+function resizeWindowTo(width: number, height: number, animate: boolean): void {
+  if (!win || win.isDestroyed()) return;
+  const p = placementFor(width, height);
+  win.setBounds({ x: p.x, y: p.y, width, height }, animate && process.platform === "darwin");
   sendDock();
 }
 
@@ -311,35 +362,16 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Smooth window resize for collapsed ↔ expanded transitions. */
-async function animateWindowSize(targetW: number, targetH: number, ms = PIP_TRANSITION_MS): Promise<void> {
-  if (!win || win.isDestroyed()) return;
-  const start = win.getBounds();
-  if (start.width === targetW && start.height === targetH) return;
-
-  const minW = Math.min(start.width, targetW);
-  const minH = Math.min(start.height, targetH);
-  const maxW = Math.max(start.width, targetW);
-  const maxH = Math.max(start.height, targetH);
-  win.setMinimumSize(minW, minH);
-  win.setMaximumSize(maxW, maxH);
-
-  const t0 = Date.now();
-  while (true) {
-    const t = Math.min(1, (Date.now() - t0) / ms);
-    const e = easeOutCubic(t);
-    const w = Math.round(start.width + (targetW - start.width) * e);
-    const h = Math.round(start.height + (targetH - start.height) * e);
-    win.setSize(w, h, false);
-    applyPlacement();
-    if (t >= 1) break;
-    await sleep(16);
-  }
-}
+/** A toggle that arrived mid-animation; applied once the current transition settles (no lost clicks). */
+let pendingExpandTarget: boolean | null = null;
 
 async function setExpanded(v: boolean, opts: { animate?: boolean } = {}): Promise<void> {
   const animate = opts.animate ?? true;
-  if (expandAnimating) return;
+  // Don't drop clicks made during a transition — remember the latest intent and apply it after.
+  if (expandAnimating) {
+    pendingExpandTarget = v;
+    return;
+  }
   if (expanded === v && !animate) return;
 
   expandAnimating = animate;
@@ -365,32 +397,43 @@ async function setExpanded(v: boolean, opts: { animate?: boolean } = {}): Promis
   try {
     if (v) {
       const w = state.panelW || cfg.panel.defaultW;
-      const h = state.panelH || cfg.panel.compactH || cfg.panel.defaultH;
+      // Always open at the COMPACT height. The renderer grows the window only when there's real
+      // content (a reply/snip). Restoring a stale tall height caused the open-tall-then-shrink
+      // ("vertical then horizontal") reflow.
+      const h = cfg.panel.compactH || cfg.panel.defaultH;
+      state.panelH = h;
       win.setResizable(false);
-      win.webContents.send("widget:expanded", true);
-      win.show();
-      if (animate) await animateWindowSize(w, h);
-      else win.setSize(w, h, false);
       win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
       win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
+      win.webContents.send("widget:expanded", true);
+      win.show();
+      // One atomic size+move (native animation on macOS). No per-frame loop, no overlapping resizes.
+      resizeWindowTo(w, h, animate);
       win.focus();
     } else {
       win.webContents.send("widget:expanded", false);
       const cw = cfg.collapsed.w;
       const ch = cfg.collapsed.h;
       win.setResizable(false);
-      if (animate) await animateWindowSize(cw, ch);
-      else win.setSize(cw, ch, false);
       win.setMinimumSize(cw, ch);
       win.setMaximumSize(cw, ch);
+      resizeWindowTo(cw, ch, animate);
       win.show();
     }
   } finally {
     expandAnimating = false;
   }
 
-  applyPlacement();
   saveState();
+
+  // If the user toggled again during the animation, honor that intent now.
+  if (pendingExpandTarget !== null && pendingExpandTarget !== expanded) {
+    const next = pendingExpandTarget;
+    pendingExpandTarget = null;
+    await setExpanded(next);
+  } else {
+    pendingExpandTarget = null;
+  }
 }
 
 function screenshotPreviewUrl(path: string): string {
@@ -1060,14 +1103,16 @@ function registerIpc(): void {
     saveState();
   });
   ipcMain.handle("window:set-panel-size", (_e, p: { w: number; h: number }) => {
-    if (!expanded) return;
+    if (!expanded || !win || win.isDestroyed()) return;
     const { w, h } = clampPanel(p.w, p.h);
+    const b = win.getBounds();
+    if (Math.abs(b.width - w) < 2 && Math.abs(b.height - h) < 2) return; // no real change → no resize
     state.panelW = w;
     state.panelH = h;
-    win.setMinimumSize(cfg.panel.minW, cfg.panel.minH);
-    win.setMaximumSize(cfg.panel.maxW, cfg.panel.maxH);
-    win.setSize(w, h, false);
-    applyPlacement();
+    // Safe now that (a) hardware acceleration is off and (b) resizeWindowTo is a single atomic bounds
+    // change — the crash was the old per-frame loop colliding with this. This is the grow-to-fit that
+    // makes room for the toolbar + any reply, so it must be allowed to run right after expand.
+    resizeWindowTo(w, h, false);
     saveState();
   });
   ipcMain.handle("window:get-bounds", () => win.getBounds());
@@ -1078,9 +1123,13 @@ function createWindow(): void {
   // Always start collapsed — avoids window/UI size mismatch showing desktop bleed-through.
   state.expanded = false;
 
+  const home = initialCornerPosition();
   win = new BrowserWindow({
     width: cfg.collapsed.w,
     height: cfg.collapsed.h,
+    x: home.x,
+    y: home.y,
+    show: false, // stay hidden until placed + painted, so Pip never flashes at the wrong spot
     frame: false,
     transparent: true,
     backgroundColor: "#00000000",
@@ -1114,6 +1163,7 @@ function createWindow(): void {
     rememberDock();
   });
 
+
   win.loadFile(join(APP_DIR, "ui", "index.html"));
 
   win.webContents.on("render-process-gone", (_e, details) => {
@@ -1122,9 +1172,23 @@ function createWindow(): void {
     win.loadFile(join(APP_DIR, "ui", "index.html"));
   });
 
-  win.webContents.once("did-finish-load", () => {
-    void setExpanded(false, { animate: false });
+  // Runs on the initial load AND after any renderer reload (e.g. after a crash), so Pip always comes
+  // back collapsed, correctly placed, and in sync with the main process — never half-rendered.
+  win.webContents.on("did-finish-load", () => {
+    if (win.isDestroyed()) return;
+    expanded = false;
+    state.expanded = false;
+    win.setResizable(false);
+    win.setSize(cfg.collapsed.w, cfg.collapsed.h, false);
+    win.setMinimumSize(cfg.collapsed.w, cfg.collapsed.h);
+    win.setMaximumSize(cfg.collapsed.w, cfg.collapsed.h);
+    win.webContents.send("widget:expanded", false);
+    if (selectedModel) win.webContents.send("widget:model", { model: currentModel() });
+    win.webContents.send("widget:voice-out", { enabled: voiceOut });
     applyPlacement();
+    lastDockEdge = null;
+    sendDock();
+    if (!hidden && !win.isVisible()) win.showInactive();
   });
 
   screen.on("display-metrics-changed", () => {
@@ -1145,7 +1209,28 @@ function createWindow(): void {
   void detectLensTasks(true);
 }
 
+// Pip is a small, frameless, TRANSPARENT, always-on-top window. On macOS, GPU compositing of a
+// transparent window across resize/show intermittently crashes the GPU process, which took the whole
+// app down a few seconds after expanding (the "Pip vanishes / have to click many times / inconsistent"
+// bug). Software compositing is plenty fast for a widget this size and makes it rock-solid.
+app.disableHardwareAcceleration();
+
+// Only one Pip at a time. A second launch just wakes the existing one instead of spawning a rival
+// orb (which would fight over the hotkeys and the monitor port and make behavior feel random).
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
+
+app.on("second-instance", () => {
+  if (!win || win.isDestroyed()) return;
+  if (hidden) setHidden(false);
+  if (!win.isVisible()) win.show();
+  win.focus();
+});
+
 app.whenReady().then(async () => {
+  if (!gotSingleInstanceLock) return; // another instance already owns Pip
   const loaded = loadConfig(APP_DIR, REPO_ROOT);
 
   try {

@@ -191,7 +191,12 @@ npm publish --workspace @tandem/cli
 `cursor-agent --force` lets the agent run shell on your machine — that's how it gets work done, and
 it's remote code execution by design. So:
 - **Always set `ALLOWED_USERS`** in the Slack app. Empty = anyone in the channel can run commands.
-- The browser bridge runs the agent in **read-only `ask` mode** and binds to `127.0.0.1` only.
+- The browser bridge binds to `127.0.0.1` only and refuses any request that isn't from the Tandem
+  extension: it enforces a loopback `Host` (anti DNS-rebind) and checks the browser-set, unforgeable
+  `Origin`, so no web page can reach it (blocks both `cors` and `no-cors` POSTs). Its `/ask` endpoint
+  runs in **read-only `ask` mode**; only the explicit **Assign to Pip** action (`/assign`) runs with
+  full tool access. Request bodies are capped.
+- The desktop monitor also binds to `127.0.0.1` only, is GET-only, and enforces a loopback `Host` check.
 - `.env` and all runtime state (`sessions.json`, `processed.json`, `open-threads.json`) are gitignored.
 
 ---

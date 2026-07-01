@@ -83,14 +83,77 @@ function deriveTitle(b: AssignBody): string {
   return firstLine.length > 80 ? `${firstLine.slice(0, 79)}…` : firstLine;
 }
 
-function cors(res: import("node:http").ServerResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+const TRUSTED_ORIGIN_PREFIXES = ["chrome-extension://", "moz-extension://"];
+const MAX_BODY_BYTES = 1_000_000;
+
+/**
+ * The extension popup sends Origin: chrome-extension://<id>. Browsers set Origin themselves and page
+ * JavaScript cannot forge it, so this reliably tells our extension apart from any web page — for both
+ * cors and no-cors requests (a no-cors POST still carries the page's real Origin).
+ */
+function isTrustedOrigin(origin: string | undefined): boolean {
+  return !!origin && TRUSTED_ORIGIN_PREFIXES.some((p) => origin.startsWith(p));
+}
+
+/**
+ * Reject requests whose Host isn't loopback. Defeats DNS-rebinding, where a public hostname is
+ * repointed at 127.0.0.1 so a web page can reach this local server.
+ */
+function isLoopbackHost(req: import("node:http").IncomingMessage): boolean {
+  const name = (req.headers.host ?? "").toLowerCase().split(":")[0];
+  return name === "127.0.0.1" || name === "localhost" || name === "[::1]" || name === "::1";
+}
+
+function applyCors(origin: string | undefined, res: import("node:http").ServerResponse): void {
+  // Never send a wildcard on a server that can run code. Only ever echo a trusted extension origin.
+  if (!isTrustedOrigin(origin)) return;
+  res.setHeader("Access-Control-Allow-Origin", origin!);
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Max-Age", "600");
+}
+
+/** Read the request body with a hard size cap so a local client can't exhaust memory. */
+function readCappedBody(
+  req: import("node:http").IncomingMessage,
+  res: import("node:http").ServerResponse,
+): Promise<string | null> {
+  return new Promise((resolveBody) => {
+    let raw = "";
+    let aborted = false;
+    req.on("data", (c) => {
+      raw += c;
+      if (raw.length > MAX_BODY_BYTES && !aborted) {
+        aborted = true;
+        res.writeHead(413, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "payload too large" }));
+        req.destroy();
+        resolveBody(null);
+      }
+    });
+    req.on("end", () => !aborted && resolveBody(raw));
+    req.on("error", () => !aborted && resolveBody(null));
+  });
 }
 
 const server = createServer(async (req, res) => {
-  cors(res);
+  const origin = req.headers.origin;
+
+  // Loopback Host only (anti DNS-rebind).
+  if (!isLoopbackHost(req)) {
+    res.writeHead(403).end("forbidden");
+    return;
+  }
+  // Block any browser context that isn't the Tandem extension. A web page's fetch always carries its
+  // real, unforgeable Origin, so this stops both cors and no-cors POSTs to /assign (the RCE vector).
+  // Requests with no Origin (curl, local tooling, tests) are allowed on loopback.
+  if (origin !== undefined && !isTrustedOrigin(origin)) {
+    res.writeHead(403).end("forbidden origin");
+    return;
+  }
+
+  applyCors(origin, res);
   if (req.method === "OPTIONS") {
     res.writeHead(204).end();
     return;
@@ -104,64 +167,63 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && req.url === "/ask") {
-    let raw = "";
-    req.on("data", (c) => (raw += c));
-    req.on("end", async () => {
-      try {
-        const body = JSON.parse(raw || "{}") as AskBody;
-        const result = await runAgent(
-          { cliBin: CURSOR_BIN, model: MODEL, workspace: WORKDIR, timeoutMs: 300_000 },
-          { prompt: buildPrompt(body), outputFormat: "json" },
-        );
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ text: result.text }));
-      } catch (err) {
-        const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: msg }));
-      }
-    });
+    const raw = await readCappedBody(req, res);
+    if (raw === null) return;
+    try {
+      const body = JSON.parse(raw || "{}") as AskBody;
+      // Passive "explain this page" questions never write or run shell: read-only ask mode, no --force.
+      const result = await runAgent(
+        { cliBin: CURSOR_BIN, model: MODEL, workspace: WORKDIR, timeoutMs: 300_000 },
+        { prompt: buildPrompt(body), outputFormat: "json", mode: "ask", force: false },
+      );
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ text: result.text }));
+    } catch (err) {
+      const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: msg }));
+    }
     return;
   }
 
   // Assign a task to Pip: capture it to tasks.md, run the agent now, save the outcome back.
+  // This is the one write/full-access path; it is reachable only from the extension (Origin-gated above)
+  // and only via the explicit "Assign to Pip" action in the popup.
   if (req.method === "POST" && req.url === "/assign") {
-    let raw = "";
-    req.on("data", (c) => (raw += c));
-    req.on("end", async () => {
-      try {
-        const body = JSON.parse(raw || "{}") as AssignBody;
+    const raw = await readCappedBody(req, res);
+    if (raw === null) return;
+    try {
+      const body = JSON.parse(raw || "{}") as AssignBody;
 
-        // 1. Deterministic capture into Needs triage — gives us a stable task id immediately.
-        const { id } = appendWebTask(TASKS_FILE, {
-          title: deriveTitle(body),
-          project: body.project,
-          priority: body.priority,
-          source: body.url,
-          page: body.title,
-          context: body.selection || body.excerpt,
-          nextAction: assignInstruction(body),
-          via: "Lens",
-        });
+      // 1. Deterministic capture into Needs triage — gives us a stable task id immediately.
+      const { id } = appendWebTask(TASKS_FILE, {
+        title: deriveTitle(body),
+        project: body.project,
+        priority: body.priority,
+        source: body.url,
+        page: body.title,
+        context: body.selection || body.excerpt,
+        nextAction: assignInstruction(body),
+        via: "Pip · web",
+      });
 
-        // 2. Run the agent now with the page context (full tool access).
-        const result = await runAgent(
-          { cliBin: CURSOR_BIN, model: MODEL, workspace: WORKDIR, timeoutMs: 300_000 },
-          { prompt: buildAssignPrompt(body), outputFormat: "json" },
-        );
+      // 2. Run the agent now with the page context (full tool access).
+      const result = await runAgent(
+        { cliBin: CURSOR_BIN, model: MODEL, workspace: WORKDIR, timeoutMs: 300_000 },
+        { prompt: buildAssignPrompt(body), outputFormat: "json" },
+      );
 
-        // 3. Persist the outcome back onto the same task (Clippy's watcher picks it up).
-        const outcome = result.text?.trim() || "(no output)";
-        appendTaskSubBullet(TASKS_FILE, id, "Outcome", outcome);
+      // 3. Persist the outcome back onto the same task (Clippy's watcher picks it up).
+      const outcome = result.text?.trim() || "(no output)";
+      appendTaskSubBullet(TASKS_FILE, id, "Outcome", outcome);
 
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ taskId: id, text: outcome, tasksFile: TASKS_FILE }));
-      } catch (err) {
-        const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: msg }));
-      }
-    });
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ taskId: id, text: outcome, tasksFile: TASKS_FILE }));
+    } catch (err) {
+      const msg = err instanceof EngineError ? err.message : String((err as Error)?.message ?? err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: msg }));
+    }
     return;
   }
 

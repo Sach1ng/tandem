@@ -66,7 +66,12 @@ workspace `AGENTS.md` + `.cursor/rules/*.mdc` are **auto-loaded** by the CLI.
 ### Chrome extension (`apps/chrome-extension`)
 - A browser can't spawn a process, so the popup talks to a **local bridge** (`127.0.0.1:8765`) that
   calls the engine. The content script extracts page context (title, URL, selection, excerpt); the
-  popup offers page-aware suggestions; the bridge runs the agent in read-only `ask` mode.
+  popup offers page-aware suggestions.
+- **Bridge safety:** binds to `127.0.0.1` only, rejects non-loopback `Host` (anti DNS-rebind), and
+  rejects any request whose `Origin` isn't a `chrome-extension://` origin — the browser sets `Origin`
+  itself and page JS can't forge it, so this blocks both `cors` and `no-cors` requests from web pages.
+  `/ask` runs read-only (`--mode ask`, no `--force`); only the explicit `/assign` action runs with
+  `--force`. Bodies are size-capped.
 
 ## State & safety
 
@@ -79,7 +84,9 @@ workspace `AGENTS.md` + `.cursor/rules/*.mdc` are **auto-loaded** by the CLI.
 | `~/Library/Application Support/Tandem/window-state.json` | Clippy window state | n/a (userData) |
 
 `--force` is required for the agent to act, and it means shell access on the host. The Slack
-allow-list is mandatory; the browser bridge stays read-only and localhost-bound.
+allow-list is mandatory. The browser bridge is localhost-bound, `Host`- and `Origin`-restricted to
+the extension, and runs `/ask` read-only — only the explicit assign action uses `--force`. The
+desktop monitor is localhost-bound, GET-only, and `Host`-checked.
 
 ## Pitfalls this codebase already handles
 

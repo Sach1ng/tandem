@@ -58,6 +58,14 @@ export function startMonitorServer(opts: MonitorServerOptions): ReturnType<typeo
   opts.log.on("update", broadcast);
 
   const server = createServer(async (req, res) => {
+    // Loopback Host only — the log holds Pip's answers + screenshots, so block DNS-rebinding where a
+    // public hostname is pointed at 127.0.0.1 to let a web page read the local monitor.
+    const hostName = (req.headers.host ?? "").toLowerCase().split(":")[0];
+    if (!(hostName === "127.0.0.1" || hostName === "localhost" || hostName === "[::1]" || hostName === "::1")) {
+      res.writeHead(403).end("forbidden");
+      return;
+    }
+
     const url = new URL(req.url ?? "/", `http://127.0.0.1:${opts.port}`);
     const path = url.pathname;
 

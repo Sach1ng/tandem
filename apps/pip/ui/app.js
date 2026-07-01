@@ -333,10 +333,26 @@ function setWorking(active, label = "Working…") {
 }
 
 /** Height for the expanded window — don't measure inside a clipped absolute layer. */
+/**
+ * Real height of Pip's always-present chrome (the ask-input row + the action toolbar). We measure it
+ * instead of trusting a fixed compactH so the toolbar can never get clipped when docked at the bottom
+ * (where the window grows upward and a too-short height would hide the toolbar above the input).
+ */
+function chromeHeight() {
+  const row = els.expanded?.querySelector(".card-row");
+  const toolbar = els.expanded?.querySelector(".pip-toolbar");
+  if (!row) return null;
+  const rowH = row.getBoundingClientRect().height;
+  const tbH = toolbar ? toolbar.getBoundingClientRect().height : 0;
+  const total = Math.ceil(rowH + tbH) + 4; // +4 safety so nothing clips at the edge
+  return total > 8 ? total : null;
+}
+
 function desiredPanelHeight() {
-  const compact = panelSizes.compactH ?? panelSizes.defaultH ?? 75;
-  const tall = panelSizes.tallH ?? compact + 72;
-  const snip = panelSizes.snipH ?? tall + 72;
+  const measured = chromeHeight();
+  const compact = Math.max(measured ?? panelSizes.compactH ?? panelSizes.defaultH ?? 75, panelSizes.minH ?? 0);
+  const tall = Math.max(panelSizes.tallH ?? 0, compact + 76);
+  const snip = Math.max(panelSizes.snipH ?? 0, tall + 84);
   const maxH = panelSizes.maxH ?? 520;
 
   const hasSnip = !els.snipPanel.hidden;

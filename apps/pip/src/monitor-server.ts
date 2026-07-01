@@ -132,6 +132,14 @@ export function startMonitorServer(opts: MonitorServerOptions): ReturnType<typeo
     createReadStream(safe).pipe(res);
   });
 
+  // The monitor is a nice-to-have dashboard, never load-bearing. If the port is taken (e.g. a previous
+  // Pip is still shutting down) don't let an unhandled 'error' event crash the whole app — just skip it.
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    opts.log.off("update", broadcast);
+    const why = err.code === "EADDRINUSE" ? `port ${opts.port} already in use` : err.message;
+    console.warn(`Pip monitor: disabled (${why}). Pip continues without the dashboard.`);
+  });
+
   server.listen(opts.port, "127.0.0.1", () => {
     const url = `http://127.0.0.1:${opts.port}`;
     console.log(`Pip monitor: ${url}`);

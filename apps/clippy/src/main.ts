@@ -27,6 +27,12 @@ let tuckedForCapture: { x: number; y: number; wasVisible: boolean } | null = nul
 let requestLog: RequestLog;
 let monitorPort = 8791;
 let pipChatId: string | null = null;
+/** Runtime-selected model for text asks (model-agnostic switcher). */
+let selectedModel: string | null = null;
+/** Dock to glide back to after a summon-to-cursor; null when Pip is at its normal home. */
+let preSummonDock: { corner?: Corner; anchorX?: number; anchorY?: number } | null = null;
+let gazeTimer: ReturnType<typeof setInterval> | null = null;
+let lastGaze = { dx: 0, dy: 0 };
 
 interface WindowState {
   corner?: Corner;
@@ -37,6 +43,7 @@ interface WindowState {
   expanded: boolean;
   panelW: number;
   panelH: number;
+  model?: string;
 }
 
 function statePath(): string {
@@ -56,6 +63,7 @@ function normalizeState(raw: Partial<WindowState>): WindowState {
     expanded: Boolean(raw.expanded),
     panelW: Number.isFinite(panelW) && panelW >= cfg.panel.minW ? panelW : cfg.panel.defaultW,
     panelH: Number.isFinite(panelH) && panelH >= cfg.panel.minH ? panelH : cfg.panel.defaultH,
+    model: typeof raw.model === "string" ? raw.model : undefined,
   };
 }
 
@@ -177,6 +185,8 @@ function rememberDock(): void {
   state.corner = `${bottom ? "bottom" : "top"}-${right ? "right" : "left"}` as Corner;
   state.anchorX = right ? b.x + b.width : b.x;
   state.anchorY = bottom ? b.y + b.height : b.y;
+  // A manual move is a new home — don't glide back to a pre-summon dock.
+  preSummonDock = null;
   saveState();
 }
 
@@ -283,6 +293,14 @@ async function setExpanded(v: boolean, opts: { animate?: boolean } = {}): Promis
   expanded = v;
   state.expanded = v;
   win.setBackgroundColor("#00000000");
+
+  // Collapsing after a summon: restore the real dock so the final applyPlacement glides Pip home.
+  if (!v && preSummonDock) {
+    state.corner = preSummonDock.corner;
+    state.anchorX = preSummonDock.anchorX;
+    state.anchorY = preSummonDock.anchorY;
+    preSummonDock = null;
+  }
 
   try {
     if (v) {
@@ -483,6 +501,7 @@ async function runLoggedAskStream(text: string, source: RequestSource): Promise<
   try {
     const result = await askStream(cfg, text, (delta) => send("widget:ask-delta", { delta }), {
       resumeChatId: pipChatId,
+      model: selectedModel,
     });
     rememberChatId(result.chatId);
     requestLog.finish(entry.id, {
@@ -582,17 +601,84 @@ function startNudgeWatcher(): void {
   }, 20_000);
 }
 
+/**
+ * "Meet where you are": warp Pip next to the cursor (on whichever display holds it), expand, and focus
+ * the input. Remembers the real dock so a later collapse/Esc glides Pip back home.
+ */
+async function summonToCursor(): Promise<void> {
+  if (!win || win.isDestroyed()) return;
+  pingActivity();
+  const pt = screen.getCursorScreenPoint();
+  const work = screen.getDisplayNearestPoint(pt).workArea;
+
+  if (!preSummonDock) {
+    preSummonDock = { corner: state.corner, anchorX: state.anchorX, anchorY: state.anchorY };
+  }
+
+  // Expand first so the window is panel-sized, then place it near the cursor (applyPlacement docks it,
+  // so we override position afterward and skip the resulting "moved" bookkeeping).
+  await setExpanded(true, { animate: false });
+  const b = win.getBounds();
+  const margin = 12;
+  let x = pt.x + 18;
+  let y = pt.y + 18;
+  x = Math.min(Math.max(x, work.x + margin), work.x + work.width - b.width - margin);
+  y = Math.min(Math.max(y, work.y + margin), work.y + work.height - b.height - margin);
+
+  skipMovedSave += 2;
+  win.setPosition(Math.round(x), Math.round(y), false);
+  win.show();
+  win.focus();
+
+  // Stack replies away from whichever half of the screen we landed in.
+  const edge = y + b.height / 2 >= work.y + work.height / 2 ? "bottom" : "top";
+  if (edge !== lastDockEdge) {
+    lastDockEdge = edge;
+    win.webContents.send("widget:dock", { edge });
+  }
+  win.webContents.send("widget:summon");
+}
+
+/** Poll the cursor and tell the renderer where to point Pip's eyes. Cheap; pauses when hidden. */
+function startGazeWatcher(): void {
+  if (gazeTimer) clearInterval(gazeTimer);
+  if (!cfg.personality.gaze || !cfg.personality.motion) return;
+
+  const REACH = 260; // px from the orb center that maps to a full eye deflection
+  gazeTimer = setInterval(() => {
+    if (!win || win.isDestroyed() || !win.isVisible()) return;
+    const pt = screen.getCursorScreenPoint();
+    const b = win.getBounds();
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+    const dx = Math.max(-1, Math.min(1, (pt.x - cx) / REACH));
+    const dy = Math.max(-1, Math.min(1, (pt.y - cy) / REACH));
+    if (Math.abs(dx - lastGaze.dx) < 0.04 && Math.abs(dy - lastGaze.dy) < 0.04) return;
+    lastGaze = { dx, dy };
+    win.webContents.send("widget:gaze", { dx, dy });
+  }, 60);
+}
+
 function registerHotkey(): void {
-  const accel = cfg.hotkey.snip?.trim();
   globalShortcut.unregisterAll();
 
-  if (accel) {
-    const ok = globalShortcut.register(accel, () => {
+  const snip = cfg.hotkey.snip?.trim();
+  if (snip) {
+    const ok = globalShortcut.register(snip, () => {
       pingActivity();
       void runHotkeySnip().catch((err) => console.error("[hotkey] snip failed:", err));
     });
-    if (ok) console.log(`Hotkey registered: ${accel} → snip & ask Pip`);
-    else console.warn(`⚠ Could not register hotkey ${accel}`);
+    if (ok) console.log(`Hotkey registered: ${snip} → snip & ask Pip`);
+    else console.warn(`⚠ Could not register hotkey ${snip}`);
+  }
+
+  const summon = cfg.hotkey.summon?.trim();
+  if (summon) {
+    const ok = globalShortcut.register(summon, () => {
+      void summonToCursor().catch((err) => console.error("[hotkey] summon failed:", err));
+    });
+    if (ok) console.log(`Hotkey registered: ${summon} → summon Pip to cursor`);
+    else console.warn(`⚠ Could not register hotkey ${summon}`);
   }
 }
 
@@ -612,6 +698,34 @@ function restartClippy(): void {
       app.relaunch();
       app.exit(0);
     });
+}
+
+/** The model text asks currently run on (selection wins, else the fast default). */
+function currentModel(): string {
+  return selectedModel?.trim() || cfg.agentFastModel || cfg.agentModel || "auto";
+}
+
+function setSelectedModel(model: string | undefined): void {
+  const m = model?.trim();
+  if (!m) return;
+  selectedModel = m;
+  state.model = m;
+  saveState();
+  if (win && !win.isDestroyed()) win.webContents.send("widget:model", { model: m });
+}
+
+/** Native picker for the runtime model switcher — makes "any model" tangible on camera. */
+function showModelMenu(): void {
+  const cur = currentModel();
+  const menu = Menu.buildFromTemplate(
+    cfg.models.map((m) => ({
+      label: m,
+      type: "radio" as const,
+      checked: m === cur,
+      click: () => setSelectedModel(m),
+    })),
+  );
+  menu.popup({ window: win });
 }
 
 function showContextMenu(): void {
@@ -642,10 +756,22 @@ function registerIpc(): void {
     knowledgeBase: cfg.knowledgeBase,
     hotkey: cfg.hotkey,
     placement: cfg.placement,
+    personality: cfg.personality,
     nudge: cfg.nudge,
     voice: cfg.voice,
     monitor: cfg.monitor,
+    models: cfg.models,
+    model: currentModel(),
   }));
+
+  ipcMain.handle("agent:model-menu", () => {
+    pingActivity();
+    showModelMenu();
+  });
+  ipcMain.handle("agent:set-model", (_e, p: { model: string }) => {
+    setSelectedModel(p?.model);
+    return currentModel();
+  });
 
   ipcMain.handle("widget:toggle", async () => {
     pingActivity();
@@ -840,13 +966,16 @@ app.whenReady().then(async () => {
 
   registerIpc();
   createWindow();
+  selectedModel = state.model ?? null;
   registerHotkey();
   startNudgeWatcher();
+  startGazeWatcher();
 });
 
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
   if (nudgeTimer) clearInterval(nudgeTimer);
+  if (gazeTimer) clearInterval(gazeTimer);
 });
 
 app.on("window-all-closed", () => app.quit());

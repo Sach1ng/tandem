@@ -134,7 +134,7 @@ export async function askStream(
   cfg: ClippyConfig,
   question: string,
   onDelta: (delta: string) => void,
-  opts: { resumeChatId?: string | null } = {},
+  opts: { resumeChatId?: string | null; model?: string | null } = {},
 ): Promise<AgentReply> {
   const q = question.trim();
   if (isTrivialGreeting(q)) {
@@ -142,7 +142,7 @@ export async function askStream(
     onDelta(reply.text);
     return { ...reply, chatId: opts.resumeChatId ?? null, durationMs: 0 };
   }
-  const model = cfg.agentFastModel?.trim() || cfg.agentModel;
+  const model = opts.model?.trim() || cfg.agentFastModel?.trim() || cfg.agentModel;
   const result = await runAgentStream(
     engineCfg(cfg, model),
     { prompt: askPrompt(cfg, q), resumeChatId: opts.resumeChatId },

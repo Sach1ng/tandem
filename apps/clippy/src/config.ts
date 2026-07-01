@@ -6,10 +6,27 @@ import { resolveWorkspace } from "@tandem/core";
 export interface ClippyHotkeyConfig {
   /** Electron accelerator, e.g. Command+Shift+T. null = disabled. */
   snip: string | null;
+  /** Global hotkey that warps Pip next to the cursor. null = disabled. */
+  summon: string | null;
   /** When true, the hotkey captures then immediately asks the agent (no extra click). */
   autoAsk: boolean;
   /** Question sent with autoAsk. */
   question: string;
+}
+
+export interface ClippyPersonalityConfig {
+  /** Master switch for idle motion (breathing, float, gaze). Honors prefers-reduced-motion too. */
+  motion: boolean;
+  /** Eyes follow the cursor when awake. */
+  gaze: boolean;
+  /** Wave hello on first appearance. */
+  greet: boolean;
+  /** Sparkle + bounce when a reply lands. */
+  celebrate: boolean;
+  /** Droop + "z" after prolonged inactivity. */
+  sleepy: boolean;
+  /** Seconds of no interaction before Pip looks sleepy. */
+  sleepyIdleSeconds: number;
 }
 
 export interface ClippyNudgeConfig {
@@ -44,11 +61,14 @@ export interface ClippyConfig {
   agentFastModel: string;
   /** Vision/screenshot model — defaults to agentFastModel. */
   agentVisionModel: string;
+  /** Selectable models exposed in the runtime switcher (model-agnostic, made visible). */
+  models: string[];
   agentFlags: string[];
   panel: { minW: number; minH: number; maxW: number; maxH: number; defaultW: number; defaultH: number; compactH?: number; tallH?: number; snipH?: number };
   collapsed: { w: number; h: number };
   placement: ClippyPlacementConfig;
   hotkey: ClippyHotkeyConfig;
+  personality: ClippyPersonalityConfig;
   nudge: ClippyNudgeConfig;
   voice: ClippyVoiceConfig;
   monitor: ClippyMonitorConfig;
@@ -89,6 +109,7 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     collapsed: { ...defaults.collapsed, ...user.collapsed },
     placement: { ...defaults.placement, ...user.placement },
     hotkey: { ...defaults.hotkey, ...user.hotkey },
+    personality: { ...defaults.personality, ...user.personality },
     nudge: { ...defaults.nudge, ...user.nudge },
     voice: { ...defaults.voice, ...user.voice },
     monitor: { ...defaults.monitor, ...user.monitor },
@@ -121,6 +142,10 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     agentModel: merged.agentModel ?? "auto",
     agentFastModel: merged.agentFastModel ?? "composer-2.5-fast",
     agentVisionModel: merged.agentVisionModel ?? merged.agentFastModel ?? "composer-2.5-fast",
+    models:
+      Array.isArray(merged.models) && merged.models.length
+        ? merged.models.map(String)
+        : ["composer-2.5-fast", "auto", "gpt-5", "sonnet-4.5"],
     agentFlags: merged.agentFlags ?? ["-p", "--trust", "--output-format", "text"],
     panel: merged.panel,
     collapsed: merged.collapsed,
@@ -130,10 +155,20 @@ export function loadConfig(appDir: string, repoRoot: string): ClippyConfig {
     },
     hotkey: {
       snip: merged.hotkey?.snip ?? "Command+Shift+T",
+      summon:
+        merged.hotkey?.summon === null ? null : merged.hotkey?.summon ?? "Command+Shift+Space",
       autoAsk: merged.hotkey?.autoAsk === true,
       question:
         merged.hotkey?.question?.trim() ||
         "What's on my screen? If there's an error, tell me how to fix it.",
+    },
+    personality: {
+      motion: merged.personality?.motion !== false,
+      gaze: merged.personality?.gaze !== false,
+      greet: merged.personality?.greet !== false,
+      celebrate: merged.personality?.celebrate !== false,
+      sleepy: merged.personality?.sleepy !== false,
+      sleepyIdleSeconds: Number(merged.personality?.sleepyIdleSeconds ?? 45),
     },
     nudge: {
       enabled: merged.nudge?.enabled !== false,

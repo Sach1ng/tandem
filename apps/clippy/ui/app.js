@@ -21,6 +21,8 @@ const els = {
   lensOpen: document.getElementById("lens-open"),
   lensDone: document.getElementById("lens-done"),
   lensDismiss: document.getElementById("lens-dismiss"),
+  modelPill: document.getElementById("model-pill"),
+  modelName: document.getElementById("model-name"),
 };
 
 let pendingNudge = null;
@@ -104,8 +106,14 @@ function bindDrag(el, { onTap } = {}) {
   el.addEventListener("pointercancel", finish);
 }
 
+let personality = { motion: true, gaze: true, greet: true, celebrate: true, sleepy: true, sleepyIdleSeconds: 45 };
+
 void w.getConfig?.().then((cfg) => {
   if (cfg?.panel) panelSizes = { ...panelSizes, ...cfg.panel };
+  if (cfg?.personality) personality = { ...personality, ...cfg.personality };
+  if (cfg?.model && els.modelName) els.modelName.textContent = cfg.model;
+  if (!personality.motion) document.body.classList.add("reduced-motion");
+  initPersonality();
 });
 
 function setMood(next) {
@@ -116,6 +124,69 @@ function setMood(next) {
 
 function ping() {
   void w.pingActivity?.();
+  wakeFromSleep();
+}
+
+// --- Personality: greet, celebrate, sleepy, pop, gaze --------------------
+let sleepyTimer = null;
+let greeted = false;
+
+function initPersonality() {
+  if (personality.greet && !greeted) {
+    greeted = true;
+    // Small delay so the wave plays after the window has settled on screen.
+    setTimeout(() => playBodyOnce("pip-greet", 1100), 350);
+  }
+  scheduleSleepy();
+}
+
+/** Restart a one-shot body animation class, then clean it up. */
+function playBodyOnce(cls, ms) {
+  if (!personality.motion) return;
+  document.body.classList.remove(cls);
+  void document.body.offsetWidth; // force reflow so the animation restarts
+  document.body.classList.add(cls);
+  setTimeout(() => document.body.classList.remove(cls), ms);
+}
+
+function celebrate() {
+  if (!personality.celebrate) return;
+  playBodyOnce("pip-celebrate", 720);
+}
+
+function playPop() {
+  if (!personality.motion) return;
+  document.querySelectorAll(".buddy").forEach((b) => {
+    b.classList.remove("pip-pop");
+    void b.offsetWidth;
+    b.classList.add("pip-pop");
+    setTimeout(() => b.classList.remove("pip-pop"), 360);
+  });
+}
+
+function wakeFromSleep() {
+  if (document.body.classList.contains("pip-sleepy")) {
+    document.body.classList.remove("pip-sleepy");
+  }
+  scheduleSleepy();
+}
+
+function scheduleSleepy() {
+  if (sleepyTimer) clearTimeout(sleepyTimer);
+  if (!personality.sleepy) return;
+  const ms = Math.max(10, personality.sleepyIdleSeconds || 45) * 1000;
+  sleepyTimer = setTimeout(() => {
+    if (!askInFlight && !snipActive && !document.body.classList.contains("mode-expanded")) {
+      document.body.classList.add("pip-sleepy");
+    }
+  }, ms);
+}
+
+function applyGaze(dx, dy) {
+  if (!personality.motion || !personality.gaze) return;
+  if (document.body.classList.contains("pip-sleepy")) return;
+  document.documentElement.style.setProperty("--gaze-x", String(dx));
+  document.documentElement.style.setProperty("--gaze-y", String(dy));
 }
 
 function setWorking(active, label = "Working…") {
@@ -455,6 +526,7 @@ function handleSnipState(payload) {
     els.snipPreview.removeAttribute("src");
     showReply(text || "(no response)");
     setMood("awake");
+    celebrate();
     forceLayout();
     return;
   }
@@ -489,6 +561,7 @@ if (w) {
 }
 
 els.collapsed.addEventListener("mouseenter", () => {
+  wakeFromSleep();
   if (mood === "rest") setMood("awake");
 });
 els.collapsed.addEventListener("mouseleave", () => {
@@ -514,6 +587,11 @@ document.getElementById("btn-snip")?.addEventListener("click", () => {
 document.getElementById("btn-collapse")?.addEventListener("click", () => {
   ping();
   void w?.setExpanded(false);
+});
+
+els.modelPill?.addEventListener("click", () => {
+  ping();
+  void w?.openModelMenu?.();
 });
 
 els.lensOpen?.addEventListener("click", () => {
@@ -614,6 +692,7 @@ async function runAsk() {
       setWorking(false);
       showReply(text || "(no response)");
       setMood("awake");
+      celebrate();
     }
     els.askInput.value = "";
   } catch (err) {
@@ -672,6 +751,8 @@ if (w) {
       document.body.classList.remove("pip-transitioning");
     }, PIP_TRANSITION_MS);
     if (open) {
+      wakeFromSleep();
+      playPop();
       const path = getSnipPath();
       if (path) {
         els.snipPanel.hidden = false;
@@ -708,6 +789,7 @@ if (w) {
   });
   w.onNudge?.((payload) => {
     pendingNudge = payload?.message ?? null;
+    wakeFromSleep();
     setMood("alert");
   });
   w.onNudgeClear?.(() => {
@@ -726,6 +808,16 @@ if (w) {
   });
   w.onAskDelta?.(({ delta }) => appendStreamDelta(delta));
   // Final authoritative text is applied when w.ask() resolves in runAsk().
+  w.onGaze?.(({ dx, dy }) => applyGaze(dx, dy));
+  w.onModel?.(({ model }) => {
+    if (model && els.modelName) els.modelName.textContent = model;
+  });
+  w.onSummon?.(() => {
+    wakeFromSleep();
+    playBodyOnce("pip-warp", 340);
+    setMood("awake");
+    els.askInput?.focus();
+  });
 
   const shell = els.expanded?.querySelector(".card-shell");
   if (shell && "ResizeObserver" in window) {

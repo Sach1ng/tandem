@@ -13,6 +13,8 @@ const taskWidget = {
   capture: (text: string) => ipcRenderer.invoke("agent:capture", { text }),
   ask: (text: string) => ipcRenderer.invoke("agent:ask", { text }),
   groom: () => ipcRenderer.invoke("agent:groom"),
+  openModelMenu: () => ipcRenderer.invoke("agent:model-menu"),
+  setModel: (model: string) => ipcRenderer.invoke("agent:set-model", { model }),
   snip: (): Promise<{ path: string; previewUrl: string } | null> =>
     ipcRenderer.invoke("screenshot:capture"),
   screenshotPreviewUrl: (path: string) => pathToFileURL(path).href,
@@ -54,6 +56,11 @@ const taskWidget = {
     ipcRenderer.on("widget:ask-delta", (_e, p) => cb(p)),
   onAskEnd: (cb: (p: { text: string; error?: boolean }) => void) =>
     ipcRenderer.on("widget:ask-end", (_e, p) => cb(p)),
+  onGaze: (cb: (p: { dx: number; dy: number }) => void) =>
+    ipcRenderer.on("widget:gaze", (_e, p) => cb(p)),
+  onSummon: (cb: () => void) => ipcRenderer.on("widget:summon", () => cb()),
+  onModel: (cb: (p: { model: string }) => void) =>
+    ipcRenderer.on("widget:model", (_e, p) => cb(p)),
   onLensTask: (
     cb: (p: {
       id: string;

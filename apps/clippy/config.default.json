@@ -5,6 +5,7 @@
   "agentModel": "auto",
   "agentFastModel": "composer-2.5-fast",
   "agentVisionModel": "composer-2.5-fast",
+  "models": ["composer-2.5-fast", "auto", "gpt-5", "sonnet-4.5"],
   "agentFlags": ["-p", "--trust", "--output-format", "text"],
   "panel": {
     "minW": 390,
@@ -27,8 +28,17 @@
   },
   "hotkey": {
     "snip": "Command+Shift+T",
+    "summon": "Command+Shift+Space",
     "autoAsk": false,
     "question": "What's on my screen? If there's an error, tell me how to fix it."
+  },
+  "personality": {
+    "motion": true,
+    "gaze": true,
+    "greet": true,
+    "celebrate": true,
+    "sleepy": true,
+    "sleepyIdleSeconds": 45
   },
   "nudge": {
     "enabled": true,

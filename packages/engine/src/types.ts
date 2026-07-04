@@ -22,6 +22,8 @@ export interface EngineConfig {
   force?: boolean;
   /** Trust the workspace headlessly (--trust). Required with -p. Default: true. */
   trust?: boolean;
+  /** Auto-approve MCP servers from .cursor/mcp.json (--approve-mcps). Default: true. */
+  approveMcps?: boolean;
 }
 
 export interface RunAgentOptions {

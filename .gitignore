@@ -10,10 +10,29 @@ out/
 # secrets & local config
 .env
 .env.local
+.env.*
 **/.env
+**/.env.*
+!.env.example
+!**/.env.example
 config.json
 **/config.json
 !config.default.json
+
+# OAuth & API credentials (never commit)
+**/gcp-oauth.keys.json
+**/gcp-oauth*.json
+**/*oauth*.keys.json
+**/client_secret*.json
+**/credentials.json
+**/service-account*.json
+**/tokens.json
+**/.config/gws/
+**/.config/google-drive-mcp/
+
+# MCP local config (env may contain API keys / OAuth secrets)
+.cursor/mcp.json
+!.cursor/mcp.json.example
 
 # runtime state (never commit) — chat sessions, dedupe sets, grants, logs
 **/sessions.json

@@ -34,6 +34,7 @@ export class EngineError extends Error {
 export function buildArgs(cfg: EngineConfig, opts: RunAgentOptions): string[] {
   const force = opts.force ?? cfg.force ?? true;
   const trust = cfg.trust ?? true;
+  const approveMcps = cfg.approveMcps ?? true;
   const args: string[] = [
     "-p",
     opts.prompt,
@@ -49,6 +50,7 @@ export function buildArgs(cfg: EngineConfig, opts: RunAgentOptions): string[] {
     args.push("--force");
   }
   if (trust) args.push("--trust");
+  if (approveMcps) args.push("--approve-mcps");
   args.push("--workspace", cfg.workspace);
   if (opts.resumeChatId) args.push("--resume", opts.resumeChatId);
   return args;

@@ -1,0 +1,15 @@
+---
+description: Open local HTML in the system browser and share GitHub Pages URL
+globs: "**/*.html"
+alwaysApply: true
+---
+
+# Local HTML — external browser + GitHub Pages
+
+When you create, edit, or share HTML (especially under `apps/website/`):
+
+1. **Always run** `open "apps/website/<file>.html"` (or `npm run roadmap:open`) — not Cursor preview.
+2. **Always include** both links in your reply:
+   - Local: `file:///Users/sachin/Desktop/AI%20projects/God%20mode/apps/website/<file>.html`
+   - Live: https://sach1ng.github.io/tandem/<file>.html
+3. After edits, **commit + push** to `main` so GitHub Pages updates (see `github-pages-html.mdc`).

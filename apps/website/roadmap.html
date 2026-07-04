@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkout Launch · Roadmap</title>
+    <style>
+      :root {
+        --bg: #faf9f7;
+        --card: #fff;
+        --text: #1a1a1a;
+        --muted: #6b6560;
+        --border: #e8e4df;
+        --p0: #c44d2a;
+        --p1: #b8860b;
+        --p2: #6b7280;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        padding: 2rem;
+      }
+      .wrap { max-width: 720px; margin: 0 auto; }
+      header { margin-bottom: 2rem; }
+      h1 { font-size: 1.5rem; font-weight: 600; }
+      .launch {
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+      .launch strong { color: var(--text); }
+      section { margin-bottom: 1.75rem; }
+      .section-head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        color: #fff;
+      }
+      .badge-p0 { background: var(--p0); }
+      .badge-p1 { background: var(--p1); }
+      .badge-p2 { background: var(--p2); }
+      .section-head h2 { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 0.9rem;
+      }
+      th, td {
+        text-align: left;
+        padding: 0.65rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: #f5f3f0;
+      }
+      tr:last-child td { border-bottom: none; }
+      .updated {
+        margin-top: 2rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .external {
+        margin-top: 0.75rem;
+        font-size: 0.8rem;
+      }
+      .external a {
+        color: var(--p0);
+        text-decoration: none;
+      }
+      .external a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Website Checkout Launch</h1>
+        <p class="launch"><strong>Launch target:</strong> July 15, 2026</p>
+        <p class="external">
+          <a
+            href="https://sach1ng.github.io/tandem/roadmap.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >↗ Live on GitHub Pages</a>
+        </p>
+      </header>
+
+      <section id="p0">
+        <div class="section-head">
+          <span class="badge badge-p0">P0</span>
+          <h2>Must ship for launch</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Owner</th>
+              <th>Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Checkout page — payment flow</td>
+              <td>Eng</td>
+              <td>Jul 12</td>
+            </tr>
+            <tr>
+              <td>Order confirmation email</td>
+              <td>Eng</td>
+              <td>Jul 12</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p1">
+        <div class="section-head">
+          <span class="badge badge-p1">P1</span>
+          <h2>Next up</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Owner</th>
+              <th>Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cart abandonment recovery</td>
+              <td>Marketing</td>
+              <td>Jul 18</td>
+            </tr>
+            <tr>
+              <td>Checkout analytics dashboard</td>
+              <td>Data</td>
+              <td>Jul 20</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p2">
+        <div class="section-head">
+          <span class="badge badge-p2">P2</span>
+          <h2>Later</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Owner</th>
+              <th>Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Apple Pay / Google Pay</td>
+              <td>Eng</td>
+              <td>Later</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <p class="updated">Last updated: July 4, 2026</p>
+    </div>
+  </body>
+</html>

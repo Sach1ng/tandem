@@ -1,0 +1,19 @@
+---
+description: Publish HTML artifacts to GitHub Pages (apps/website)
+globs: "**/*.html"
+alwaysApply: true
+---
+
+# HTML → GitHub Pages
+
+When you create or edit shareable HTML (roadmaps, demos, launch pages, reports):
+
+1. **Put the file in `apps/website/`** — not the repo root. Example: `apps/website/roadmap.html`.
+2. **Commit and push to `main`** so the Pages workflow deploys it. Do not leave HTML local-only.
+3. **Share the live URL** in every reply:
+   - Site root: https://sach1ng.github.io/tandem/
+   - Roadmap: https://sach1ng.github.io/tandem/roadmap.html
+4. Also run `open apps/website/<file>.html` and include the `file://` path for local preview.
+5. When Pip or Slack tasks update HTML, edit the `apps/website/` copy and push so Hardik (and others) see the live page.
+
+Pages deploys automatically via `.github/workflows/deploy-pages.yml` on push to `main`.

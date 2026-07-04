@@ -23,10 +23,13 @@
     "slack:setup": "npm run setup --workspace @tandem/slack",
     "slack:smoke": "npm run smoke --workspace @tandem/slack",
     "slack:reinstall": "npm run reinstall --workspace @tandem/slack",
+    "slack:install-service": "npm run install-service --workspace @tandem/slack",
+    "slack:activate": "npm run activate --workspace @tandem/slack",
     "pip": "npm run build --workspace @tandem/pip && npm run start --workspace @tandem/pip",
     "chrome:build": "npm run build --workspace @tandem/chrome-extension",
     "tandem:init": "node packages/cli/bin/tandem.mjs init",
-    "tandem:doctor": "node packages/cli/bin/tandem.mjs doctor"
+    "tandem:doctor": "node packages/cli/bin/tandem.mjs doctor",
+    "roadmap:open": "open apps/website/roadmap.html"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

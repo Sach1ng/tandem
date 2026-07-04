@@ -1,17 +1,18 @@
 ---
-description: Commit and push website changes to GitHub after editing apps/website
+description: Commit and push website/HTML changes to GitHub Pages after editing apps/website
 globs: apps/website/**
 alwaysApply: false
 ---
 
 # Website deploy workflow
 
-When you change anything under `apps/website/` (especially `index.html`):
+When you change anything under `apps/website/` (HTML, CSS, assets):
 
-1. **Finish the edit** — keep it a single-file static site; no build step required.
-2. **Commit** only the website files (and related deploy docs if touched).
-3. **Push to GitHub** on `main` (`origin`) so the live site stays in sync.
+1. **Finish the edit** — keep pages static; no build step required.
+2. **Commit** the website files (and workflow if touched).
+3. **Push to GitHub** on `main` (`origin`) so GitHub Pages deploys via Actions.
+4. **Share the live URL** — e.g. https://sach1ng.github.io/tandem/roadmap.html
 
-Do not leave website work local-only. Preview locally if helpful (`python3 -m http.server 8080 --directory apps/website`), but always push when the change is done.
+Do not leave website work local-only. Preview with `npm run roadmap:open` or a local server, but always push when done.
 
 If the user asked not to commit in the same message, finish the edit and remind them the site still needs a push.

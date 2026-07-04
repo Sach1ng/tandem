@@ -124,6 +124,7 @@ export async function runAgentStream(
   const args = buildArgs(cfg, { ...opts, outputFormat: "stream-json" });
   args.push("--stream-partial-output");
   const startedAt = Date.now();
+  const timeoutMs = cfg.timeoutMs ?? DEFAULTS.timeoutMs;
 
   return new Promise<AgentResult>((resolve, reject) => {
     const child = spawn(bin, args, {
@@ -139,9 +140,19 @@ export async function runAgentStream(
     let stderr = "";
     let settled = false;
 
+    // Guard against a hung cursor-agent: unlike runAgent (execFile has a timeout option), a raw
+    // spawn will never self-terminate, so we arm our own timer and SIGKILL the child if it fires.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      child.kill("SIGKILL");
+      fail(new EngineError(`cursor-agent timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    timer.unref?.();
+
     const fail = (err: EngineError) => {
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       reject(err);
     };
 
@@ -209,6 +220,7 @@ export async function runAgentStream(
         return;
       }
       settled = true;
+      clearTimeout(timer);
       resolve({ text, chatId, raw: acc, parsed: true, durationMs: Date.now() - startedAt });
     });
   });

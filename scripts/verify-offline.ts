@@ -47,14 +47,8 @@ check("Pip capture: --force + text output", captureArgs.includes("--force") && c
 const screenArgs = buildArgs({ workspace: ws }, { prompt: "screenshot", outputFormat: "text" });
 check("Pip screenshot: --force (full tool access)", screenArgs.includes("--force") && !screenArgs.includes("--mode"));
 
-const chromeAskArgs = buildArgs(
-  { workspace: ws },
-  { prompt: "page", outputFormat: "json", mode: "ask", force: false },
-);
-check(
-  "Chrome Pip /ask: read-only (--mode ask, no --force)",
-  chromeAskArgs.includes("--mode") && chromeAskArgs.includes("ask") && !chromeAskArgs.includes("--force"),
-);
+const chromeAskArgs = buildArgs({ workspace: ws }, { prompt: "page", outputFormat: "json" });
+check("Chrome Pip /ask: --force (full tool access)", chromeAskArgs.includes("--force") && !chromeAskArgs.includes("--mode"));
 
 console.log("\n[2] Slack mrkdwn conversion\n");
 const md = "# Heading\n**bold** and [link](https://x.com)\n* item";
@@ -98,10 +92,8 @@ check("Chrome popup CTA: Ask Pip", chromePopup.includes("Ask Pip"));
 
 const chromeBridge = readFileSync(join(ROOT, "apps/chrome-extension/bridge/server.ts"), "utf8");
 check("Pip bridge persona", /You are Pip, Tandem's page-aware browser surface/.test(chromeBridge));
-check(
-  "Pip bridge /ask runs read-only",
-  /mode:\s*"ask"/.test(chromeBridge) && /force:\s*false/.test(chromeBridge),
-);
+check("Pip bridge autonomy charter", /AUTONOMY/.test(chromeBridge));
+check("Pip bridge configurable timeout", /TIMEOUT_MS/.test(chromeBridge));
 
 const pipAgent = readFileSync(join(ROOT, "apps/pip/src/agent.ts"), "utf8");
 check("Pip assistant persona", /You are Pip/.test(pipAgent));
@@ -147,7 +139,7 @@ try {
 }
 
 console.log("\n[6] Presence config (peek / magnetic snap / hide)\n");
-check("peek-when-idle enabled by default", pipConfig.peek?.enabled === true);
+check("peek-when-idle disabled by default (GPU stability)", pipConfig.peek?.enabled === false);
 check("peek leaves a visible sliver (insetPct < 1)", Number(pipConfig.peek?.insetPct) > 0 && Number(pipConfig.peek?.insetPct) < 1);
 check("magnetic snap threshold configured", Number(pipConfig.placement?.snapThreshold) > 0);
 check("hide/show hotkey configured", typeof pipConfig.hotkey?.hide === "string" && pipConfig.hotkey.hide.length > 0);

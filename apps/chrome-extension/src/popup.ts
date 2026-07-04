@@ -37,8 +37,8 @@ function suggestionsFor(c: PageContext): string[] {
   if (/github\.com/.test(h)) return ["Explain what this PR/issue is about", "What should I review most carefully here?"];
   if (/docs\.google|notion\.so|confluence/.test(h)) return ["Review this doc and flag risks or gaps", "Turn this into a crisp exec summary"];
   if (/figma\.com/.test(h)) return ["What PM questions should I ask about this design?"];
-  if (c.selection) return ["Explain this selection", "Draft a reply to this"];
-  return ["Summarize this page", "What should I do about this?"];
+  if (c.selection) return ["Explain this selection", "Draft a reply to this", "Research this topic deeply and assign to Pip"];
+  return ["Summarize this page", "What should I do about this?", "Deep research on this topic — outline, investigate, report"];
 }
 
 async function loadContext(): Promise<void> {
@@ -53,7 +53,7 @@ async function loadContext(): Promise<void> {
     if (!tab?.id) throw new Error("no tab");
     ctx = await chrome.tabs.sendMessage(tab.id, { type: "getContext" });
   } catch {
-    contextEl.textContent = "Can't read this page (browser-internal or blocked page).";
+    contextEl.textContent = "No page context (internal/blocked page) — you can still type a task and Assign.";
   }
   if (pendingSelection && ctx) ctx.selection = pendingSelection;
 
@@ -110,7 +110,10 @@ const BRIDGE_DOWN = "Couldn't reach the bridge. Start it with: npm run bridge -w
 async function ask(): Promise<void> {
   if (inFlight) return;
   const question = qEl.value.trim();
-  if (!ctx && !question) return;
+  if (!question && !ctx) {
+    answerEl.textContent = "Type a question, or open Lens on a page you want to ask about.";
+    return;
+  }
   setBusy(true);
   assignedEl.hidden = true;
   answerEl.textContent = "Thinking…";
@@ -118,7 +121,7 @@ async function ask(): Promise<void> {
     const res = await fetch(`${BRIDGE}/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...ctx, question }),
+      body: JSON.stringify({ ...(ctx ?? {}), question }),
     });
     const data = await res.json();
     answerEl.textContent = data.error ? `Error: ${data.error}` : data.text || "(no output)";
@@ -131,19 +134,22 @@ async function ask(): Promise<void> {
 
 async function assign(): Promise<void> {
   if (inFlight) return;
-  if (!ctx) {
-    answerEl.textContent = "Can't read this page, so there's nothing to assign.";
+  const instruction = qEl.value.trim();
+  if (!instruction && !ctx) {
+    answerEl.textContent = "Type what you want Pip to do, then Assign — page context is optional.";
     return;
   }
-  const instruction = qEl.value.trim();
   setBusy(true);
   assignedEl.hidden = true;
-  answerEl.textContent = "Assigning to Pip… capturing the task and running it now.";
+  answerEl.textContent = "Assigning to Pip… capturing the task and running it now (may take several minutes for research).";
   try {
     const res = await fetch(`${BRIDGE}/assign`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...ctx, instruction }),
+      body: JSON.stringify({
+        ...(ctx ?? {}),
+        instruction: instruction || "Review this page and tell me what I should do about it.",
+      }),
     });
     const data = await res.json();
     if (data.error) {

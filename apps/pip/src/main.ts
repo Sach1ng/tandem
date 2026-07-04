@@ -7,7 +7,7 @@ import chokidar from "chokidar";
 import { loadConfig, type PipConfig } from "./config.ts";
 import { parseTasksMarkdown, type ParsedTasks, type SectionKey, type Task } from "./parser.ts";
 import { moveTaskInFile, toggleDoneInFile } from "./task-file.ts";
-import { ask, askAboutScreenshot, askStream, capture, groom } from "./agent.ts";
+import { askAboutScreenshot, askStream, capture, groom } from "./agent.ts";
 import { ensureKnowledgeBase } from "./knowledge-base.ts";
 import { makeScreenshotPreview, type CapturedScreenshot } from "./screenshot.ts";
 import { RequestLog, type RequestSource } from "./request-log.ts";
@@ -574,25 +574,6 @@ function pingActivity(): void {
 
 function openMonitorDashboard(): void {
   void shell.openExternal(`http://127.0.0.1:${monitorPort}`);
-}
-
-async function runLoggedAsk(text: string, source: RequestSource): Promise<{ text: string }> {
-  const entry = requestLog.start({ kind: "ask", question: text, source });
-  try {
-    const result = await ask(cfg, text, { resumeChatId: pipChatId });
-    rememberChatId(result.chatId);
-    requestLog.finish(entry.id, {
-      status: "done",
-      response: result.text,
-      chatId: result.chatId,
-      durationMs: result.durationMs,
-    });
-    return { text: result.text };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    requestLog.finish(entry.id, { status: "error", error: msg });
-    return { text: msg };
-  }
 }
 
 /** Streaming ask: pushes text deltas to the renderer as the model generates them. */

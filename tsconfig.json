@@ -15,6 +15,9 @@
     "apps/slack/src/**/*.ts",
     "apps/slack/scripts/**/*.ts",
     "apps/pip/src/**/*.ts",
-    "apps/chrome-extension/src/**/*.ts"
+    "apps/pip/scripts/**/*.ts",
+    "apps/chrome-extension/src/**/*.ts",
+    "apps/chrome-extension/bridge/**/*.ts",
+    "scripts/**/*.ts"
   ]
 }

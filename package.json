@@ -13,7 +13,7 @@
     "apps/chrome-extension"
   ],
   "scripts": {
-    "build": "npm run build --workspace @tandem/core && npm run build --workspace @tandem/engine && npm run prepare --workspace @tandem/pm-os && npm run build --workspace @tandem/cli && npm run build --workspace @tandem/pip && npm run build --workspace @tandem/slack",
+    "build": "npm run build --workspace @tandem/core && npm run build --workspace @tandem/engine && npm run prepare --workspace @tandem/pm-os && npm run build --workspace @tandem/cli && npm run build --workspace @tandem/pip && npm run build --workspace @tandem/slack && npm run build --workspace @tandem/chrome-extension",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "tsx scripts/verify-offline.ts",
     "engine:smoke": "tsx packages/engine/scripts/smoke.ts",

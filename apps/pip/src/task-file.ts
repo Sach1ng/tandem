@@ -77,9 +77,8 @@ export function moveTaskInFile(file: string, id: string, targetSection: SectionK
   // Trim trailing blank lines inside the section so we tuck in cleanly.
   while (insertAt - 1 > headerIdx && without[insertAt - 1]!.trim() === "") insertAt--;
 
-  const prevIsTask = insertAt - 1 > headerIdx && /^[-\s]/.test(without[insertAt - 1] ?? "");
-  const splice = prevIsTask ? block : block; // blocks are self-contained; no extra gap needed
-  without.splice(insertAt, 0, ...splice);
+  // Blocks are self-contained (task line + its sub-bullets), so no extra spacer is needed.
+  without.splice(insertAt, 0, ...block);
 
   writeFileSync(file, without.join("\n"));
 }

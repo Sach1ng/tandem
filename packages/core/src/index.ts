@@ -1,6 +1,7 @@
 export { toSlackMrkdwn, chunkText } from "./mrkdwn.ts";
 export { JsonStore, KeyedQueue } from "./jsonStore.ts";
 export { readCharter, readPersona } from "./charter.ts";
+export { PIP_AGENT_AUTONOMY } from "./autonomy.ts";
 export { defaultWorkspaceHome, findWorkspaceFromCwd, resolveWorkspace } from "./workspace.ts";
 export {
   defaultPmOsDir,

@@ -1,0 +1,17 @@
+---
+description: Commit and push website changes to GitHub after editing apps/website
+globs: apps/website/**
+alwaysApply: false
+---
+
+# Website deploy workflow
+
+When you change anything under `apps/website/` (especially `index.html`):
+
+1. **Finish the edit** — keep it a single-file static site; no build step required.
+2. **Commit** only the website files (and related deploy docs if touched).
+3. **Push to GitHub** on `main` (`origin`) so the live site stays in sync.
+
+Do not leave website work local-only. Preview locally if helpful (`python3 -m http.server 8080 --directory apps/website`), but always push when the change is done.
+
+If the user asked not to commit in the same message, finish the edit and remind them the site still needs a push.

@@ -10,6 +10,7 @@ import {
   appendTaskSubBullet,
   resolveTasksFile,
   logActivity,
+  PIP_AGENT_AUTONOMY,
 } from "@tandem/core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -22,25 +23,19 @@ const MODEL = process.env.CURSOR_MODEL?.trim() || "auto";
 const CURSOR_BIN = process.env.CURSOR_BIN?.trim() || "cursor-agent";
 const TIMEOUT_MS = Number(process.env.TANDEM_BRIDGE_TIMEOUT_MS ?? 600_000);
 
-const AUTONOMY = `Act autonomously with full tool access (WebSearch, WebFetch, shell, file writes, Task subagents).
-Never stop to ask for confirmation — use sensible defaults and complete the task end-to-end.
-User skills in ~/.cursor/skills/ are available (including research, research-deep, research-report).
-For research tasks: run the full pipeline when asked (outline → deep → report) without human-in-the-loop.
-Write artifacts under the workspace; lead the saved outcome with a concise BLUF, then paths/files created.`;
-
 const BROWSER_PERSONA = `You are Pip, Tandem's page-aware browser surface. The user is looking at a web
 page and has asked you something about it. Lead with the answer. Be concise and skimmable.
 Use the page context provided. If it is a PM artifact (PRD, ticket, dashboard, doc), apply the
 relevant PM OS skill from the workspace. Never invent facts; if the page context is insufficient, say so.
 
-${AUTONOMY}`;
+${PIP_AGENT_AUTONOMY}`;
 
 const ASSIGN_PERSONA = `You are Pip, Tandem's page-aware browser surface, acting on a task the user
 just assigned from a web page (or typed directly). Do the task now using any context provided, then
 lead with the result. This answer is saved to the user's task board and shown on their desktop.
 If context is thin, use WebSearch and workspace skills to finish anyway — state assumptions briefly.
 
-${AUTONOMY}`;
+${PIP_AGENT_AUTONOMY}`;
 
 interface AskBody {
   url?: string;

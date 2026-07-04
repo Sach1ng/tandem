@@ -123,9 +123,23 @@ function bindDrag(el, { onTap } = {}) {
 let personality = { motion: true, gaze: true, greet: true, celebrate: true, sleepy: true, sleepyIdleSeconds: 45 };
 let voiceCfg = { enabled: false, autoSend: true, speakReplies: false };
 
-// ── Voice: push-to-talk in (Web Speech) + spoken replies out (driven by main) ──
+// ── Voice: mic capture in renderer + on-device Whisper WASM ──
 let recognition = null;
 let listening = false;
+let mediaStream = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let whisperPipelinePromise = null;
+let voiceAudioCtx = null;
+let voiceAnalyser = null;
+let voiceVadFrame = null;
+let voiceMaxTimer = null;
+let voiceFinishing = false;
+
+const VAD_SPEECH_RMS = 0.016;
+const VAD_SILENCE_MS = 1300;
+const VAD_MAX_MS = 45000;
+const VAD_START_TIMEOUT_MS = 9000;
 
 function reflectVoiceOut(on) {
   document.body.classList.toggle("voice-on", !!on);
@@ -135,8 +149,180 @@ function reflectVoiceOut(on) {
   }
 }
 
+async function loadWhisperPipeline() {
+  if (!whisperPipelinePromise) {
+    whisperPipelinePromise = import(
+      "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/+esm"
+    ).then(({ pipeline }) => pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en"));
+  }
+  return whisperPipelinePromise;
+}
+
+async function blobToMono16k(blob) {
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  try {
+    const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const n = audio.length;
+    const out = new Float32Array(n);
+    for (let c = 0; c < audio.numberOfChannels; c++) {
+      const data = audio.getChannelData(c);
+      for (let i = 0; i < n; i++) out[i] += data[i] / audio.numberOfChannels;
+    }
+    return out;
+  } finally {
+    await ctx.close();
+  }
+}
+
+async function transcribeBlob(blob) {
+  const pipe = await loadWhisperPipeline();
+  const audio = await blobToMono16k(blob);
+  const out = await pipe(audio, { sampling_rate: 16000 });
+  return String(out?.text ?? "").trim();
+}
+
+async function finishVoiceCapture() {
+  if (voiceFinishing) return;
+  voiceFinishing = true;
+  clearVoiceVad();
+  document.body.classList.remove("pip-listening");
+  mediaStream?.getTracks().forEach((t) => t.stop());
+  mediaStream = null;
+  listening = false;
+  const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || "audio/webm" });
+  mediaRecorder = null;
+  audioChunks = [];
+  if (blob.size < 800) {
+    voiceFinishing = false;
+    els.askInput.placeholder = "Ask Pip…";
+    showTranscriptHint("Didn't catch that — try Talk again.");
+    return;
+  }
+  els.askInput.placeholder = "Transcribing…";
+  try {
+    const text = await transcribeBlob(blob);
+    els.askInput.value = text;
+    autoResizeAskInput();
+    els.askInput.placeholder = "Ask Pip…";
+    if (voiceCfg.autoSend && text.trim()) els.askForm.requestSubmit();
+    else els.askInput?.focus();
+  } catch (err) {
+    console.error("[voice] transcribe failed:", err);
+    els.askInput.placeholder = "Ask Pip…";
+    showTranscriptHint("Couldn't transcribe — check your connection for the first-run model download, or type instead.");
+  } finally {
+    voiceFinishing = false;
+  }
+}
+
+function clearVoiceVad() {
+  if (voiceVadFrame) cancelAnimationFrame(voiceVadFrame);
+  voiceVadFrame = null;
+  if (voiceMaxTimer) clearTimeout(voiceMaxTimer);
+  voiceMaxTimer = null;
+  voiceAnalyser = null;
+  if (voiceAudioCtx) {
+    void voiceAudioCtx.close().catch(() => {});
+    voiceAudioCtx = null;
+  }
+}
+
+/** Auto-stop when the user pauses after speaking (no second click). */
+function startVoiceVad(stream) {
+  clearVoiceVad();
+  voiceAudioCtx = new AudioContext();
+  const source = voiceAudioCtx.createMediaStreamSource(stream);
+  voiceAnalyser = voiceAudioCtx.createAnalyser();
+  voiceAnalyser.fftSize = 512;
+  source.connect(voiceAnalyser);
+  const samples = new Uint8Array(voiceAnalyser.fftSize);
+  let heardSpeech = false;
+  let silenceAt = 0;
+  const startedAt = Date.now();
+
+  voiceMaxTimer = setTimeout(() => {
+    if (listening) stopVoiceCapture();
+  }, VAD_MAX_MS);
+
+  const tick = () => {
+    if (!listening || !voiceAnalyser) return;
+    voiceAnalyser.getByteTimeDomainData(samples);
+    let sum = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const v = (samples[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / samples.length);
+    const now = Date.now();
+
+    if (rms >= VAD_SPEECH_RMS) {
+      heardSpeech = true;
+      silenceAt = 0;
+    } else if (heardSpeech) {
+      if (!silenceAt) silenceAt = now;
+      else if (now - silenceAt >= VAD_SILENCE_MS) {
+        stopVoiceCapture();
+        return;
+      }
+    } else if (now - startedAt >= VAD_START_TIMEOUT_MS) {
+      stopVoiceCapture();
+      return;
+    }
+
+    voiceVadFrame = requestAnimationFrame(tick);
+  };
+  voiceVadFrame = requestAnimationFrame(tick);
+}
+
+function stopVoiceCapture() {
+  if (mediaRecorder?.state === "recording") {
+    mediaRecorder.stop();
+    return;
+  }
+  if (listening) void finishVoiceCapture();
+}
+
+async function beginVoiceInput() {
+  if (listening) {
+    stopVoiceCapture();
+    return;
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showTranscriptHint("Voice input isn't available — type your question instead.");
+    els.askInput?.focus();
+    return;
+  }
+
+  const micOk = await w.ensureMicAccess?.().catch(() => true);
+  if (micOk === false) {
+    showTranscriptHint("Mic access is blocked. Enable it in System Settings → Privacy & Security → Microphone.");
+    return;
+  }
+
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+    });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream);
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size) audioChunks.push(e.data);
+    };
+    mediaRecorder.onstop = () => void finishVoiceCapture();
+    mediaRecorder.start(200);
+    listening = true;
+    document.body.classList.add("pip-listening");
+    setMood("awake");
+    els.askInput.placeholder = "Listening…";
+    startVoiceVad(mediaStream);
+  } catch {
+    showTranscriptHint("Mic access denied. Allow Microphone for Electron/Pip in System Settings.");
+    els.askInput?.focus();
+  }
+}
+
 function initVoice() {
-  // Spoken replies (reliable): an always-visible toggle in the bar so users can discover it.
   w.onSpeaking?.(({ speaking }) => document.body.classList.toggle("pip-speaking", !!speaking));
   w.onVoiceOut?.(({ enabled }) => reflectVoiceOut(enabled));
   void w.getVoiceState?.().then((s) => reflectVoiceOut(!!s?.speakReplies));
@@ -145,18 +331,17 @@ function initVoice() {
     void w.toggleVoiceOut?.().then((on) => reflectVoiceOut(on));
   });
 
-  // Push-to-talk (best-effort): show the mic whenever the runtime exposes speech recognition.
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR || !els.btnMic) return;
+  if (!navigator.mediaDevices?.getUserMedia || !els.btnMic) return;
   els.btnMic.hidden = false;
-  els.btnMic.addEventListener("click", () => {
+  els.btnMic.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     ping();
-    if (listening) stopListening();
-    else startListening(SR);
+    void beginVoiceInput();
   });
 }
 
-function startListening(SR) {
+function startWebListening(SR) {
   try {
     recognition = new SR();
   } catch {
@@ -201,6 +386,7 @@ function startListening(SR) {
 }
 
 function stopListening() {
+  stopVoiceCapture();
   listening = false;
   document.body.classList.remove("pip-listening");
   if (els.askInput.placeholder === "Listening…") els.askInput.placeholder = "Ask Pip…";
@@ -968,11 +1154,12 @@ if (w) {
   // Final authoritative text is applied when w.ask() resolves in runAsk().
   w.onGaze?.(({ dx, dy }) => applyGaze(dx, dy));
   w.onModel?.(({ model }) => setModelLabel(model));
-  w.onSummon?.(() => {
+  w.onSummon?.((payload) => {
     wakeFromSleep();
     playBodyOnce("pip-warp", 340);
     setMood("awake");
-    els.askInput?.focus();
+    if (payload?.voice) beginVoiceInput();
+    else els.askInput?.focus();
   });
   w.onPeek?.(({ peeking }) => {
     document.body.classList.toggle("pip-peeking", !!peeking);

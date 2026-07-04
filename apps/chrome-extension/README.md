@@ -27,7 +27,8 @@ npm run bridge             # → http://127.0.0.1:8765
 Then load it in Chrome:
 1. `chrome://extensions` → enable **Developer mode**
 2. **Load unpacked** → select `apps/chrome-extension/dist`
-3. Pin **Tandem Pip**, open any page, click the icon. Or select text → right-click → *Ask Pip*.
+3. Pin **Tandem Pip**, open any page, click the icon — or press **⌘B** to summon Pip in-page.
+4. Set the shortcut at `chrome://extensions/shortcuts` if **⌘B** conflicts with another extension.
 
 ## How it works
 - `content.ts` extracts page context (title, URL, selection, excerpt).

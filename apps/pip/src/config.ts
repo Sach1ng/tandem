@@ -10,6 +10,8 @@ export interface PipHotkeyConfig {
   summon: string | null;
   /** Global hotkey that hides/shows Pip (meeting/screen-share safety). null = disabled. */
   hide: string | null;
+  /** Global hotkey that summons Pip and starts voice input. null = disabled. */
+  voice: string | null;
   /** When true, the hotkey captures then immediately asks the agent (no extra click). */
   autoAsk: boolean;
   /** Question sent with autoAsk. */
@@ -86,11 +88,17 @@ export interface PipConfig {
   nudge: PipNudgeConfig;
   voice: PipVoiceConfig;
   monitor: PipMonitorConfig;
+  ui: PipUiConfig;
 }
 
 export interface PipMonitorConfig {
   enabled: boolean;
   port: number;
+}
+
+export interface PipUiConfig {
+  /** Show Pip in the macOS Dock / Windows taskbar. Default false (ambient floating widget). */
+  showInDock: boolean;
 }
 
 function readJson(path: string): Record<string, any> {
@@ -128,6 +136,7 @@ export function loadConfig(appDir: string, repoRoot: string): PipConfig {
     nudge: { ...defaults.nudge, ...user.nudge },
     voice: { ...defaults.voice, ...user.voice },
     monitor: { ...defaults.monitor, ...user.monitor },
+    ui: { ...defaults.ui, ...user.ui },
   };
 
   const defaultWs = resolveWorkspace(repoRoot);
@@ -179,6 +188,7 @@ export function loadConfig(appDir: string, repoRoot: string): PipConfig {
       summon:
         merged.hotkey?.summon === null ? null : merged.hotkey?.summon ?? "Command+Shift+Space",
       hide: merged.hotkey?.hide === null ? null : merged.hotkey?.hide ?? "Command+Shift+H",
+      voice: merged.hotkey?.voice === null ? null : merged.hotkey?.voice ?? "Command+N",
       autoAsk: merged.hotkey?.autoAsk === true,
       question:
         merged.hotkey?.question?.trim() ||
@@ -205,6 +215,9 @@ export function loadConfig(appDir: string, repoRoot: string): PipConfig {
     monitor: {
       enabled: merged.monitor?.enabled !== false,
       port: Number(merged.monitor?.port ?? 8791),
+    },
+    ui: {
+      showInDock: merged.ui?.showInDock === true,
     },
   };
 }

@@ -1,0 +1,5 @@
+2026-07-03: Built launch website for Tandem at apps/website/index.html — single-file static site (no build step), dark theme, sections: hero + 3-surface preview, idea pillars, surfaces, architecture, comparison, quickstart, security. Deployable to GitHub Pages/Vercel as-is.
+2026-07-03: Restyled Tandem launch site (apps/website) to a light theme per Hardik's request — warm off-white bg, burnt-orange accent, soft shadows; terminal/demo mockups kept dark for contrast. Informed by 2026 light-SaaS landing conventions (single saturated accent, subtle depth, generous whitespace).
+2026-07-04: Added knowledge/INDEX.md — PM knowledge routing (Tandem memory, active PM OS products, submodule skills, research pipeline, external links); AGENTS.md points PM tasks to it first.
+2026-07-04: Removed YC badge from launch site hero (reverted lab0-style addition). Preference recorded: always commit + push `apps/website/` changes to GitHub.
+2026-07-04: Desktop Pip prompts now include shared `PIP_AGENT_AUTONOMY` (WebSearch, WebFetch, full tool access) — same charter as Chrome bridge.

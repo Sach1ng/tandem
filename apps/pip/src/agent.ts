@@ -1,5 +1,5 @@
 import { runAgent, runAgentStream } from "@tandem/engine";
-import { hasBrainSkills, readMemory } from "@tandem/core";
+import { hasBrainSkills, PIP_AGENT_AUTONOMY, readMemory } from "@tandem/core";
 import type { PipConfig } from "./config.ts";
 import {
   isPmQuestion,
@@ -53,17 +53,25 @@ function askPrompt(cfg: PipConfig, question: string): string {
   const usePmHint = isPmQuestion(q) && hasBrainSkills(cfg.workspace, cfg.knowledgeBase);
   const pm = usePmHint ? `\n${PM_OS_HINT(cfg.knowledgeBase)}` : "";
   const mem = memoryContext(cfg);
-  if (isShortQuestion(q)) {
-    return `You are Pip, a concise desktop buddy. Reply in 1–3 sentences.${pm}${mem}\n\nQ: ${q}`;
-  }
-  return `You are Pip, a concise desktop buddy. Lead with the answer.${pm}${mem}\n\nQ: ${q}`;
+  const style = isShortQuestion(q) ? "Reply in 1–3 sentences." : "Lead with the answer.";
+  return `You are Pip, Tandem's desktop coworker. ${style} Be concise.
+If context is thin or the question needs current external info, use WebSearch and WebFetch to finish anyway — state assumptions briefly.
+
+${PIP_AGENT_AUTONOMY}${pm}${mem}
+
+Q: ${q}`;
 }
 
 function screenshotPrompt(cfg: PipConfig, imagePath: string, question: string): string {
   const q = question.trim() || "What's on screen? If there's an error, explain the fix.";
   const usePmHint = isPmQuestion(q) && hasBrainSkills(cfg.workspace, cfg.knowledgeBase);
   const pm = usePmHint ? `\nPM OS (only if relevant): ${cfg.knowledgeBase}` : "";
-  return `@${imagePath}\n\n${q}${pm}`;
+  return `@${imagePath}
+
+${q}${pm}
+If the screenshot isn't enough, use WebSearch and WebFetch for docs or fixes — state assumptions briefly.
+
+${PIP_AGENT_AUTONOMY}`;
 }
 
 export interface AgentReply {

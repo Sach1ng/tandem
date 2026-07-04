@@ -58,7 +58,7 @@ async function main() {
     collapsed: { w: 96, h: 110 },
     placement: { corner: "top-right", margin: 16, snapThreshold: 64 },
     peek: { enabled: false, idleSeconds: 25, insetPct: 0.62 },
-    hotkey: { snip: "Command+Shift+T", summon: null, hide: null, autoAsk: false, question: "What's on my screen?" },
+    hotkey: { snip: "Command+Shift+T", summon: null, hide: null, voice: null, autoAsk: false, question: "What's on my screen?" },
     personality: { motion: false, gaze: false, greet: false, celebrate: false, sleepy: false, sleepyIdleSeconds: 45 },
     nudge: { enabled: false, idleSeconds: 120, cooldownSeconds: 600 },
     voice: { enabled: false, autoSend: true, speakReplies: false },

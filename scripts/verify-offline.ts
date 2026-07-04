@@ -92,11 +92,12 @@ check("Chrome popup CTA: Ask Pip", chromePopup.includes("Ask Pip"));
 
 const chromeBridge = readFileSync(join(ROOT, "apps/chrome-extension/bridge/server.ts"), "utf8");
 check("Pip bridge persona", /You are Pip, Tandem's page-aware browser surface/.test(chromeBridge));
-check("Pip bridge autonomy charter", /AUTONOMY/.test(chromeBridge));
+check("Pip bridge autonomy charter", /PIP_AGENT_AUTONOMY|WebSearch/.test(chromeBridge));
 check("Pip bridge configurable timeout", /TIMEOUT_MS/.test(chromeBridge));
 
 const pipAgent = readFileSync(join(ROOT, "apps/pip/src/agent.ts"), "utf8");
 check("Pip assistant persona", /You are Pip/.test(pipAgent));
+check("Pip desktop web browse", /WebSearch/.test(pipAgent));
 check("Pip screenshot @-path prompt", /@\$\{imagePath\}/.test(pipAgent));
 
 const pipHtml = readFileSync(join(ROOT, "apps/pip/ui/index.html"), "utf8");

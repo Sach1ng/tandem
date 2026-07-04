@@ -21,6 +21,7 @@ const taskWidget = {
   stopSpeaking: () => ipcRenderer.invoke("voice:stop"),
   getVoiceState: (): Promise<{ speakReplies: boolean; autoSend: boolean }> =>
     ipcRenderer.invoke("voice:state"),
+  ensureMicAccess: (): Promise<boolean> => ipcRenderer.invoke("voice:ensure-mic"),
   snip: (): Promise<{ path: string; previewUrl: string } | null> =>
     ipcRenderer.invoke("screenshot:capture"),
   screenshotPreviewUrl: (path: string) => pathToFileURL(path).href,
@@ -65,7 +66,8 @@ const taskWidget = {
     ipcRenderer.on("widget:ask-end", (_e, p) => cb(p)),
   onGaze: (cb: (p: { dx: number; dy: number }) => void) =>
     ipcRenderer.on("widget:gaze", (_e, p) => cb(p)),
-  onSummon: (cb: () => void) => ipcRenderer.on("widget:summon", () => cb()),
+  onSummon: (cb: (p?: { voice?: boolean }) => void) =>
+    ipcRenderer.on("widget:summon", (_e, p) => cb(p)),
   onPeek: (cb: (p: { peeking: boolean }) => void) =>
     ipcRenderer.on("widget:peek", (_e, p) => cb(p)),
   onSpeaking: (cb: (p: { speaking: boolean }) => void) =>

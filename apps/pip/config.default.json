@@ -36,6 +36,7 @@
     "snip": "Command+Shift+T",
     "summon": "Command+Shift+Space",
     "hide": "Command+Shift+H",
+    "voice": "Command+N",
     "autoAsk": false,
     "question": "What's on my screen? If there's an error, tell me how to fix it."
   },
@@ -60,5 +61,8 @@
   "monitor": {
     "enabled": true,
     "port": 8791
+  },
+  "ui": {
+    "showInDock": false
   }
 }

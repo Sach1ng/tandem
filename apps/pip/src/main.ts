@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, powerMonitor, screen, shell } from "electron";
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, powerMonitor, screen, session, shell, systemPreferences } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -699,9 +699,10 @@ function startNudgeWatcher(): void {
  * "Meet where you are": warp Pip next to the cursor (on whichever display holds it), expand, and focus
  * the input. Remembers the real dock so a later collapse/Esc glides Pip back home.
  */
-async function summonToCursor(): Promise<void> {
+async function summonToCursor(opts?: { voice?: boolean }): Promise<void> {
   if (!win || win.isDestroyed()) return;
   pingActivity();
+  if (hidden) setHidden(false);
   const pt = screen.getCursorScreenPoint();
   const work = screen.getDisplayNearestPoint(pt).workArea;
 
@@ -730,7 +731,7 @@ async function summonToCursor(): Promise<void> {
     lastDockEdge = edge;
     win.webContents.send("widget:dock", { edge });
   }
-  win.webContents.send("widget:summon");
+  win.webContents.send("widget:summon", { voice: !!opts?.voice });
 }
 
 /** Poll the cursor and tell the renderer where to point Pip's eyes. Cheap; pauses when hidden. */
@@ -807,6 +808,7 @@ function setHidden(v: boolean): void {
     peeking = false;
     peekHome = null;
     stopSpeaking();
+    stopVoiceIn();
     win.hide();
   } else {
     applyPlacement();
@@ -846,6 +848,15 @@ function registerHotkey(): void {
     if (ok) console.log(`Hotkey registered: ${hide} → hide/show Pip`);
     else console.warn(`⚠ Could not register hotkey ${hide}`);
   }
+
+  const voice = cfg.hotkey.voice?.trim();
+  if (voice) {
+    const ok = globalShortcut.register(voice, () => {
+      void summonToCursor({ voice: true }).catch((err) => console.error("[hotkey] voice failed:", err));
+    });
+    if (ok) console.log(`Hotkey registered: ${voice} → summon Pip + voice input`);
+    else console.warn(`⚠ Could not register hotkey ${voice}`);
+  }
 }
 
 function restartPip(): void {
@@ -882,6 +893,10 @@ function speechText(raw: string): string {
     s = (lastStop > 300 ? cut.slice(0, lastStop + 1) : cut).trim();
   }
   return s;
+}
+
+function stopVoiceIn(): void {
+  /* voice capture runs in the renderer (MediaRecorder + Whisper WASM) */
 }
 
 /** Stop any in-flight speech immediately. */
@@ -1014,6 +1029,14 @@ function registerIpc(): void {
   });
   ipcMain.handle("voice:stop", () => stopSpeaking());
   ipcMain.handle("voice:state", () => ({ speakReplies: voiceOut, autoSend: cfg.voice.autoSend }));
+  ipcMain.handle("voice:ensure-mic", async () => {
+    if (process.platform !== "darwin") return true;
+    try {
+      return await systemPreferences.askForMediaAccess("microphone");
+    } catch {
+      return false;
+    }
+  });
 
   ipcMain.handle("widget:toggle", async () => {
     pingActivity();
@@ -1117,7 +1140,7 @@ function createWindow(): void {
     hasShadow: false,
     roundedCorners: false,
     alwaysOnTop: true,
-    skipTaskbar: true,
+    skipTaskbar: !cfg.ui.showInDock,
     resizable: false,
     fullscreenable: false,
     acceptFirstMouse: true,
@@ -1133,7 +1156,8 @@ function createWindow(): void {
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setAlwaysOnTop(true, "screen-saver");
   if (process.platform === "darwin") {
-    app.dock?.hide();
+    if (cfg.ui.showInDock) app.dock?.show();
+    else app.dock?.hide();
   }
 
   win.on("moved", () => {
@@ -1212,6 +1236,14 @@ app.on("second-instance", () => {
 
 app.whenReady().then(async () => {
   if (!gotSingleInstanceLock) return; // another instance already owns Pip
+
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === "media" || permission === "microphone");
+  });
+  session.defaultSession.setPermissionCheckHandler((_wc, permission) => {
+    return permission === "media" || permission === "microphone";
+  });
+
   const loaded = loadConfig(APP_DIR, REPO_ROOT);
 
   try {

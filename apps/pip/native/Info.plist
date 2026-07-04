@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.tandem.pip.dictate</string>
+  <key>CFBundleName</key>
+  <string>Pip Dictate</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Pip uses the microphone when you press Talk or ⌘N to ask questions by voice.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Pip transcribes your voice on-device when you use Talk or ⌘N.</string>
+</dict>
+</plist>

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<title>Tandem — One AI coworker. On every surface where you do the work.</title>
+<meta name="description" content="Tandem is Pip: an ambient AI coworker that lives in Slack, on your desktop, and in your browser. Local-first, model-agnostic, powered by the Cursor CLI. Open source." />
+<meta property="og:title" content="Tandem — One AI coworker. On every surface where you do the work." />
+<meta property="og:description" content="Meet Pip: an ambient AI coworker in Slack, on your screen, and in your browser. Your models, your machine, your context — it compounds as you work." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --bg-soft: #f3f4f6;
+    --bg-card: #ffffff;
+    --border: #e8eaed;
+    --border-strong: #d8dce0;
+    --grid-line: rgba(20, 28, 36, 0.05);
+    --grid-size: 56px;
+    --text: #1c1b22;
+    --text-dim: #5d5c66;
+    --text-faint: #94929c;
+    --accent: #d9480f;          /* burnt orange — single saturated accent */
+    --accent-soft: #fff0e8;
+    --amber: #f59f00;
+    --coral: #e8590c;
+    --violet: #7048e8;
+    --teal: #0ca678;
+    --grad: linear-gradient(100deg, var(--amber), var(--coral) 55%, var(--violet));
+    --shadow-sm: 0 1px 2px rgba(28, 27, 34, 0.05), 0 2px 8px rgba(28, 27, 34, 0.05);
+    --shadow-md: 0 2px 4px rgba(28, 27, 34, 0.05), 0 12px 32px rgba(28, 27, 34, 0.09);
+    --radius: 14px;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+    /* dark tokens for the terminal / demo mockups only */
+    --dark-bg: #14131a;
+    --dark-border: rgba(255, 255, 255, 0.1);
+    --dark-text: #ecebf0;
+    --dark-dim: #a3a1ad;
+    --dark-faint: #6b6975;
+    --dark-amber: #ffc078;
+    --dark-coral: #ff8a5c;
+    --dark-violet: #b197fc;
+    --dark-teal: #63e6be;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(var(--grid-line) 1px, transparent 1px);
+    background-size: var(--grid-size) var(--grid-size);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: rgba(232, 89, 12, 0.18); }
+
+  a { color: inherit; text-decoration: none; }
+  code, pre { font-family: var(--mono); }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── blueprint grid (lab0-style) ─────────────────── */
+  .ambient { display: none; }
+  .grid-lines { display: none; }
+
+  /* ── nav ────────────────────────────────────────── */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(248, 249, 250, 0.88);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+  .logo-mark {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--grad);
+    display: grid; place-items: center;
+    font-size: 13px; color: #fff; font-weight: 800;
+    box-shadow: 0 2px 10px rgba(232, 89, 12, 0.35);
+  }
+  .nav-links { display: flex; gap: 28px; align-items: center; font-size: 14px; color: var(--text-dim); font-weight: 500; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    padding: 7px 16px; border-radius: 8px; font-weight: 600; font-size: 13.5px;
+    color: var(--text) !important;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .nav-cta:hover { border-color: var(--coral); background: var(--accent-soft); }
+  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* ── hero ───────────────────────────────────────── */
+  .hero { padding: 96px 0 72px; text-align: center; position: relative; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 500; color: var(--text-dim);
+    border: 1px solid var(--border-strong); border-radius: 100px;
+    padding: 6px 14px; margin-bottom: 28px;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+  }
+  .badge .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 6px rgba(12, 166, 120, 0.7);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  h1 {
+    font-size: clamp(40px, 6.5vw, 72px);
+    font-weight: 800; letter-spacing: -0.035em; line-height: 1.05;
+    margin-bottom: 22px;
+  }
+  h1 .grad {
+    background: var(--grad);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  /* rotating surface word */
+  .rotator-slot { display: inline-block; }
+  .rotator {
+    display: inline-block;
+    transition: opacity 0.32s ease, transform 0.32s ease;
+  }
+  .rotator.swap-out { opacity: 0; transform: translateY(-0.45em); }
+  .rotator.swap-in { opacity: 0; transform: translateY(0.45em); transition: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rotator { transition: none; }
+    .rotator.swap-out, .rotator.swap-in { opacity: 1; transform: none; }
+  }
+
+  .hero-sub {
+    font-size: clamp(17px, 2.2vw, 20px); color: var(--text-dim);
+    max-width: 640px; margin: 0 auto 40px;
+  }
+  .hero-sub strong { color: var(--text); font-weight: 600; }
+
+  .install-box {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: var(--dark-bg);
+    border: 1px solid var(--dark-border);
+    border-radius: 12px; padding: 14px 18px;
+    font-family: var(--mono); font-size: 13.5px;
+    box-shadow: var(--shadow-md);
+    max-width: 100%; overflow-x: auto;
+  }
+  .install-box .prompt { color: var(--dark-coral); user-select: none; }
+  .install-box code { color: var(--dark-text); white-space: nowrap; }
+  .copy-btn {
+    flex-shrink: 0; border: 1px solid var(--dark-border); background: rgba(255,255,255,0.07);
+    color: var(--dark-dim); border-radius: 7px; padding: 5px 11px;
+    font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--dark-text); border-color: var(--dark-coral); }
+  .hero-actions { margin-top: 26px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 26px; border-radius: 10px; font-weight: 600; font-size: 15px;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 4px 18px rgba(217, 72, 15, 0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); background: #c73f0a; box-shadow: 0 8px 26px rgba(217, 72, 15, 0.38); }
+  .btn-ghost { border: 1px solid var(--border-strong); color: var(--text-dim); background: var(--bg-card); box-shadow: var(--shadow-sm); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-faint); }
+
+  /* ── pip preview carousel ───────────────────────── */
+  .surfaces-preview {
+    margin: 84px auto 0; max-width: 520px;
+    text-align: center;
+  }
+  .preview-carousel {
+    position: relative;
+    min-height: 172px;
+  }
+  .preview-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0; overflow: hidden;
+    text-align: left;
+    box-shadow: var(--shadow-sm);
+    position: absolute; top: 0; left: 0; right: 0;
+    opacity: 0; transform: translateY(14px) scale(0.98);
+    pointer-events: none; z-index: 0;
+    transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.45s ease;
+  }
+  .preview-card.active {
+    opacity: 1; transform: none; pointer-events: auto; z-index: 1;
+    box-shadow: var(--shadow-md);
+  }
+  .preview-dots {
+    display: flex; justify-content: center; gap: 8px; margin-top: 18px;
+  }
+  .preview-dot {
+    border: 1px solid var(--border-strong); background: var(--bg-card);
+    color: var(--text-dim); border-radius: 100px;
+    padding: 6px 14px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .preview-dot:hover { color: var(--text); border-color: var(--text-faint); }
+  .preview-dot.active {
+    color: var(--text); border-color: var(--coral);
+    background: var(--accent-soft);
+  }
+  .preview-dot[data-surface="slack"].active { border-color: var(--teal); background: rgba(12, 166, 120, 0.08); color: #087f5b; }
+  .preview-dot[data-surface="desktop"].active { border-color: var(--amber); background: rgba(245, 159, 0, 0.1); color: #b35a00; }
+  .preview-dot[data-surface="browser"].active { border-color: var(--violet); background: rgba(112, 72, 232, 0.08); color: #5f3dc4; }
+  .preview-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--bg-soft);
+  }
+  .traffic { display: flex; gap: 5px; }
+  .traffic i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .traffic i:nth-child(1) { background: #ff5f57; } .traffic i:nth-child(2) { background: #febc2e; } .traffic i:nth-child(3) { background: #28c840; }
+  .preview-title { font-size: 12px; color: var(--text-faint); font-weight: 500; margin-left: 4px; }
+  .preview-body { padding: 16px 14px 18px; font-size: 13px; min-height: 118px; }
+  .chat-line { display: flex; gap: 9px; margin-bottom: 11px; align-items: flex-start; }
+  .avatar {
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 10px; font-weight: 700;
+  }
+  .avatar.user { background: var(--bg-soft); border: 1px solid var(--border-strong); color: var(--text-dim); }
+  .avatar.pip { background: var(--grad); color: #fff; }
+  .msg { color: var(--text-dim); line-height: 1.45; }
+  .msg b { color: var(--text); font-weight: 600; }
+  .kbd {
+    font-family: var(--mono); font-size: 11px; background: var(--bg-soft);
+    border: 1px solid var(--border-strong); border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 6px; color: var(--text);
+  }
+
+  /* ── sections ───────────────────────────────────── */
+  section { padding: 96px 0; }
+  section:nth-of-type(even) {
+    background: rgba(243, 244, 246, 0.65);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .section-kicker {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+  }
+  h2 {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 750; letter-spacing: -0.03em;
+    line-height: 1.12; margin-bottom: 16px;
+  }
+  .section-sub { color: var(--text-dim); font-size: 17px; max-width: 620px; }
+
+  /* pillars */
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 52px; }
+  @media (max-width: 800px) { .pillars { grid-template-columns: 1fr; } }
+  .pillar {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 26px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.25s, transform 0.25s;
+  }
+  .pillar:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .pillar-icon {
+    width: 42px; height: 42px; border-radius: 11px; margin-bottom: 18px;
+    display: grid; place-items: center; font-size: 19px;
+    background: var(--accent-soft); border: 1px solid rgba(217, 72, 15, 0.18);
+  }
+  .pillar h3 { font-size: 18px; font-weight: 650; margin-bottom: 9px; letter-spacing: -0.01em; }
+  .pillar p { color: var(--text-dim); font-size: 14.5px; }
+  .pillar p code { font-size: 12.5px; background: var(--bg-soft); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+
+  /* surfaces detail */
+  .surface-rows { margin-top: 56px; display: flex; flex-direction: column; gap: 20px; }
+  .surface-row {
+    display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; align-items: center;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 36px 38px;
+    box-shadow: var(--shadow-sm);
+  }
+  .surface-row:nth-child(even) { direction: rtl; }
+  .surface-row:nth-child(even) > * { direction: ltr; }
+  @media (max-width: 800px) { .surface-row, .surface-row:nth-child(even) { grid-template-columns: 1fr; direction: ltr; padding: 28px 24px; } }
+  .surface-tag {
+    display: inline-block; font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 6px; margin-bottom: 14px;
+  }
+  .tag-slack { color: #087f5b; background: rgba(12, 166, 120, 0.09); border: 1px solid rgba(12, 166, 120, 0.28); }
+  .tag-desktop { color: #b35a00; background: rgba(245, 159, 0, 0.1); border: 1px solid rgba(245, 159, 0, 0.32); }
+  .tag-browser { color: #5f3dc4; background: rgba(112, 72, 232, 0.08); border: 1px solid rgba(112, 72, 232, 0.25); }
+  .surface-row h3 { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; }
+  .surface-row p { color: var(--text-dim); font-size: 15px; }
+  .surface-row p .kbd { font-size: 12px; }
+  .surface-demo {
+    background: var(--dark-bg); border: 1px solid var(--dark-border); border-radius: 12px;
+    padding: 18px; font-family: var(--mono); font-size: 12.5px; line-height: 1.7;
+    color: var(--dark-dim); overflow-x: auto;
+    box-shadow: var(--shadow-md);
+  }
+  .surface-demo .c-coral { color: var(--dark-coral); }
+  .surface-demo .c-teal { color: var(--dark-teal); }
+  .surface-demo .c-amber { color: var(--dark-amber); }
+  .surface-demo .c-violet { color: var(--dark-violet); }
+  .surface-demo .c-text { color: var(--dark-text); }
+
+  /* how it works */
+  .arch {
+    margin-top: 52px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 40px; text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  @media (max-width: 700px) { .arch { padding: 24px 14px; } }
+  .arch-layer {
+    border: 1px solid var(--border-strong); border-radius: 12px;
+    padding: 18px 20px; position: relative;
+    background: var(--bg-soft);
+  }
+  .arch-connector {
+    width: 2px; height: 30px; margin: 0 auto;
+    background: linear-gradient(var(--border-strong), var(--accent));
+    position: relative;
+  }
+  .arch-connector::after {
+    content: "▼"; position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+    color: var(--accent); font-size: 9px;
+  }
+  .arch-label {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px;
+  }
+  .arch-items { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .arch-chip {
+    font-size: 13.5px; font-weight: 550; color: var(--text);
+    background: var(--bg-card); border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 8px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .arch-chip small { display: block; font-weight: 400; color: var(--text-faint); font-size: 11.5px; }
+  .arch-engine {
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+  }
+  .arch-engine .fn { color: var(--coral); font-weight: 600; }
+  .arch-engine .flag { color: var(--teal); }
+  .arch-note { margin-top: 26px; color: var(--text-faint); font-size: 13.5px; max-width: 560px; margin-left: auto; margin-right: auto; }
+  .arch-note code { background: var(--bg-soft); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* comparison */
+  .compare-table {
+    margin-top: 52px; width: 100%; border-collapse: separate; border-spacing: 0;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; font-size: 14.5px;
+    box-shadow: var(--shadow-sm);
+  }
+  .compare-table th, .compare-table td { padding: 16px 22px; text-align: left; }
+  .compare-table thead th {
+    font-size: 13px; font-weight: 600; color: var(--text-dim);
+    background: var(--bg-soft); border-bottom: 1px solid var(--border);
+  }
+  .compare-table thead th:last-child { color: var(--accent); }
+  .compare-table tbody td { border-bottom: 1px solid var(--border); color: var(--text-dim); }
+  .compare-table tbody tr:last-child td { border-bottom: none; }
+  .compare-table tbody td:first-child { color: var(--text); font-weight: 550; }
+  .compare-table tbody td:last-child { color: var(--text); background: rgba(217, 72, 15, 0.025); }
+  .compare-table .yes { color: var(--teal); margin-right: 7px; font-weight: 700; }
+  @media (max-width: 640px) {
+    .compare-table th, .compare-table td { padding: 12px 12px; font-size: 13px; }
+  }
+
+  /* quickstart */
+  .terminal {
+    margin-top: 52px; background: var(--dark-bg); border: 1px solid var(--dark-border);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(28, 27, 34, 0.18);
+  }
+  .terminal-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-bottom: 1px solid var(--dark-border);
+    background: rgba(255,255,255,0.04);
+  }
+  .terminal-title { font-family: var(--mono); font-size: 12px; color: var(--dark-faint); margin-left: 4px; }
+  .terminal-body { padding: 24px 26px; font-family: var(--mono); font-size: 13.5px; line-height: 2.05; overflow-x: auto; }
+  .terminal-body .cm { color: var(--dark-faint); }
+  .terminal-body .pr { color: var(--dark-coral); user-select: none; }
+  .terminal-body .cd { color: var(--dark-text); }
+  .terminal-body .ok { color: var(--dark-teal); }
+  .quickstart-note { margin-top: 22px; color: var(--text-dim); font-size: 14.5px; max-width: 640px; }
+  .quickstart-note code { background: var(--bg-soft); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+
+  /* final cta */
+  .final-cta {
+    text-align: center; padding: 110px 0 120px; position: relative;
+  }
+  .final-cta::before { display: none; }
+  .final-cta h2 { margin-bottom: 14px; }
+  .final-cta p { color: var(--text-dim); font-size: 17px; margin-bottom: 36px; }
+
+  footer {
+    border-top: 1px solid var(--border); padding: 36px 0; font-size: 13.5px; color: var(--text-faint);
+    background: rgba(243, 244, 246, 0.65);
+  }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .footer-inner a { color: var(--text-dim); }
+  .footer-inner a:hover { color: var(--text); }
+  .footer-links { display: flex; gap: 22px; }
+
+  /* reveal animation */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .badge .dot { animation: none; }
+    .preview-card { transition: none; transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<div class="grid-lines"></div>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="logo" href="#top">
+      <span class="logo-mark">◗</span> Tandem
+    </a>
+    <div class="nav-links">
+      <a href="#surfaces">Surfaces</a>
+      <a href="#how">How it works</a>
+      <a href="#compare">Why Tandem</a>
+      <a href="#quickstart">Quickstart</a>
+      <a class="nav-cta" href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────── -->
+<header class="hero wrap" id="top">
+  <div class="badge"><span class="dot"></span> Open source · MIT · Local-first</div>
+  <h1>One AI coworker.<br />On every surface where you<br />do the work — <span class="rotator-slot"><span id="rotator" class="grad rotator">Slack</span></span></h1>
+  <p class="hero-sub">
+    Meet <strong>Pip</strong> — in <strong>Slack</strong>, on your <strong>desktop</strong>, and in
+    <strong>Chrome</strong>. One memory, any model, runs on your machine.
+  </p>
+
+  <div class="install-box">
+    <span class="prompt">$</span>
+    <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash</code>
+    <button class="copy-btn" onclick="copyInstall(this)">Copy</button>
+  </div>
+
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#quickstart">Get started →</a>
+    <a class="btn btn-ghost" href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">Star on GitHub</a>
+  </div>
+
+  <!-- three-surface preview carousel -->
+  <div class="surfaces-preview">
+    <div class="preview-carousel" id="preview-carousel">
+      <div class="preview-card active" data-surface="slack">
+        <div class="preview-head"><span class="traffic"><i></i><i></i><i></i></span><span class="preview-title">#product — Slack</span></div>
+        <div class="preview-body">
+          <div class="chat-line"><span class="avatar user">HT</span><span class="msg"><b>@Pip</b> ship the launch one-pager from this thread — use our template</span></div>
+          <div class="chat-line"><span class="avatar pip">P</span><span class="msg">Shipped — read 34 messages, <b>wrote docs/launch-one-pager.md</b>, posted the draft here, and logged 2 open questions for design.</span></div>
+        </div>
+      </div>
+      <div class="preview-card" data-surface="desktop">
+        <div class="preview-head"><span class="traffic"><i></i><i></i><i></i></span><span class="preview-title">Pip — desktop</span></div>
+        <div class="preview-body">
+          <div class="chat-line"><span class="avatar user">⌘</span><span class="msg"><span class="kbd">⌘⇧T</span> snip a failing chart → "debug this and file it"</span></div>
+          <div class="chat-line"><span class="avatar pip">P</span><span class="msg">Done — traced the drop to Tuesday's deploy, <b>wrote the incident timeline</b>, filed repro steps in tasks.md, and queued a rollback checklist.</span></div>
+        </div>
+      </div>
+      <div class="preview-card" data-surface="browser">
+        <div class="preview-head"><span class="traffic"><i></i><i></i><i></i></span><span class="preview-title">Pip — browser</span></div>
+        <div class="preview-body">
+          <div class="chat-line"><span class="avatar user">HT</span><span class="msg"><span class="kbd">Assign to Pip</span> on an RFP page → "turn this into tickets + a response outline"</span></div>
+          <div class="chat-line"><span class="avatar pip">P</span><span class="msg">Done — parsed the spec, <b>created 6 tasks in tasks.md</b> with owners, drafted the response outline, and saved vendor gaps to memory.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="preview-dots" id="preview-dots">
+      <button type="button" class="preview-dot active" data-surface="slack" aria-label="Slack example">Slack</button>
+      <button type="button" class="preview-dot" data-surface="desktop" aria-label="Desktop example">desktop</button>
+      <button type="button" class="preview-dot" data-surface="browser" aria-label="Chrome example">Chrome</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── IDEA / PILLARS ───────────────────────────────── -->
+<section id="idea">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-kicker">The idea</div>
+      <h2>Most AI tools are a chat box.<br />Tandem flips that.</h2>
+      <p class="section-sub">
+        A model wrapped in a chat window, locked to one vendor and one surface, that forgets you every
+        session. Tandem is built the other way around.
+      </p>
+    </div>
+    <div class="pillars">
+      <div class="pillar reveal">
+        <div class="pillar-icon">🧠</div>
+        <h3>The brain is yours — and it compounds</h3>
+        <p>Pip starts with a blank memory and builds context as you work, saving durable facts to a local
+        <code>memory/</code> it reuses on every surface. Have a capability OS like PM OS? Pip mounts it
+        as a rich starting point. Nothing is required to begin.</p>
+      </div>
+      <div class="pillar reveal" style="transition-delay:.08s">
+        <div class="pillar-icon">🔁</div>
+        <h3>The engine is model-agnostic</h3>
+        <p>Every surface shells out to one shared adapter around <code>cursor-agent</code>. Switch from
+        <code>gpt-5</code> to <code>sonnet-4</code> to <code>auto</code> with an env var — no new
+        integration, no vendor lock-in.</p>
+      </div>
+      <div class="pillar reveal" style="transition-delay:.16s">
+        <div class="pillar-icon">📍</div>
+        <h3>The surfaces meet you where you are</h3>
+        <p>A Slack teammate, a floating desktop widget, and a browser extension — all calling the
+        <em>same</em> engine against the <em>same</em> workspace. One coworker, not three bots.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SURFACES ─────────────────────────────────────── -->
+<section id="surfaces">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-kicker">Three surfaces, one Pip</div>
+      <h2>Same coworker, same memory,<br />everywhere you work.</h2>
+    </div>
+    <div class="surface-rows">
+      <div class="surface-row reveal">
+        <div>
+          <span class="surface-tag tag-slack">Slack</span>
+          <h3>Tag @Pip like a teammate</h3>
+          <p>Mention or DM Pip in any channel. It runs the agent in your workspace with your full
+          context, ships the artifact in-thread, and keeps going — thread continuity means follow-ups
+          pick up where you left off. Owner allow-lists keep it locked down.</p>
+        </div>
+        <div class="surface-demo">
+          <span class="c-text">you</span>&nbsp; <span class="c-teal">@Pip</span> turn this thread into a decision log + update the PRD<br />
+          <span class="c-coral">pip</span>&nbsp; On it — reading 47 messages + your PRD template…<br />
+          <span class="c-coral">pip</span>&nbsp; <span class="c-text">Shipped.</span> decision-log.md written · PRD §3 updated · both posted here<br />
+          &nbsp;&nbsp;&nbsp;&nbsp; Logged owners + next steps to <span class="c-amber">memory/log.md</span>
+        </div>
+      </div>
+      <div class="surface-row reveal">
+        <div>
+          <span class="surface-tag tag-desktop">Desktop</span>
+          <h3>Pip lives on your screen</h3>
+          <p>A floating, always-on-top companion. Click to delegate, or hit
+          <span class="kbd">⌘⇧T</span> to snip any part of your screen and have Pip run with it.
+          Pip grooms your <code style="font-family:var(--mono);font-size:12.5px">tasks.md</code>, writes the fix, and moves work across your board.</p>
+        </div>
+        <div class="surface-demo">
+          <span class="c-amber">◗ pip</span> <span class="c-text">· floating on your desktop</span><br />
+          <span class="c-violet">⌘⇧T</span> → snip a CI failure → <span class="c-text">"fix this and capture it"</span><br />
+          <span class="c-coral">pip</span>&nbsp; Opened the repo · wrote the patch · ran tests <span class="c-teal">(green)</span><br />
+          &nbsp;&nbsp;&nbsp;&nbsp; Moved task <span class="c-amber">Needs triage → Done</span> in tasks.md · left a handoff note
+        </div>
+      </div>
+      <div class="surface-row reveal">
+        <div>
+          <span class="surface-tag tag-browser">Browser</span>
+          <h3>Page-aware work in Chrome</h3>
+          <p>Point Pip at whatever tab you're on — the extension reads the page, and with
+          <strong>Assign to Pip</strong> it runs with full tool access: drafts docs, creates tasks,
+          and writes back to your workspace. Read-only by default until you explicitly assign.</p>
+        </div>
+        <div class="surface-demo">
+          <span class="c-violet">tab</span>&nbsp; competitor.com/changelog<br />
+          <span class="c-text">you</span>&nbsp; <span class="c-teal">[Assign to Pip]</span> battlecard + Slack summary for #sales<br />
+          <span class="c-coral">pip</span>&nbsp; <span class="c-text">Shipped.</span> battlecard.md · 4 feature gaps · paste-ready Slack blurb<br />
+          &nbsp;&nbsp;&nbsp;&nbsp; Saved pricing edge to <span class="c-amber">memory/</span> · follow-up added to <span class="c-amber">tasks.md</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ─────────────────────────────────── -->
+<section id="how">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-kicker">How it works</div>
+      <h2>Thin surfaces. One engine.<br />A brain you own.</h2>
+      <p class="section-sub">Every request follows the same path, no matter where it starts.</p>
+    </div>
+    <div class="arch reveal">
+      <div class="arch-layer">
+        <div class="arch-label">Surfaces</div>
+        <div class="arch-items">
+          <span class="arch-chip">Pip · Slack <small>tag @Pip</small></span>
+          <span class="arch-chip">Pip · Desktop <small>on-screen, ⌘⇧T snip</small></span>
+          <span class="arch-chip">Pip · Chrome <small>page-aware work</small></span>
+        </div>
+      </div>
+      <div class="arch-connector"></div>
+      <div class="arch-layer">
+        <div class="arch-label">Engine · @tandem/engine</div>
+        <div class="arch-engine"><span class="fn">runAgent()</span> → cursor-agent -p … <span class="flag">--model &lt;any&gt;</span> <span class="flag">--workspace &lt;repo&gt;</span></div>
+      </div>
+      <div class="arch-connector"></div>
+      <div class="arch-layer">
+        <div class="arch-label">Brain · your workspace</div>
+        <div class="arch-items">
+          <span class="arch-chip">memory/ <small>grows as you go</small></span>
+          <span class="arch-chip">skills &amp; knowledge <small>optional PM OS</small></span>
+          <span class="arch-chip">AGENTS.md <small>auto-loaded charter</small></span>
+        </div>
+      </div>
+      <p class="arch-note">
+        Because the workspace holds <code>AGENTS.md</code>, memory, and any mounted capability OS,
+        the agent has the full context on disk for every call — no per-surface plumbing.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── COMPARISON ───────────────────────────────────── -->
+<section id="compare">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-kicker">Why Tandem</div>
+      <h2>Not another single-vendor bot.</h2>
+    </div>
+    <table class="compare-table reveal">
+      <thead>
+        <tr><th></th><th>Single-vendor Slack AI</th><th>Tandem</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Models</td><td>One vendor's models</td><td><span class="yes">✓</span>Any model the Cursor CLI supports</td></tr>
+        <tr><td>Surfaces</td><td>Slack only</td><td><span class="yes">✓</span>Slack + desktop + browser, one engine</td></tr>
+        <tr><td>Brain &amp; memory</td><td>Closed, hosted</td><td><span class="yes">✓</span>Yours, local, compounds as you work</td></tr>
+        <tr><td>Hosting</td><td>Vendor cloud</td><td><span class="yes">✓</span>Your machine, local-first</td></tr>
+        <tr><td>Access</td><td>Enterprise-gated</td><td><span class="yes">✓</span>Open source, works solo</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── QUICKSTART ───────────────────────────────────── -->
+<section id="quickstart">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-kicker">Quickstart</div>
+      <h2>Running in two minutes.</h2>
+      <p class="section-sub">One command installs everything: the code, the <code style="font-family:var(--mono);font-size:14px">tandem</code> CLI, and the Cursor CLI if you need it.</p>
+    </div>
+    <div class="terminal reveal">
+      <div class="terminal-head">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span class="terminal-title">zsh — ~/</span>
+      </div>
+      <div class="terminal-body">
+        <span class="cm"># install tandem</span><br />
+        <span class="pr">$</span> <span class="cd">curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash</span><br />
+        <span class="ok">✓ node 20+ found &nbsp;✓ built &nbsp;✓ tandem on PATH &nbsp;✓ workspace initialized</span><br />
+        <br />
+        <span class="cm"># one-time model auth</span><br />
+        <span class="pr">$</span> <span class="cd">cursor-agent login</span><br />
+        <br />
+        <span class="cm"># launch Pip on your desktop</span><br />
+        <span class="pr">$</span> <span class="cd">tandem pip</span><br />
+        <span class="ok">◗ Pip is on your screen. Say hi.</span>
+      </div>
+    </div>
+    <p class="quickstart-note">
+      Prefer npm? <code>npm install -g @tandem/cli @tandem/pip @tandem/slack</code> — then
+      <code>tandem pip</code> self-initializes on first run. Slack and Chrome setup live in each
+      app's README. No PM OS required: Pip starts blank and builds your context as you go.
+    </p>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ────────────────────────────────────── -->
+<section class="final-cta">
+  <div class="wrap reveal">
+    <h2>Give your team a coworker,<br /><span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">not another chat box.</span></h2>
+    <p>Open source, MIT licensed, runs on your machine. Context that compounds from day one.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">Get Tandem on GitHub →</a>
+      <a class="btn btn-ghost" href="#quickstart">Read the quickstart</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div>
+      <strong style="color:var(--text)">Tandem</strong> · co-created by
+      <a href="https://github.com/Sach1ng" target="_blank" rel="noopener">Sachin Gupta</a> &amp;
+      <a href="https://github.com/hardiktiwari" target="_blank" rel="noopener">Hardik Tiwari</a>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/hardiktiwari/PM-operating-OS" target="_blank" rel="noopener">PM OS</a>
+      <a href="https://cursor.com/docs/cli" target="_blank" rel="noopener">Cursor CLI</a>
+    </div>
+    <div>MIT License · Personal project, not affiliated with any employer or vendor.</div>
+  </div>
+</footer>
+
+<script>
+  function copyInstall(btn) {
+    navigator.clipboard.writeText(document.getElementById("install-cmd").textContent).then(() => {
+      btn.textContent = "Copied!";
+      setTimeout(() => (btn.textContent = "Copy"), 1600);
+    });
+  }
+
+  (function rotateSurfaces() {
+    const surfaces = [
+      { word: "Slack", key: "slack" },
+      { word: "desktop", key: "desktop" },
+      { word: "Chrome", key: "browser" },
+    ];
+    const rotator = document.getElementById("rotator");
+    const cards = [...document.querySelectorAll(".preview-card")];
+    const dots = [...document.querySelectorAll(".preview-dot")];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let i = 0;
+    let timer;
+
+    function show(idx) {
+      i = idx;
+      const { word, key } = surfaces[i];
+      if (reduced) {
+        rotator.textContent = word;
+      } else {
+        rotator.classList.add("swap-out");
+        setTimeout(() => {
+          rotator.textContent = word;
+          rotator.classList.remove("swap-out");
+          rotator.classList.add("swap-in");
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => rotator.classList.remove("swap-in"))
+          );
+        }, 320);
+      }
+      cards.forEach((c) => c.classList.toggle("active", c.dataset.surface === key));
+      dots.forEach((d) => d.classList.toggle("active", d.dataset.surface === key));
+    }
+
+    function next() { show((i + 1) % surfaces.length); }
+
+    function start() {
+      clearInterval(timer);
+      timer = setInterval(next, 3200);
+    }
+
+    dots.forEach((dot, idx) => {
+      dot.addEventListener("click", () => {
+        show(idx);
+        start();
+      });
+    });
+
+    show(0);
+    start();
+  })();
+
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add("in")),
+    { threshold: 0.12 }
+  );
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

@@ -8,6 +8,8 @@ context as you go**, or mounts a capability OS you own (like
 
 > One coworker. Many surfaces. Your models, your machine, your context — that compounds as you work.
 
+**Website:** [hardiktiwari.github.io/tandem-site](https://hardiktiwari.github.io/tandem-site/) — product overview, surfaces, and quickstart.
+
 ---
 
 ## The idea

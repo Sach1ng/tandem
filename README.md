@@ -1,4 +1,4 @@
-# Tandem
+# PIP
 
 **An ambient AI coworker that lives where you work.** Tandem is **Pip** — one coworker who shows up
 in Slack, on your screen, and in your browser. Pip starts with a blank memory and **builds your

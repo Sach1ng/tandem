@@ -36,6 +36,17 @@ if (!existsSync(distMain)) {
 }
 
 function electronBin() {
+  const direct = join(
+    pipRoot,
+    "node_modules",
+    "electron",
+    "dist",
+    "Electron.app",
+    "Contents",
+    "MacOS",
+    "Electron",
+  );
+  if (existsSync(direct)) return direct;
   const local = join(pipRoot, "node_modules", ".bin", "electron");
   if (existsSync(local)) return local;
   return require.resolve("electron/cli.js");

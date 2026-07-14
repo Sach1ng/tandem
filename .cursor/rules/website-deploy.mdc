@@ -1,5 +1,5 @@
 ---
-description: Commit and push website/HTML changes to GitHub Pages after editing apps/website
+description: Publish website/HTML changes to hardiktiwari/tandem-site only
 globs: apps/website/**
 alwaysApply: false
 ---
@@ -9,10 +9,10 @@ alwaysApply: false
 When you change anything under `apps/website/` (HTML, CSS, assets):
 
 1. **Finish the edit** — keep pages static; no build step required.
-2. **Commit** the website files (and workflow if touched).
-3. **Push to GitHub** on `main` (`origin`) so GitHub Pages deploys via Actions.
-4. **Share the live URL** — e.g. https://sach1ng.github.io/tandem/roadmap.html
+2. **Publish to `hardiktiwari/tandem-site` only** — clone or pull that repo, copy changed files from `apps/website/`, commit, and push to `main`.
+3. **Do not deploy via `Sach1ng/tandem`** — ignore `sach1ng.github.io/tandem` and do not push website-only changes to the monorepo for Pages.
+4. **Share the live URL** — https://hardiktiwari.github.io/tandem-site/ (or `…/roadmap.html` etc.)
 
-Do not leave website work local-only. Preview with `npm run roadmap:open` or a local server, but always push when done.
+Do not leave website work local-only. Preview with `npm run roadmap:open` or a local server, but always push to `hardiktiwari/tandem-site` when done.
 
-If the user asked not to commit in the same message, finish the edit and remind them the site still needs a push.
+If the user asked not to commit in the same message, finish the edit and remind them the site still needs a push to `hardiktiwari/tandem-site`.

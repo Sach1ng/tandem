@@ -2,8 +2,8 @@
 
 Static site for Tandem — no build step, no dependencies. Deployed to **GitHub Pages**.
 
-**Live:** https://sach1ng.github.io/tandem/  
-**Roadmap demo:** https://sach1ng.github.io/tandem/roadmap.html
+**Live:** https://hardiktiwari.github.io/tandem-site/  
+**Roadmap demo:** https://hardiktiwari.github.io/tandem-site/roadmap.html
 
 ## Preview locally
 
@@ -16,8 +16,8 @@ python3 -m http.server 8080 --directory apps/website
 
 ## Deploy
 
-Push to `main`. The workflow at `.github/workflows/deploy-pages.yml` publishes `apps/website/` automatically.
+Edit files here, then publish to **`hardiktiwari/tandem-site`** (push to `main` on that repo).
 
-**First-time setup (once per repo):** GitHub → Settings → Pages → Build and deployment → Source: **GitHub Actions**.
+Do **not** use `Sach1ng/tandem` GitHub Pages (`sach1ng.github.io/tandem`) as the live deploy target.
 
 Put all shareable HTML here (`index.html`, `roadmap.html`, etc.) — not the repo root.

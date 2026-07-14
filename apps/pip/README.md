@@ -29,6 +29,20 @@ npm start          # from this directory, or: npm run pip (from repo root)
 tandem pip
 ```
 
+### Start at login (macOS)
+
+Pip can auto-start when you log in — uses a LaunchAgent with `cursor-agent` on your PATH:
+
+```bash
+tandem pip autostart install
+tandem pip autostart status
+tandem pip autostart uninstall
+```
+
+This writes `~/Library/LaunchAgents/com.tandem.pip.plist`, `~/.tandem/autostart.env`
+(workspace path), and `~/.tandem/launch-pip.sh` (launcher with Node + cursor-agent PATH).
+Logs: `/tmp/tandem-pip.out.log` and `/tmp/tandem-pip.err.log`.
+
 - **Click** Pip (bottom-right) to open the ask bar · **right-click** for menu
 - **⌘⇧T** — snip any region of your screen and get an answer
 - **⌘⇧Space** — summon Pip to your cursor · **⌘N** — summon + voice input · **⌘⇧H** — hide/show Pip (meeting-safe)

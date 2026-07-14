@@ -1,5 +1,5 @@
 ---
-description: Open local HTML in the system browser and share GitHub Pages URL
+description: Open local HTML in the system browser and share hardiktiwari/tandem-site URL
 globs: "**/*.html"
 alwaysApply: true
 ---
@@ -10,6 +10,6 @@ When you create, edit, or share HTML (especially under `apps/website/`):
 
 1. **Always run** `open "apps/website/<file>.html"` (or `npm run roadmap:open`) — not Cursor preview.
 2. **Always include** both links in your reply:
-   - Local: `file:///Users/sachin/Desktop/AI%20projects/God%20mode/apps/website/<file>.html`
-   - Live: https://sach1ng.github.io/tandem/<file>.html
-3. After edits, **commit + push** to `main` so GitHub Pages updates (see `github-pages-html.mdc`).
+   - Local: `file:///Users/hardiktiwar/Desktop/Tandem/apps/website/<file>.html`
+   - Live: https://hardiktiwari.github.io/tandem-site/<file>.html
+3. After edits, **push to `hardiktiwari/tandem-site`** (see `github-pages-html.mdc`). Do not deploy via `Sach1ng/tandem` Pages.

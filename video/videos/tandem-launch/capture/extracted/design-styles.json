@@ -1,0 +1,323 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Inter",
+      "fontSize": "72px",
+      "fontWeight": "800",
+      "lineHeight": "75.6px",
+      "letterSpacing": "-2.52px",
+      "color": "#1C1B22",
+      "sampleText": "One AI coworker.On every surface where youdo the work — Slac"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Inter",
+      "fontSize": "42px",
+      "fontWeight": "750",
+      "lineHeight": "47.04px",
+      "letterSpacing": "-1.26px",
+      "color": "#1C1B22",
+      "sampleText": "Most AI tools are a chat box.Tandem flips that."
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "Inter",
+      "fontSize": "23px",
+      "fontWeight": "700",
+      "lineHeight": "36.8px",
+      "letterSpacing": "-0.46px",
+      "color": "#1C1B22",
+      "sampleText": "Tag @Pip like a teammate"
+    },
+    {
+      "role": "body",
+      "fontFamily": "Inter",
+      "fontSize": "20px",
+      "fontWeight": "400",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "color": "#5D5C66",
+      "sampleText": "Meet Pip — in Slack, on your desktop, and in Chrome. One mem"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "Inter",
+      "fontSize": "18px",
+      "fontWeight": "650",
+      "lineHeight": "28.8px",
+      "letterSpacing": "-0.18px",
+      "color": "#1C1B22",
+      "sampleText": "The brain is yours — and it compounds"
+    },
+    {
+      "role": "link",
+      "fontFamily": "Inter",
+      "fontSize": "17px",
+      "fontWeight": "700",
+      "lineHeight": "27.2px",
+      "letterSpacing": "-0.34px",
+      "color": "#1C1B22",
+      "sampleText": "◗ Tandem"
+    },
+    {
+      "role": "code",
+      "fontFamily": "JetBrains Mono",
+      "fontSize": "13.5px",
+      "fontWeight": "400",
+      "lineHeight": "21.6px",
+      "letterSpacing": "normal",
+      "color": "#ECEBF0",
+      "sampleText": "curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/"
+    },
+    {
+      "role": "label",
+      "fontFamily": "Inter",
+      "fontSize": "13px",
+      "fontWeight": "500",
+      "lineHeight": "20.8px",
+      "letterSpacing": "normal",
+      "color": "#5D5C66",
+      "sampleText": "Open source · MIT · Local-first"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "Inter",
+      "fontSize": "11.5px",
+      "fontWeight": "400",
+      "lineHeight": "18.4px",
+      "letterSpacing": "normal",
+      "color": "#94929C",
+      "sampleText": "tag @Pip"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      6,
+      8,
+      9,
+      10,
+      11,
+      12,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24,
+      26,
+      28,
+      36
+    ],
+    "baseUnit": 4
+  },
+  "radius": [
+    "6px",
+    "8px",
+    "10px",
+    "14px",
+    "100px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(28, 27, 34, 0.05) 0px 1px 2px 0px, rgba(28, 27, 34, 0.05) 0px 2px 8px 0px",
+      "count": 5
+    },
+    {
+      "value": "rgba(217, 72, 15, 0.3) 0px 4px 18px 0px",
+      "count": 2
+    },
+    {
+      "value": "rgba(28, 27, 34, 0.05) 0px 1.98709px 3.97419px 0px, rgba(28, 27, 34, 0.09) 0px 11.8709px 31.6903px 0px",
+      "count": 1
+    },
+    {
+      "value": "rgba(28, 27, 34, 0.05) 0px 1.01291px 2.02581px 0px, rgba(28, 27, 34, 0.05) 0px 2.12905px 8.30973px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "GitHub ↗",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1C1B22",
+      "padding": "7px 16px",
+      "borderRadius": "8px",
+      "border": "1px solid rgb(216, 220, 224)",
+      "boxShadow": "rgba(28, 27, 34, 0.05) 0px 1px 2px 0px, rgba(28, 27, 34, 0.05) 0px 2px 8px 0px",
+      "fontSize": "13.5px",
+      "fontWeight": "600",
+      "height": "37.5938px"
+    },
+    {
+      "label": "Copy",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#A3A1AD",
+      "padding": "5px 11px",
+      "borderRadius": "7px",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "27px"
+    },
+    {
+      "label": "Get started →",
+      "background": "#D9480F",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "12px 26px",
+      "borderRadius": "10px",
+      "border": "0px none rgb(255, 255, 255)",
+      "boxShadow": "rgba(217, 72, 15, 0.3) 0px 4px 18px 0px",
+      "fontSize": "15px",
+      "fontWeight": "600",
+      "height": "50px"
+    },
+    {
+      "label": "Star on GitHub",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#5D5C66",
+      "padding": "12px 26px",
+      "borderRadius": "10px",
+      "border": "1px solid rgb(216, 220, 224)",
+      "boxShadow": "rgba(28, 27, 34, 0.05) 0px 1px 2px 0px, rgba(28, 27, 34, 0.05) 0px 2px 8px 0px",
+      "fontSize": "15px",
+      "fontWeight": "600",
+      "height": "50px"
+    },
+    {
+      "label": "Slack",
+      "background": "#0CA678",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#087F5B",
+      "padding": "6px 14px",
+      "borderRadius": "100px",
+      "border": "1px solid rgb(12, 166, 120)",
+      "boxShadow": "rgba(28, 27, 34, 0.05) 0px 1px 2px 0px, rgba(28, 27, 34, 0.05) 0px 2px 8px 0px",
+      "fontSize": "12.5px",
+      "fontWeight": "600",
+      "height": "28px"
+    },
+    {
+      "label": "desktop",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#5D5C66",
+      "padding": "6px 14px",
+      "borderRadius": "100px",
+      "border": "1px solid rgb(216, 220, 224)",
+      "boxShadow": "rgba(28, 27, 34, 0.05) 0px 1px 2px 0px, rgba(28, 27, 34, 0.05) 0px 2px 8px 0px",
+      "fontSize": "12.5px",
+      "fontWeight": "600",
+      "height": "28px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1C1B22",
+      "padding": "0px",
+      "borderRadius": "14px",
+      "border": "1px solid rgb(232, 234, 237)",
+      "boxShadow": "rgba(28, 27, 34, 0.05) 0px 1.98709px 3.97419px 0px, rgba(28, 27, 34, 0.09) 0px 11.8709px 31.6903px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "160.188px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#F8F9FA",
+    "backgroundImage": "",
+    "backdropFilter": "blur(14px)",
+    "color": "#1C1B22",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "61px"
+  },
+  "chips": [
+    {
+      "label": "Open source · MIT · Loca",
+      "background": "#FFFFFF",
+      "color": "#5D5C66",
+      "padding": "6px 14px",
+      "borderRadius": "100px",
+      "border": "1px solid rgb(216, 220, 224)",
+      "boxShadow": "rgba(28, 27, 34, 0.05) 0px 1px 2px 0px, rgba(28, 27, 34, 0.05) 0px 2px 8px 0px",
+      "fontSize": "13px",
+      "fontWeight": "500",
+      "height": "34.7969px"
+    },
+    {
+      "label": "🧠",
+      "background": "#FFF0E8",
+      "color": "#1C1B22",
+      "padding": "0px",
+      "borderRadius": "11px",
+      "border": "1px solid rgba(217, 72, 15, 0.18)",
+      "boxShadow": "none",
+      "fontSize": "19px",
+      "fontWeight": "400",
+      "height": "42px"
+    },
+    {
+      "label": "Slack",
+      "background": "#0CA678",
+      "color": "#087F5B",
+      "padding": "4px 10px",
+      "borderRadius": "6px",
+      "border": "1px solid rgba(12, 166, 120, 0.28)",
+      "boxShadow": "none",
+      "fontSize": "11.5px",
+      "fontWeight": "600",
+      "height": "28.3906px"
+    },
+    {
+      "label": "Desktop",
+      "background": "#F59F00",
+      "color": "#B35A00",
+      "padding": "4px 10px",
+      "borderRadius": "6px",
+      "border": "1px solid rgba(245, 159, 0, 0.32)",
+      "boxShadow": "none",
+      "fontSize": "11.5px",
+      "fontWeight": "600",
+      "height": "28.3906px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "linear-gradient(90deg, rgba(20, 28, 36, 0.05) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(rgba(20, 28, 36, 0.05) 1px, rgba(0, 0, 0, 0) 1px)",
+      "area": 13422750
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(14px)",
+      "background": "rgba(248, 249, 250, 0.88)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 117120
+    }
+  ]
+}

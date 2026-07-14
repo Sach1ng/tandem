@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #07080c;
+        font-family: Inter, system-ui, sans-serif;
+        color: #f4f5f7;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .ground {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            120% 80% at 50% 0%,
+            #141824 0%,
+            #07080c 55%,
+            #05060a 100%
+          ),
+          #07080c;
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 40%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+        z-index: 5;
+      }
+      video.demo {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        object-fit: cover;
+        z-index: 1;
+        transform-origin: 50% 45%;
+      }
+      .glass {
+        position: absolute;
+        z-index: 10;
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.16),
+          rgba(255, 255, 255, 0.05)
+        );
+        backdrop-filter: blur(28px) saturate(1.4);
+        -webkit-backdrop-filter: blur(28px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 28px;
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        padding: 36px 44px;
+      }
+      .glass::before {
+        content: "";
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        top: 1px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.55),
+          transparent
+        );
+      }
+      .kicker {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(244, 245, 247, 0.85);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
+      }
+      .kicker .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #d9480f;
+        box-shadow: 0 0 16px rgba(217, 72, 15, 0.65);
+      }
+      .display {
+        font-size: 72px;
+        font-weight: 700;
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+        max-width: 1100px;
+        text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+      }
+      .display.xl {
+        font-size: 92px;
+      }
+      .display.sm {
+        font-size: 56px;
+      }
+      .caption-bl {
+        left: 72px;
+        top: 96px;
+        bottom: auto;
+        max-width: 860px;
+        background: linear-gradient(
+          145deg,
+          rgba(8, 10, 16, 0.72),
+          rgba(8, 10, 16, 0.45)
+        );
+      }
+      .center-card {
+        left: 160px;
+        right: 160px;
+        top: 220px;
+        text-align: left;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+      .face-slot {
+        position: absolute;
+        right: 56px;
+        bottom: 56px;
+        width: 280px;
+        height: 280px;
+        z-index: 12;
+        border-radius: 50%;
+        overflow: hidden;
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.14),
+          rgba(255, 255, 255, 0.04)
+        );
+        backdrop-filter: blur(20px) saturate(1.3);
+        -webkit-backdrop-filter: blur(20px) saturate(1.3);
+        border: 2px solid rgba(255, 255, 255, 0.28);
+        box-shadow:
+          0 16px 48px rgba(0, 0, 0, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          0 0 0 4px rgba(217, 72, 15, 0.35);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-align: center;
+        padding: 24px;
+      }
+      .face-slot .face-label {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(244, 245, 247, 0.7);
+      }
+      .face-slot .face-hint {
+        font-size: 22px;
+        font-weight: 600;
+        color: #f4f5f7;
+        line-height: 1.25;
+      }
+      .face-slot .face-sub {
+        font-size: 16px;
+        color: rgba(244, 245, 247, 0.45);
+        font-family: "JetBrains Mono", monospace;
+      }
+      img.still-card {
+        position: absolute;
+        width: 1080px;
+        height: 680px;
+        object-fit: cover;
+        object-position: center top;
+        border-radius: 18px;
+        border: 1.5px solid rgba(255, 255, 255, 0.28);
+        box-shadow:
+          0 28px 90px rgba(0, 0, 0, 0.55),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        z-index: 1;
+        background: #111;
+      }
+      #still-docs {
+        left: 60px;
+        top: 140px;
+        z-index: 2;
+      }
+      #still-slack {
+        left: 320px;
+        top: 180px;
+        z-index: 3;
+      }
+      #still-github {
+        left: 140px;
+        top: 260px;
+        z-index: 4;
+      }
+      #still-desktop {
+        left: 480px;
+        top: 120px;
+        z-index: 5;
+      }
+      #still-gmail {
+        left: 260px;
+        top: 300px;
+        z-index: 6;
+      }
+      img.still-cursor {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        object-fit: cover;
+        object-position: center top;
+        z-index: 7;
+      }
+      .cmd {
+        margin-top: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 26px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 28px;
+      }
+      .cmd .prompt {
+        color: #0ca678;
+      }
+      .cmd .dim {
+        color: rgba(244, 245, 247, 0.4);
+      }
+      .brand {
+        font-size: 108px;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+      }
+      .sub {
+        margin-top: 12px;
+        font-size: 32px;
+        color: rgba(244, 245, 247, 0.7);
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-e4mq" id="root" data-composition-id="main" data-start="0" data-duration="66" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-m43c" id="ground" class="ground clip" data-start="0" data-duration="66" data-track-index="0"></div>
+
+      <!-- Pile stacks 4–12.5s, Cursor 12.5–16s -->
+      <img data-hf-id="hf-hct7" id="still-docs" class="still-card clip" data-start="4" data-duration="8.5" data-track-index="5" src="assets/problem/01-docs-tabs.png" alt="">
+      <img data-hf-id="hf-mqfq" id="still-slack" class="still-card clip" data-start="5.3" data-duration="7.2" data-track-index="6" src="assets/problem/02-slack.png" alt="">
+      <img data-hf-id="hf-m0i4" id="still-github" class="still-card clip" data-start="6.6" data-duration="5.9" data-track-index="7" src="assets/problem/03-github-tabs.png" alt="">
+      <img data-hf-id="hf-24ag" id="still-desktop" class="still-card clip" data-start="7.9" data-duration="4.6" data-track-index="8" src="assets/problem/04-desktop-chaos.png" alt="">
+      <img data-hf-id="hf-waj4" id="still-gmail" class="still-card clip" data-start="9.2" data-duration="3.3" data-track-index="9" src="assets/problem/05-gmail-draft.png" alt="">
+      <img data-hf-id="hf-j6tv" id="still-cursor" class="still-cursor clip" data-start="12.5" data-duration="3.5" data-track-index="1" src="assets/problem/06-cursor-claude.png" alt="">
+
+      <video data-hf-id="hf-x5ko" id="slack-demo" class="demo clip" data-start="22" data-duration="8.994" data-track-index="1" data-media-start="0" src="assets/demos/slack-demo.mp4" muted playsinline></video><video data-hf-id="hf-g4xw" id="slack-demo-split" class="demo clip" data-start="30.994" data-duration="3.006" data-track-index="1" data-media-start="8.994" src="assets/demos/slack-demo.mp4" muted playsinline></video>
+      <video data-hf-id="hf-svbn" id="desktop-demo" class="demo clip" data-start="34" data-duration="3.271" data-track-index="1" data-media-start="0" src="assets/demos/desktop-demo.mp4" muted playsinline></video><video data-hf-id="hf-tqz1" id="desktop-demo-split" class="demo clip" data-start="37.271" data-duration="8.729" data-track-index="1" data-media-start="3.271" src="assets/demos/desktop-demo.mp4" muted playsinline></video>
+      <video data-hf-id="hf-q3dw" id="browser-demo" class="demo clip" data-start="46" data-duration="10" data-track-index="1" data-media-start="0" src="assets/demos/browser-demo.mp4" muted playsinline></video>
+
+      <div data-hf-id="hf-rhay" id="vignette" class="vignette clip" data-start="0" data-duration="66" data-track-index="2"></div>
+
+      <!-- F1 shortened to 4s -->
+      <div data-hf-id="hf-mmtq" id="f1" class="glass center-card clip" data-start="0" data-duration="4" data-track-index="3">
+        <div data-hf-id="hf-wro2" class="kicker"><span data-hf-id="hf-9gry" class="dot"></span> Problem</div>
+        <div data-hf-id="hf-is94" class="display xl">
+          While we're growing more dependent<br data-hf-id="hf-x5px">on AI as an assistant…
+        </div>
+      </div>
+
+      <div data-hf-id="hf-qptf" id="f2" class="glass caption-bl clip" data-start="4" data-duration="8.5" data-track-index="3">
+        <div data-hf-id="hf-j9um" class="kicker"><span data-hf-id="hf-zcc2" class="dot"></span> The gap</div>
+        <div data-hf-id="hf-iz76" class="display sm">Work is still scattered.</div>
+      </div>
+
+      <div data-hf-id="hf-5u5q" id="f2b" class="glass caption-bl clip" data-start="12.5" data-duration="3.5" data-track-index="3">
+        <div data-hf-id="hf-5fjh" class="kicker"><span data-hf-id="hf-zqn3" class="dot"></span> Homework</div>
+        <div data-hf-id="hf-lltd" class="display sm">You bring all that context to Cursor.</div>
+      </div>
+
+      <div data-hf-id="hf-tgil" id="f3" class="glass center-card clip" data-start="16" data-duration="6" data-track-index="3">
+        <div data-hf-id="hf-zzuo" class="kicker"><span data-hf-id="hf-04y4" class="dot"></span> PIP</div>
+        <div data-hf-id="hf-de7u" class="display sm">
+          What if it already knew you?<br data-hf-id="hf-rsrt">
+          What if it was already where you work?
+        </div>
+      </div>
+
+      <div data-hf-id="hf-6c2l" id="f4" class="glass caption-bl clip" data-start="22" data-duration="12" data-track-index="3">
+        <div data-hf-id="hf-9r8t" class="kicker"><span data-hf-id="hf-0j95" class="dot"></span> Slack</div>
+        <div data-hf-id="hf-d8fc" class="display sm">Ask where the conversation is.</div>
+      </div>
+
+      <div data-hf-id="hf-69tz" id="f5" class="glass caption-bl clip" data-start="34" data-duration="12" data-track-index="3">
+        <div data-hf-id="hf-2y8x" class="kicker"><span data-hf-id="hf-0xk6" class="dot"></span> Desktop</div>
+        <div data-hf-id="hf-4bvw" class="display sm">Snip it. Ask it. Keep going.</div>
+      </div>
+
+      <div data-hf-id="hf-5lnr" id="f6" class="glass caption-bl clip" data-start="46" data-duration="10" data-track-index="3">
+        <div data-hf-id="hf-qaop" class="kicker"><span data-hf-id="hf-1bv7" class="dot"></span> Browser</div>
+        <div data-hf-id="hf-abff" class="display sm">Same thread. Any tab.</div>
+      </div>
+
+      <div data-hf-id="hf-qtec" id="f7" class="glass center-card clip" data-start="56" data-duration="5" data-track-index="3">
+        <div data-hf-id="hf-lls0" class="kicker"><span data-hf-id="hf-1q68" class="dot"></span> Payoff</div>
+        <div data-hf-id="hf-1idh" class="display">
+          One coworker. One brain that compounds.<br data-hf-id="hf-szow">No more homework.
+        </div>
+      </div>
+
+      <div data-hf-id="hf-k4y9" id="f8" class="glass center-card clip" data-start="61" data-duration="5" data-track-index="3">
+        <div data-hf-id="hf-h7jg" class="brand">PIP</div>
+        <div data-hf-id="hf-w7qa" class="sub">The ambient AI coworker. Open source. Local-first.</div>
+        <div data-hf-id="hf-03wg" class="cmd">
+          <span data-hf-id="hf-99ip" class="prompt">$</span>
+          <span data-hf-id="hf-nxsv">tandem pip</span>
+          <span data-hf-id="hf-3njc" class="dim"># launch PIP</span>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-yahc" id="face-slot" class="face-slot clip" data-start="0" data-duration="66" data-track-index="4">
+        <div data-hf-id="hf-0teh" class="face-label">You</div>
+        <div data-hf-id="hf-n4o3" class="face-hint">Face cam<br data-hf-id="hf-sldv">goes here</div>
+        <div data-hf-id="hf-fsou" class="face-sub">drop me.mp4</div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.set("#desktop-demo-split", { scale: 1.0381579350490195 }, 37.270680147058826);
+
+      tl.set("#slack-demo-split", { scale: 1.0599607843137255 }, 30.99411764705882);
+
+      const cards = ["#f1", "#f2", "#f2b", "#f3", "#f4", "#f5", "#f6", "#f7", "#f8"];
+      const starts = [0, 4, 12.5, 16, 22, 34, 46, 56, 61];
+
+      cards.forEach((sel, i) => {
+        const t = starts[i];
+        tl.fromTo(
+          sel,
+          { opacity: 0, y: 28, scale: 0.96 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" },
+          t + 0.05,
+        );
+      });
+
+      const pile = [
+        { id: "#still-docs", t: 4, rot: -4, x: -40, y: 40 },
+        { id: "#still-slack", t: 5.3, rot: 3, x: 50, y: -20 },
+        { id: "#still-github", t: 6.6, rot: -2, x: -20, y: 60 },
+        { id: "#still-desktop", t: 7.9, rot: 5, x: 70, y: -30 },
+        { id: "#still-gmail", t: 9.2, rot: -3.5, x: 30, y: 50 },
+      ];
+      pile.forEach(({ id, t, rot, x, y }) => {
+        tl.fromTo(
+          id,
+          { opacity: 0, scale: 0.82, rotate: rot - 8, x: x - 80, y: y + 120 },
+          {
+            opacity: 1,
+            scale: 1,
+            rotate: rot,
+            x: 0,
+            y: 0,
+            duration: 0.55,
+            ease: "power3.out",
+          },
+          t,
+        );
+      });
+
+      tl.fromTo(
+        "#still-cursor",
+        { opacity: 0, scale: 1.12 },
+        { opacity: 1, scale: 1, duration: 0.45, ease: "power2.out" },
+        12.5,
+      );
+
+      tl.fromTo("#slack-demo", { scale: 1 }, { scale: 1.0599607843137255, duration: 8.994117647058822, ease: "none" }, 22);
+      tl.fromTo("#desktop-demo", { scale: 1 }, { scale: 1.0381579350490195, duration: 3.270680147058826, ease: "power1.inOut" }, 34);
+      tl.fromTo(
+        "#browser-demo",
+        { scale: 1.04, xPercent: -1 },
+        { scale: 1.12, xPercent: 1.5, duration: 10, ease: "none" },
+        46,
+      );
+
+      tl.fromTo(
+        "#face-slot",
+        { opacity: 0, scale: 0.85, y: 24 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: "power3.out" },
+        0.4,
+      );
+
+      tl.fromTo("#slack-demo-split", { scale: 1.0599607843137255 }, { scale: 1.08, duration: 3.0058823529411782, ease: "none" }, 30.99411764705882);
+
+      tl.fromTo("#desktop-demo-split", { scale: 1.0381579350490195 }, { scale: 1.14, duration: 8.729319852941174, ease: "power1.inOut" }, 37.270680147058826);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

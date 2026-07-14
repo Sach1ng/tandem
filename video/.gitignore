@@ -1,0 +1,9 @@
+node_modules
+out
+.DS_Store
+# ignore heavy media by default; force-add specific files if you want them tracked
+public/*.mp4
+public/*.mov
+public/*.webm
+public/*.mp3
+public/*.wav

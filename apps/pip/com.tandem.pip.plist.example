@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  launchd LaunchAgent for Pip (global hotkey + task widget).
-  1. Copy to ~/Library/LaunchAgents/com.tandem.pip.plist
-  2. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tandem.pip.plist
+  launchd LaunchAgent for Pip (global hotkey + desktop widget).
+  Prefer: tandem pip autostart install
+  Manual:
+    1. Edit paths if needed, copy to ~/Library/LaunchAgents/com.tandem.pip.plist
+    2. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tandem.pip.plist
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

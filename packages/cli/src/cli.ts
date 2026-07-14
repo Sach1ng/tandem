@@ -14,6 +14,18 @@ import {
   cmdSlackStatus,
   slackUsage,
 } from "./slack-cmd.js";
+import {
+  pipAutostartInstall,
+  pipAutostartStatus,
+  pipAutostartUninstall,
+  pipAutostartUsage,
+} from "./pip-autostart.js";
+import {
+  bridgeAutostartInstall,
+  bridgeAutostartStatus,
+  bridgeAutostartUninstall,
+  bridgeAutostartUsage,
+} from "./bridge-autostart.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -26,6 +38,8 @@ Usage:
   tandem init --force     Overwrite existing workspace files
   tandem doctor           Check prerequisites (Node, cursor-agent, workspace)
   tandem pip              Launch Pip on your desktop
+  tandem pip autostart    Install/remove login autostart (macOS)
+  tandem bridge autostart Install/remove Chrome bridge login autostart (macOS)
   tandem workspace        Print the resolved workspace path
 
   tandem slack connect    Connect Slack via OAuth (recommended)
@@ -96,6 +110,17 @@ function findPipRoot(): string {
 }
 
 function findElectronBin(pipRoot: string): string {
+  const direct = join(
+    pipRoot,
+    "node_modules",
+    "electron",
+    "dist",
+    "Electron.app",
+    "Contents",
+    "MacOS",
+    "Electron",
+  );
+  if (existsSync(direct)) return direct;
   const local = join(pipRoot, "node_modules", ".bin", "electron");
   if (existsSync(local)) return local;
   try {
@@ -105,7 +130,89 @@ function findElectronBin(pipRoot: string): string {
   }
 }
 
-async function cmdPip(): Promise<void> {
+async function cmdPipAutostart(args: string[]): Promise<void> {
+  const [sub, ...rest] = args;
+  if (!sub || sub === "--help" || sub === "-h") {
+    pipAutostartUsage();
+    return;
+  }
+
+  switch (sub) {
+    case "install": {
+      const wsFlag = rest.indexOf("--workspace");
+      const workspace = wsFlag >= 0 ? rest[wsFlag + 1] : undefined;
+      const status = pipAutostartInstall(__dirname, workspace);
+      console.log("\n✅ Pip will start at login\n");
+      console.log(`  Workspace:  ${status.workspace}`);
+      console.log(`  Launcher:   ${status.runScript}`);
+      console.log(`  LaunchAgent: ${status.plistPath}`);
+      console.log(`  Monitor:    http://127.0.0.1:8791 (after Pip starts)\n`);
+      break;
+    }
+    case "uninstall":
+      pipAutostartUninstall(__dirname);
+      console.log("\n✅ Removed Pip login autostart\n");
+      break;
+    case "status": {
+      const status = pipAutostartStatus(__dirname);
+      console.log("\nPip autostart\n");
+      console.log(`  Installed: ${status.installed ? "yes" : "no"}`);
+      console.log(`  Loaded:    ${status.loaded ? "yes" : "no"}`);
+      console.log(`  Workspace: ${status.workspace}`);
+      console.log(`  Plist:     ${status.plistPath}`);
+      console.log(`  Launcher:  ${status.runScript}\n`);
+      break;
+    }
+    default:
+      console.error(`Unknown pip autostart command: ${sub}\n`);
+      pipAutostartUsage();
+      process.exit(1);
+  }
+}
+
+async function cmdBridgeAutostart(args: string[]): Promise<void> {
+  const [sub, ...rest] = args;
+  if (!sub || sub === "--help" || sub === "-h") {
+    bridgeAutostartUsage();
+    return;
+  }
+
+  switch (sub) {
+    case "install": {
+      const wsFlag = rest.indexOf("--workspace");
+      const workspace = wsFlag >= 0 ? rest[wsFlag + 1] : undefined;
+      const status = bridgeAutostartInstall(__dirname, workspace);
+      console.log("\n✅ Chrome bridge will start at login\n");
+      console.log(`  Workspace:   ${status.workspace}`);
+      console.log(`  Extension:   ${status.extensionRoot}`);
+      console.log(`  Launcher:    ${status.runScript}`);
+      console.log(`  LaunchAgent: ${status.plistPath}`);
+      console.log(`  Health:      http://127.0.0.1:8765/health\n`);
+      break;
+    }
+    case "uninstall":
+      bridgeAutostartUninstall(__dirname);
+      console.log("\n✅ Removed Chrome bridge login autostart\n");
+      break;
+    case "status": {
+      const status = bridgeAutostartStatus(__dirname);
+      console.log("\nChrome bridge autostart\n");
+      console.log(`  Installed: ${status.installed ? "yes" : "no"}`);
+      console.log(`  Loaded:    ${status.loaded ? "yes" : "no"}`);
+      console.log(`  Workspace: ${status.workspace}`);
+      console.log(`  Extension: ${status.extensionRoot}`);
+      console.log(`  Plist:     ${status.plistPath}`);
+      console.log(`  Launcher:  ${status.runScript}\n`);
+      break;
+    }
+    default:
+      console.error(`Unknown bridge autostart command: ${sub}\n`);
+      bridgeAutostartUsage();
+      process.exit(1);
+  }
+}
+
+async function cmdPipLaunch(): Promise<void> {
   let ws = resolveWorkspace();
   if (!existsSync(join(ws, "AGENTS.md"))) {
     console.log(`No workspace at ${ws} yet — setting one up (this is a one-time step)…`);
@@ -176,7 +283,20 @@ async function main(): Promise<void> {
       break;
     case "pip":
     case "clippy": // back-compat alias
-      await cmdPip();
+      if (sub === "autostart") {
+        await cmdPipAutostart(rest);
+      } else {
+        await cmdPipLaunch();
+      }
+      break;
+    case "bridge":
+      if (sub === "autostart") {
+        await cmdBridgeAutostart(rest);
+      } else {
+        console.error("Unknown bridge command. Try: tandem bridge autostart\n");
+        bridgeAutostartUsage();
+        process.exit(1);
+      }
       break;
     case "workspace":
       cmdWorkspace();

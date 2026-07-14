@@ -365,28 +365,6 @@
   .arch-note { margin-top: 26px; color: var(--text-faint); font-size: 13.5px; max-width: 560px; margin-left: auto; margin-right: auto; }
   .arch-note code { background: var(--bg-soft); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 
-  /* comparison */
-  .compare-table {
-    margin-top: 52px; width: 100%; border-collapse: separate; border-spacing: 0;
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-    overflow: hidden; font-size: 14.5px;
-    box-shadow: var(--shadow-sm);
-  }
-  .compare-table th, .compare-table td { padding: 16px 22px; text-align: left; }
-  .compare-table thead th {
-    font-size: 13px; font-weight: 600; color: var(--text-dim);
-    background: var(--bg-soft); border-bottom: 1px solid var(--border);
-  }
-  .compare-table thead th:last-child { color: var(--accent); }
-  .compare-table tbody td { border-bottom: 1px solid var(--border); color: var(--text-dim); }
-  .compare-table tbody tr:last-child td { border-bottom: none; }
-  .compare-table tbody td:first-child { color: var(--text); font-weight: 550; }
-  .compare-table tbody td:last-child { color: var(--text); background: rgba(217, 72, 15, 0.025); }
-  .compare-table .yes { color: var(--teal); margin-right: 7px; font-weight: 700; }
-  @media (max-width: 640px) {
-    .compare-table th, .compare-table td { padding: 12px 12px; font-size: 13px; }
-  }
-
   /* quickstart */
   .terminal {
     margin-top: 52px; background: var(--dark-bg); border: 1px solid var(--dark-border);
@@ -424,6 +402,39 @@
   .footer-inner a:hover { color: var(--text); }
   .footer-links { display: flex; gap: 22px; }
 
+  /* faq — Rote-style accordion */
+  .faq-list { margin-top: 48px; max-width: 720px; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-item:first-child { border-top: 1px solid var(--border); }
+  .faq-trigger {
+    width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    padding: 22px 0; background: none; border: none; cursor: pointer;
+    font-family: var(--font); font-size: 17px; font-weight: 600;
+    color: var(--text); text-align: left; letter-spacing: -0.01em;
+    transition: color 0.2s;
+  }
+  .faq-trigger:hover { color: var(--accent); }
+  .faq-icon {
+    flex-shrink: 0; width: 28px; height: 28px;
+    display: grid; place-items: center;
+    font-size: 22px; font-weight: 300; line-height: 1; color: var(--text-faint);
+    transition: transform 0.25s ease, color 0.2s;
+  }
+  .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent); }
+  .faq-panel {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+  }
+  .faq-item.open .faq-panel { grid-template-rows: 1fr; }
+  .faq-panel-inner {
+    overflow: hidden; color: var(--text-dim); font-size: 15px; line-height: 1.65;
+  }
+  .faq-panel-inner p { padding-bottom: 22px; }
+  .faq-panel-inner code {
+    font-size: 12.5px; background: var(--bg-soft); border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 4px;
+  }
+
   /* reveal animation */
   .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in { opacity: 1; transform: none; }
@@ -446,7 +457,7 @@
     <div class="nav-links">
       <a href="#surfaces">Surfaces</a>
       <a href="#how">How it works</a>
-      <a href="#compare">Why Tandem</a>
+      <a href="#faq">FAQ</a>
       <a href="#quickstart">Quickstart</a>
       <a class="nav-cta" href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
@@ -638,28 +649,6 @@
   </div>
 </section>
 
-<!-- ── COMPARISON ───────────────────────────────────── -->
-<section id="compare">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="section-kicker">Why Tandem</div>
-      <h2>Not another single-vendor bot.</h2>
-    </div>
-    <table class="compare-table reveal">
-      <thead>
-        <tr><th></th><th>Single-vendor Slack AI</th><th>Tandem</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Models</td><td>One vendor's models</td><td><span class="yes">✓</span>Any model the Cursor CLI supports</td></tr>
-        <tr><td>Surfaces</td><td>Slack only</td><td><span class="yes">✓</span>Slack + desktop + browser, one engine</td></tr>
-        <tr><td>Brain &amp; memory</td><td>Closed, hosted</td><td><span class="yes">✓</span>Yours, local, compounds as you work</td></tr>
-        <tr><td>Hosting</td><td>Vendor cloud</td><td><span class="yes">✓</span>Your machine, local-first</td></tr>
-        <tr><td>Access</td><td>Enterprise-gated</td><td><span class="yes">✓</span>Open source, works solo</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
 <!-- ── QUICKSTART ───────────────────────────────────── -->
 <section id="quickstart">
   <div class="wrap">
@@ -691,6 +680,85 @@
       <code>tandem pip</code> self-initializes on first run. Slack and Chrome setup live in each
       app's README. No PM OS required: Pip starts blank and builds your context as you go.
     </p>
+  </div>
+</section>
+
+<!-- ── FAQ ──────────────────────────────────────────── -->
+<section id="faq">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-kicker">FAQ</div>
+      <h2>Questions people actually ask</h2>
+      <p class="section-sub">The practical stuff — what you do, what Pip does, and where everything runs.</p>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button type="button" class="faq-trigger" aria-expanded="false">
+          So my team does… what, exactly?
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-panel" hidden>
+          <div class="faq-panel-inner">
+            <p>Ask in Slack, snip on desktop, or assign from Chrome — then steer or approve. Pip runs the Cursor agent against your workspace: reads memory, writes artifacts, logs decisions, and ships the outcome back on whichever surface you started from. You stay in the loop; Pip does the research, drafting, and file moves.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-trigger" aria-expanded="false">
+          Who actually runs the agent?
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-panel" hidden>
+          <div class="faq-panel-inner">
+            <p>You do — on your machine. Every surface shells out to <code>cursor-agent</code> with your repo as context. There is no Tandem cloud. Your models, your disk, your workspace.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-trigger" aria-expanded="false">
+          Is this a Cursor, Slack, or Google product?
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-panel" hidden>
+          <div class="faq-panel-inner">
+            <p>No. Tandem is an open-source personal project (MIT). It plugs into those surfaces but is not affiliated with any vendor or employer. Swap the CLI engine when you want — the surfaces and memory layer stay the same.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-trigger" aria-expanded="false">
+          Do I need PM OS or a skills library to start?
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-panel" hidden>
+          <div class="faq-panel-inner">
+            <p>No. Pip boots with blank <code>memory/</code> and builds context as you work. Mount PM OS (or any knowledge tree) if you want a rich starting point — totally optional.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-trigger" aria-expanded="false">
+          What about privacy and memory?
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-panel" hidden>
+          <div class="faq-panel-inner">
+            <p>Memory lives locally under your workspace — profile, activity log, and durable facts Pip reuses across Slack, desktop, and browser. No hosted brain, no cross-tenant data. You control what stays in the repo.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-trigger" aria-expanded="false">
+          Which models and tools work?
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-panel" hidden>
+          <div class="faq-panel-inner">
+            <p>Whatever the Cursor CLI supports — GPT, Claude, Gemini, Auto, and more. Set <code>CURSOR_AGENT_MODEL</code> or pass flags per call. From browser and desktop, Pip can also use WebSearch, shell, file writes, and MCP when you assign work with full autonomy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -786,6 +854,16 @@
     { threshold: 0.12 }
   );
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+  document.querySelectorAll(".faq-item").forEach((item) => {
+    const trigger = item.querySelector(".faq-trigger");
+    const panel = item.querySelector(".faq-panel");
+    trigger.addEventListener("click", () => {
+      const open = item.classList.toggle("open");
+      trigger.setAttribute("aria-expanded", open);
+      panel.hidden = !open;
+    });
+  });
 </script>
 </body>
 </html>

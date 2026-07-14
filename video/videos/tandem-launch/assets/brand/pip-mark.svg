@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="pipGrad" x1="28" y1="28" x2="172" y2="172" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d9480f"/>
+      <stop offset="100%" stop-color="#7048e8"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- soft plate -->
+  <rect x="16" y="16" width="168" height="168" rx="48" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  <!-- tandem pair -->
+  <rect x="42" y="42" width="88" height="88" rx="28" stroke="url(#pipGrad)" stroke-width="10" opacity="0.55"/>
+  <rect x="70" y="70" width="88" height="88" rx="28" stroke="url(#pipGrad)" stroke-width="10"/>
+  <!-- orbiting pip -->
+  <circle cx="148" cy="52" r="14" fill="#7048e8" filter="url(#glow)"/>
+</svg>

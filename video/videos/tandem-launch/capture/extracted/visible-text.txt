@@ -1,0 +1,221 @@
+[a] Surfaces
+[a] How it works
+[a] Why Tandem
+[a] Quickstart
+[a] GitHub ↗
+[div] Open source · MIT · Local-first
+[h1] One AI coworker.
+[h1] On every surface where you
+[h1] do the work —
+[span] Slack
+[p] Meet
+[strong] Pip
+[p] — in
+[strong] Slack
+[p] , on your
+[strong] desktop
+[p] , and in
+[strong] Chrome
+[p] . One memory, any model, runs on your machine.
+[code] curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash
+[button] Copy
+[a] Get started →
+[a] Star on GitHub
+[span] #product — Slack
+[b] @Pip
+[span] ship the launch one-pager from this thread — use our template
+[span] Shipped — read 34 messages,
+[b] wrote docs/launch-one-pager.md
+[span] , posted the draft here, and logged 2 open questions for design.
+[span] Pip — desktop
+[span] ⌘⇧T
+[span] snip a failing chart → "debug this and file it"
+[span] Done — traced the drop to Tuesday's deploy,
+[b] wrote the incident timeline
+[span] , filed repro steps in tasks.md, and queued a rollback checklist.
+[span] Pip — browser
+[span] Assign to Pip
+[span] on an RFP page → "turn this into tickets + a response outline"
+[span] Done — parsed the spec,
+[b] created 6 tasks in tasks.md
+[span] with owners, drafted the response outline, and saved vendor gaps to memory.
+[button] Slack
+[button] desktop
+[button] Chrome
+[div] The idea
+[h2] Most AI tools are a chat box.
+[h2] Tandem flips that.
+[p] A model wrapped in a chat window, locked to one vendor and one surface, that forgets you every
+        session. Tandem is built the other way around.
+[h3] The brain is yours — and it compounds
+[p] Pip starts with a blank memory and builds context as you work, saving durable facts to a local
+[code] memory/
+[p] it reuses on every surface. Have a capability OS like PM OS? Pip mounts it
+        as a rich starting point. Nothing is required to begin.
+[h3] The engine is model-agnostic
+[p] Every surface shells out to one shared adapter around
+[code] cursor-agent
+[p] . Switch from
+[code] gpt-5
+[code] sonnet-4
+[code] auto
+[p] with an env var — no new
+        integration, no vendor lock-in.
+[h3] The surfaces meet you where you are
+[p] A Slack teammate, a floating desktop widget, and a browser extension — all calling the
+[em] same
+[p] engine against the
+[em] same
+[p] workspace. One coworker, not three bots.
+[div] Three surfaces, one Pip
+[h2] Same coworker, same memory,
+[h2] everywhere you work.
+[span] Slack
+[h3] Tag @Pip like a teammate
+[p] Mention or DM Pip in any channel. It runs the agent in your workspace with your full
+          context, ships the artifact in-thread, and keeps going — thread continuity means follow-ups
+          pick up where you left off. Owner allow-lists keep it locked down.
+[span] you
+[span] @Pip
+[div] turn this thread into a decision log + update the PRD
+[span] pip
+[div] On it — reading 47 messages + your PRD template…
+[span] pip
+[span] Shipped.
+[div] decision-log.md written · PRD §3 updated · both posted here
+[div] Logged owners + next steps to
+[span] memory/log.md
+[span] Desktop
+[h3] Pip lives on your screen
+[p] A floating, always-on-top companion. Click to delegate, or hit
+[span] ⌘⇧T
+[p] to snip any part of your screen and have Pip run with it.
+          Pip grooms your
+[code] tasks.md
+[p] , writes the fix, and moves work across your board.
+[span] ◗ pip
+[span] · floating on your desktop
+[span] ⌘⇧T
+[div] → snip a CI failure →
+[span] "fix this and capture it"
+[span] pip
+[div] Opened the repo · wrote the patch · ran tests
+[span] (green)
+[div] Moved task
+[span] Needs triage → Done
+[div] in tasks.md · left a handoff note
+[span] Browser
+[h3] Page-aware work in Chrome
+[p] Point Pip at whatever tab you're on — the extension reads the page, and with
+[strong] Assign to Pip
+[p] it runs with full tool access: drafts docs, creates tasks,
+          and writes back to your workspace. Read-only by default until you explicitly assign.
+[span] tab
+[div] competitor.com/changelog
+[span] you
+[span] [Assign to Pip]
+[div] battlecard + Slack summary for #sales
+[span] pip
+[span] Shipped.
+[div] battlecard.md · 4 feature gaps · paste-ready Slack blurb
+[div] Saved pricing edge to
+[span] memory/
+[div] · follow-up added to
+[span] tasks.md
+[div] How it works
+[h2] Thin surfaces. One engine.
+[h2] A brain you own.
+[p] Every request follows the same path, no matter where it starts.
+[div] Surfaces
+[span] Pip · Slack
+[small] tag @Pip
+[span] Pip · Desktop
+[small] on-screen, ⌘⇧T snip
+[span] Pip · Chrome
+[small] page-aware work
+[div] Engine · @tandem/engine
+[span] runAgent()
+[div] → cursor-agent -p …
+[span] --model <any>
+[span] --workspace <repo>
+[div] Brain · your workspace
+[span] memory/
+[small] grows as you go
+[span] skills & knowledge
+[small] optional PM OS
+[span] AGENTS.md
+[small] auto-loaded charter
+[p] Because the workspace holds
+[code] AGENTS.md
+[p] , memory, and any mounted capability OS,
+        the agent has the full context on disk for every call — no per-surface plumbing.
+[div] Why Tandem
+[h2] Not another single-vendor bot.
+[th] Single-vendor Slack AI
+[th] Tandem
+[td] Models
+[td] One vendor's models
+[td] Any model the Cursor CLI supports
+[td] Surfaces
+[td] Slack only
+[td] Slack + desktop + browser, one engine
+[td] Brain & memory
+[td] Closed, hosted
+[td] Yours, local, compounds as you work
+[td] Hosting
+[td] Vendor cloud
+[td] Your machine, local-first
+[td] Access
+[td] Enterprise-gated
+[td] Open source, works solo
+[div] Quickstart
+[h2] Running in two minutes.
+[p] One command installs everything: the code, the
+[code] tandem
+[p] CLI, and the Cursor CLI if you need it.
+[span] zsh — ~/
+[span] # install tandem
+[span] curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash
+[span] ✓ node 20+ found  ✓ built  ✓ tandem on PATH  ✓ workspace initialized
+[span] # one-time model auth
+[span] cursor-agent login
+[span] # launch Pip on your desktop
+[span] tandem pip
+[span] ◗ Pip is on your screen. Say hi.
+[p] Prefer npm?
+[code] npm install -g @tandem/cli @tandem/pip @tandem/slack
+[p] — then
+[code] tandem pip
+[p] self-initializes on first run. Slack and Chrome setup live in each
+      app's README. No PM OS required: Pip starts blank and builds your context as you go.
+[div] FAQ
+[h2] Questions people actually ask
+[p] The practical stuff — what you do, what Pip does, and where everything runs.
+[button] So my team does… what, exactly?
+[p] Ask in Slack, snip on desktop, or assign from Chrome — then steer or approve. Pip runs the Cursor agent against your workspace: reads memory, writes artifacts, logs decisions, and ships the outcome back on whichever surface you started from. You stay in the loop; Pip does the research, drafting, and file moves.
+[button] Who actually runs the agent?
+[p] You do — on your machine. Every surface shells out to
+[code] cursor-agent
+[p] with your repo as context. There is no Tandem cloud. Your models, your disk, your workspace.
+[button] Is this a Cursor, Slack, or Google product?
+[p] No. Tandem is an open-source personal project (MIT). It plugs into those surfaces but is not affiliated with any vendor or employer. Swap the CLI engine when you want — the surfaces and memory layer stay the same.
+[button] Do I need PM OS or a skills library to start?
+[p] No. Pip boots with blank
+[code] memory/
+[p] and builds context as you work. Mount PM OS (or any knowledge tree) if you want a rich starting point — totally optional.
+[button] What about privacy and memory?
+[p] Memory lives locally under your workspace — profile, activity log, and durable facts Pip reuses across Slack, desktop, and browser. No hosted brain, no cross-tenant data. You control what stays in the repo.
+[button] Which models and tools work?
+[p] Whatever the Cursor CLI supports — GPT, Claude, Gemini, Auto, and more. Set
+[code] CURSOR_AGENT_MODEL
+[p] or pass flags per call. From browser and desktop, Pip can also use WebSearch, shell, file writes, and MCP when you assign work with full autonomy.
+[h2] Give your team a coworker,
+[span] not another chat box.
+[p] Open source, MIT licensed, runs on your machine. Context that compounds from day one.
+[a] Get Tandem on GitHub →
+[a] Read the quickstart
+[div] · co-created by
+[a] Sachin Gupta
+[a] Hardik Tiwari
+[a] Cursor CLI
+[div] MIT License · Personal project, not affiliated with any employer or vendor.

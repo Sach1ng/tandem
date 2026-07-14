@@ -40,3 +40,4 @@
 2026-07-11: Re-added Rote-inspired FAQ accordion to launch site (apps/website/index.html) — "Questions people actually ask" with 6 items; published to hardiktiwari.github.io/tandem-site (66cdd3b). Hardik asked from tryrote.com context.
 
 2026-07-11: Publish check — apps/website already in sync with hardiktiwari/tandem-site (66cdd3b); Pages status built; live https://hardiktiwari.github.io/tandem-site/
+- 2026-07-13: Rebranded product name Tandem → Pip across repo prose/UI (kept functional identifiers: @tandem pkg scope, tandem CLI, TANDEM_* env, com.tandem.* labels, existing URLs). Pushed monorepo to github.com/hardiktiwari/PIP-.

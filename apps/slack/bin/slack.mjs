@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Start the Tandem Slack coworker (loads config from ~/.tandem/slack/.env).
+ * Start the Pip Slack coworker (loads config from ~/.tandem/slack/.env).
  */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";

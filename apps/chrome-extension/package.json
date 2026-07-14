@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Pip — Tandem's page-aware Chrome extension. Ambient prompts about whatever page you're on.",
+  "description": "Pip — your page-aware Chrome extension. Ambient prompts about whatever page you're on.",
   "scripts": {
     "build": "node build.mjs",
     "bridge": "node --env-file=.env --import tsx bridge/server.ts"

@@ -18,7 +18,7 @@ const hasWorkspace = existsSync(join(ws, "AGENTS.md"));
 const hasPmOs = isPmOsDir(defaultPmOsDir(ws));
 
 if (!hasWorkspace && !hasPmOs) {
-  console.error(`No Tandem workspace at ${ws}. Run: tandem init`);
+  console.error(`No Pip workspace at ${ws}. Run: tandem init`);
   console.error(`Or launch Pip and choose a PM OS knowledge base folder when prompted.`);
   process.exit(1);
 }

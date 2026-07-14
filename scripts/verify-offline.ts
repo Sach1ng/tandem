@@ -68,7 +68,7 @@ const prompt = assemblePrompt({
   userId: "U9",
   task: "draft the announcement",
 });
-check("includes persona (executor voice)", /Tandem/i.test(prompt));
+check("includes persona (executor voice)", /Pip/i.test(prompt));
 check("includes channel context", prompt.includes("#launch"));
 check("includes thread history", prompt.includes("when is the demo?"));
 check("includes the task", prompt.includes("draft the announcement"));
@@ -82,16 +82,16 @@ check("Slack bot display_name: Pip", slackManifest.features?.bot_user?.display_n
 check("Slack manifest mentions Pip", /Pip/.test(slackManifest.display_information?.long_description ?? ""));
 
 const chromeManifest = JSON.parse(readFileSync(join(ROOT, "apps/chrome-extension/public/manifest.json"), "utf8"));
-check("Chrome extension name: Tandem Pip", chromeManifest.name === "Tandem Pip");
+check("Chrome extension name: Pip", chromeManifest.name === "Pip");
 check("Chrome short_name: Pip", chromeManifest.short_name === "Pip");
 
 const chromePopup = readFileSync(join(ROOT, "apps/chrome-extension/public/popup.html"), "utf8");
 check("Chrome popup brand: Pip", chromePopup.includes(">Pip<"));
-check("Chrome popup: by Tandem", chromePopup.includes("by Tandem"));
+check("Chrome popup: your AI coworker", chromePopup.includes("your AI coworker"));
 check("Chrome popup CTA: Ask Pip", chromePopup.includes("Ask Pip"));
 
 const chromeBridge = readFileSync(join(ROOT, "apps/chrome-extension/bridge/server.ts"), "utf8");
-check("Pip bridge persona", /You are Pip, Tandem's page-aware browser surface/.test(chromeBridge));
+check("Pip bridge persona", /You are Pip, your page-aware browser surface/.test(chromeBridge));
 check("Pip bridge autonomy charter", /PIP_AGENT_AUTONOMY|WebSearch/.test(chromeBridge));
 check("Pip bridge configurable timeout", /TIMEOUT_MS/.test(chromeBridge));
 
@@ -101,7 +101,7 @@ check("Pip desktop web browse", /WebSearch/.test(pipAgent));
 check("Pip screenshot @-path prompt", /@\$\{imagePath\}/.test(pipAgent));
 
 const pipHtml = readFileSync(join(ROOT, "apps/pip/ui/index.html"), "utf8");
-check("Pip UI title", pipHtml.includes("Pip · Tandem"));
+check("Pip UI title", pipHtml.includes("Pip"));
 check("Pip placeholder", pipHtml.includes("Ask Pip"));
 
 const pipConfig = JSON.parse(readFileSync(join(ROOT, "apps/pip/config.default.json"), "utf8"));

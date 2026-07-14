@@ -31,7 +31,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 function usage(): void {
-  console.log(`Tandem — ambient AI coworker, Pip (Slack, desktop, browser)
+  console.log(`Pip — ambient AI coworker, Pip (Slack, desktop, browser)
 
 Usage:
   tandem init [dir]       Initialize workspace (~/.tandem by default)
@@ -65,7 +65,7 @@ async function cmdInit(args: string[]): Promise<void> {
   const dirArg = args.find((a) => !a.startsWith("-"));
   const result = initWorkspace({ dir: dirArg, force });
 
-  console.log(`\n✅ Tandem workspace ready at ${result.dir}\n`);
+  console.log(`\n✅ Pip workspace ready at ${result.dir}\n`);
   if (result.created.length) {
     console.log("Created:");
     for (const f of result.created) console.log(`  ${f}`);
@@ -85,7 +85,7 @@ Next steps:
 async function cmdDoctor(): Promise<void> {
   const checks = await runDoctor();
   let allOk = true;
-  console.log("\nTandem doctor\n");
+  console.log("\nPip doctor\n");
   for (const c of checks) {
     console.log(`  ${c.ok ? "✓" : "✗"} ${c.name}: ${c.detail}`);
     if (!c.ok) allOk = false;

@@ -1,6 +1,6 @@
 # Architecture
 
-Tandem is three layers: **surfaces** (where you interact), an **engine** (one adapter around the
+Pip is three layers: **surfaces** (where you interact), an **engine** (one adapter around the
 Cursor CLI), and a **brain** (the PM OS submodule the agent runs inside). The value is the seam
 between them: every surface is thin, the engine is shared, and the brain is swappable.
 
@@ -16,7 +16,7 @@ surface event ─▶ build prompt (persona + AGENTS.md charter + surface context
              ─▶ surface renders text; persists chatId for the next turn
 ```
 
-Because `--workspace` is the Tandem repo (which contains `AGENTS.md` and the PM OS submodule), the
+Because `--workspace` is the Pip repo (which contains `AGENTS.md` and the PM OS submodule), the
 agent has the full capability OS on disk for every call — no per-surface plumbing.
 
 ## The engine (`packages/engine`)

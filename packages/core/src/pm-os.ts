@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-/** Default PM OS location inside a Tandem workspace. */
+/** Default PM OS location inside a Pip workspace. */
 export function defaultPmOsDir(workspace: string): string {
   return join(workspace, "external", "pm-operating-os");
 }
@@ -13,7 +13,7 @@ export function isPmOsDir(dir: string): boolean {
 
 /**
  * Directory passed to cursor-agent `--workspace`.
- * Prefer the PM OS root when it has its own AGENTS.md; otherwise the Tandem workspace.
+ * Prefer the PM OS root when it has its own AGENTS.md; otherwise the Pip workspace.
  */
 export function resolveAgentWorkspace(workspace: string, knowledgeBase?: string): string {
   const kb = knowledgeBase?.trim();

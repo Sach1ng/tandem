@@ -78,7 +78,7 @@ async function exchangeCode(
 
 function successHtml(team: string): string {
   return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><title>Tandem — Slack connected</title>
+<html lang="en"><head><meta charset="utf-8"/><title>Pip — Slack connected</title>
 <style>body{font:16px system-ui,sans-serif;background:#0f1117;color:#e8eaed;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
 .card{background:#1a1d27;border:1px solid #2a2f3a;border-radius:12px;padding:32px;max-width:420px;text-align:center}
 h1{font-size:1.25rem;margin:0 0 8px}p{color:#9aa0a6;margin:0}</style></head>
@@ -89,7 +89,7 @@ h1{font-size:1.25rem;margin:0 0 8px}p{color:#9aa0a6;margin:0}</style></head>
 function errorHtml(message: string): string {
   const safe = message.replace(/</g, "&lt;");
   return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><title>Tandem — Connection failed</title>
+<html lang="en"><head><meta charset="utf-8"/><title>Pip — Connection failed</title>
 <style>body{font:16px system-ui,sans-serif;background:#0f1117;color:#e8eaed;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
 .card{background:#3a1a1a;border:1px solid #5a2a2a;border-radius:12px;padding:32px;max-width:480px;text-align:center}
 h1{font-size:1.25rem;margin:0 0 8px}p{color:#ffb4b4;margin:0;word-break:break-word}</style></head>
@@ -166,7 +166,7 @@ export async function runSlackConnect(opts: SlackConnectOptions = {}): Promise<S
   const authUrl = buildAuthorizeUrl(creds, state, port);
   const timeoutMs = opts.timeoutMs ?? 300_000;
 
-  console.log("\nConnecting Tandem to Slack…\n");
+  console.log("\nConnecting Pip to Slack…\n");
   console.log(`Redirect URI: ${redirectUri(port)}`);
   console.log("(Must be registered in your Slack app → OAuth & Permissions → Redirect URLs)\n");
 

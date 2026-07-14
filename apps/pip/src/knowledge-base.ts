@@ -24,7 +24,7 @@ function readUserConfig(): Record<string, unknown> {
   }
 }
 
-/** Persist chosen knowledge base for future Pip / Tandem runs. */
+/** Persist chosen knowledge base for future Pip runs. */
 export function saveKnowledgeBase(dir: string): void {
   const path = userConfigPath();
   mkdirSync(join(homedir(), ".tandem"), { recursive: true });
@@ -37,7 +37,7 @@ export function saveKnowledgeBase(dir: string): void {
  *
  * `knowledgeBase` — the brain on disk. A full PM OS (skills/knowledge/memory) if one is available,
  *   otherwise the workspace itself in grow-as-you-go mode (Pip reads/writes `memory/` there).
- * `agentWorkspace` — cursor-agent `--workspace` (kept at the Tandem workspace so every ask doesn't
+ * `agentWorkspace` — cursor-agent `--workspace` (kept at the Pip workspace so every ask doesn't
  *   boot the full PM OS tree; the agent reads skills/knowledge via tools / @paths on demand).
  *
  * Never throws and never blocks on a folder picker: a first-time user with no context still gets a

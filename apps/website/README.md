@@ -1,6 +1,6 @@
-# Tandem launch website
+# Pip launch website
 
-Static site for Tandem — no build step, no dependencies. Deployed to **GitHub Pages**.
+Static site for Pip — no build step, no dependencies. Deployed to **GitHub Pages**.
 
 **Live:** https://hardiktiwari.github.io/tandem-site/  
 **Roadmap demo:** https://hardiktiwari.github.io/tandem-site/roadmap.html

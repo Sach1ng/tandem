@@ -54,7 +54,7 @@ function askPrompt(cfg: PipConfig, question: string): string {
   const pm = usePmHint ? `\n${PM_OS_HINT(cfg.knowledgeBase)}` : "";
   const mem = memoryContext(cfg);
   const style = isShortQuestion(q) ? "Reply in 1–3 sentences." : "Lead with the answer.";
-  return `You are Pip, Tandem's desktop coworker. ${style} Be concise.
+  return `You are Pip, your desktop coworker. ${style} Be concise.
 If context is thin or the question needs current external info, use WebSearch and WebFetch to finish anyway — state assumptions briefly.
 
 ${PIP_AGENT_AUTONOMY}${pm}${mem}

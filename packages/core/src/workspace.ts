@@ -24,7 +24,7 @@ export function findWorkspaceFromCwd(start = process.cwd()): string | undefined 
 }
 
 /**
- * Resolve the Tandem workspace directory.
+ * Resolve the Pip workspace directory.
  *
  * Priority:
  *  1. TANDEM_WORKSPACE env

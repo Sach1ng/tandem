@@ -3,7 +3,7 @@
     "name": "Pip",
     "description": "Your team's AI coworker in Slack — tag @Pip in any channel. Powered by the Cursor CLI and PM OS.",
     "background_color": "#242428",
-    "long_description": "Pip is the Slack surface of Tandem, your ambient AI coworker. Mention @Pip or DM it to run tasks against your PM OS workspace. Same Pip you get on desktop and in the browser."
+    "long_description": "Pip is your ambient AI coworker in Slack. Mention @Pip or DM it to run tasks against your PM OS workspace. Same Pip you get on desktop and in the browser."
   },
   "features": {
     "bot_user": {

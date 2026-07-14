@@ -1,14 +1,14 @@
-# Pip — Tandem's browser surface
+# Pip — your browser surface
 
-**Pip** is Tandem's page-aware Chrome extension — it reads whatever tab you're on (a ticket, a doc,
+**Pip** is Pip's page-aware Chrome extension — it reads whatever tab you're on (a ticket, a doc,
 a dashboard) and answers questions through a local bridge that calls the Cursor CLI against PM OS.
 
 ## Naming
 
 | Layer | Name |
 |---|---|
-| Product | **Tandem** |
-| This extension | **Pip** (shows in Chrome as *Tandem Pip*) |
+| Product | **Pip** |
+| This extension | **Pip** (shows in Chrome as *Pip*) |
 | Desktop buddy | **Pip** |
 | Slack teammate | **Pip** (`@Pip`) |
 | Brain | **PM OS** |
@@ -27,7 +27,7 @@ npm run bridge             # → http://127.0.0.1:8765
 Then load it in Chrome:
 1. `chrome://extensions` → enable **Developer mode**
 2. **Load unpacked** → select `apps/chrome-extension/dist`
-3. Pin **Tandem Pip**, open any page, click the icon — or press **⌘B** to summon Pip in-page.
+3. Pin **Pip**, open any page, click the icon — or press **⌘B** to summon Pip in-page.
 4. Set the shortcut at `chrome://extensions/shortcuts` if **⌘B** conflicts with another extension.
 
 ## How it works

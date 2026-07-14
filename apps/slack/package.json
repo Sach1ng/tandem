@@ -1,7 +1,7 @@
 {
   "name": "@tandem/slack",
   "version": "0.1.0",
-  "description": "Tandem Slack coworker — OAuth connect + local Socket Mode bot backed by cursor-agent.",
+  "description": "Pip Slack coworker — OAuth connect + local Socket Mode bot backed by cursor-agent.",
   "type": "module",
   "main": "./dist/app.cjs",
   "exports": {

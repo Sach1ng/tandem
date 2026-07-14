@@ -71,7 +71,7 @@ export const CtaScene: React.FC = () => {
             transform: `translateY(${interpolate(nameEnter, [0, 1], [20, 0])}px)`,
           }}
         >
-          Tandem
+          Pip
         </div>
         <Subhead delay={20} size={30} style={{ textAlign: "center" }}>
           The ambient AI coworker. Open source, local-first, any model.

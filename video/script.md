@@ -1,4 +1,4 @@
-# Tandem / Pip — launch video script
+# Pip — launch video script
 
 **Format:** 16:9 · 30 fps · ~65s  
 **Story:** One task, three surfaces, one brain that compounds.
@@ -11,7 +11,7 @@
 | 4 | **Desktop** | 0:23–0:41 | **Lives on your screen.** Pip floats on the desktop. ⌘⇧T to snip anything and ask — same task, same context. | `desktop-demo.mp4` |
 | 5 | **Browser** | 0:41–0:55 | **Answers on any tab.** Page-aware prompts on whatever you're reading — still the same thread from this morning. | `browser-demo.mp4` |
 | 6 | **Payoff** | 0:55–1:00 | **One coworker. Many surfaces. One brain that compounds.** Your models · Your machine · Your context. | Motion graphic |
-| 7 | **CTA** | 1:00–1:06 | **Tandem** — The ambient AI coworker. Open source, local-first, any model. `$ tandem pip` | Logo + command |
+| 7 | **CTA** | 1:00–1:06 | **Pip** — The ambient AI coworker. Open source, local-first, any model. `$ tandem pip` | Logo + command |
 
 ## Recording notes (what we have)
 

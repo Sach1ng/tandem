@@ -1,7 +1,7 @@
 {
   "name": "@tandem/cli",
   "version": "0.1.0",
-  "description": "Tandem CLI — init a workspace, run doctor checks, launch Pip. No git required.",
+  "description": "Pip CLI — init a workspace, run doctor checks, launch Pip. No git required.",
   "type": "module",
   "bin": {
     "tandem": "./bin/tandem.mjs"

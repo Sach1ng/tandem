@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Always-on launcher for the Tandem Slack coworker.
+# Always-on launcher for the Pip Slack coworker.
 # Use with the launchd plist (RunAtLoad + KeepAlive) — NOT cron, which can't reach the
 # keychain/GUI session that cursor-agent's auth needs.
 set -euo pipefail

@@ -1,6 +1,6 @@
-# Tandem — launch + demo video
+# Pip — launch + demo video
 
-A [Remotion](https://remotion.dev) project that renders the Tandem / Pip launch video:
+A [Remotion](https://remotion.dev) project that renders the Pip launch video:
 a ~50s, 16:9 day-in-the-life story that follows one task across all three surfaces
 (Slack → desktop → browser) and lands on the "one brain that compounds" payoff + CTA.
 

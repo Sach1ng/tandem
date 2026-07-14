@@ -1,7 +1,7 @@
 {
   "name": "@tandem/core",
   "version": "0.1.0",
-  "description": "Shared Tandem utilities: Slack mrkdwn, atomic JSON state, workspace charter, workspace resolution.",
+  "description": "Shared Pip utilities: Slack mrkdwn, atomic JSON state, workspace charter, workspace resolution.",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

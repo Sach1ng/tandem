@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
 /**
- * Deterministic, line-faithful writes to a Tandem `tasks.md` board, usable from any surface
+ * Deterministic, line-faithful writes to a Pip `tasks.md` board, usable from any surface
  * (Pip's web bridge, the CLI, tests) without importing Electron. Mirrors the section contract and
  * line-id scheme of Pip's parser/task-file so Pip's watcher and parser stay in sync.
  */

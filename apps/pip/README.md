@@ -1,13 +1,13 @@
-# Pip — Tandem's desktop coworker
+# Pip — your desktop coworker
 
-A frameless AI coworker on your desktop — Pip is Tandem's **visual** surface: a general AI assistant,
+A frameless AI coworker on your desktop — Pip is your **visual** surface: a general AI assistant,
 not a task board.
 
 ## Naming
 
 | Layer | Name | What it is |
 |---|---|---|
-| **Product** | Tandem | Ambient AI coworker across Slack, desktop, and Chrome |
+| **Product** | Pip | Ambient AI coworker across Slack, desktop, and Chrome |
 | **Desktop** | **Pip** | Pip on your screen (this app) |
 | **Slack teammate** | **Pip** (`@Pip`) | Team channels and DMs |
 | **Browser** | **Pip** | Chrome extension for page-aware Q&A |

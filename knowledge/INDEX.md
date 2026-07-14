@@ -25,13 +25,13 @@ Do not invent strategy, metrics, or product facts — cite the linked files and 
 
 ---
 
-## Tandem workspace (this repo)
+## Pip workspace (this repo)
 
 | Resource | Path | Purpose |
 |---|---|---|
 | Workspace charter | [`AGENTS.md`](../AGENTS.md) | Pip persona, memory rules, PM routing |
 | Architecture | [`docs/architecture.md`](../docs/architecture.md) | Surfaces, engine, brain layers |
-| Product overview | [`README.md`](../README.md) | Tandem / Pip positioning, quickstart |
+| Product overview | [`README.md`](../README.md) | Pip positioning, quickstart |
 | Launch site | [`apps/website/index.html`](../apps/website/index.html) | Public messaging |
 | Session memory | [`memory/log.md`](../memory/log.md) | Dated decisions and outcomes |
 | User profile | [`memory/profile.md`](../memory/profile.md) | Durable preferences (create if missing) |
@@ -74,7 +74,7 @@ Configured in Pip as **`knowledgeBase`**: `/Users/hardiktiwar/Desktop/PM OS`
 
 ---
 
-## PM OS submodule (bundled with Tandem)
+## PM OS submodule (bundled with Pip)
 
 Path: [`external/pm-operating-os/`](../external/pm-operating-os/)
 
@@ -124,7 +124,7 @@ Optional supplements: `research-add-items`, `research-add-fields`.
 | Resource | URL |
 |---|---|
 | PM Operating System (upstream) | https://github.com/hardiktiwari/PM-operating-OS |
-| Tandem (upstream) | https://github.com/Sach1ng/tandem |
+| Pip (upstream) | https://github.com/Sach1ng/tandem |
 | Slack app / bot token | https://api.slack.com/apps |
 | GitHub PAT (MCP) | https://github.com/settings/tokens |
 | Figma PAT (MCP) | https://www.figma.com/settings |

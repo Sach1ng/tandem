@@ -86,7 +86,7 @@
 ## Line 8 — CTA (Frame 8)
 
 **Time:** 102.3 – 107.3s
-**Delivery:** Soft close. End card: Pip orb + **Tandem** + champagne **Meet Pip.** + install cmds.
+**Delivery:** Soft close. End card: Pip orb + **Pip** + champagne **Meet Pip.** + install cmds.
 
     $ curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash
     $ tandem pip

@@ -53,7 +53,7 @@ async function main() {
     throw new Error(`Agent did not return expected text. Got: ${text}`);
   }
 
-  await postReply(bot, channel, String(Date.now() / 1000), `✅ Tandem smoke test passed.\n\n_${text}_`);
+  await postReply(bot, channel, String(Date.now() / 1000), `✅ Pip smoke test passed.\n\n_${text}_`);
   console.log("✓ posted confirmation to your Slack DM");
   console.log("✅ slack smoke PASS");
 }

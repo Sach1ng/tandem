@@ -13,7 +13,7 @@ export interface OAuthPublicConfig {
 export interface OAuthCredentials {
   clientId: string;
   clientSecret: string;
-  /** Shared app-level token (connections:write) for Socket Mode — one per Tandem Slack app. */
+  /** Shared app-level token (connections:write) for Socket Mode — one per Pip Slack app. */
   appToken: string;
   redirectPort: number;
   botScopes: string[];
@@ -44,7 +44,7 @@ function readPublicConfig(): OAuthPublicConfig {
 }
 
 /**
- * Load OAuth credentials for the Tandem distributed Slack app.
+ * Load OAuth credentials for the Pip distributed Slack app.
  *
  * clientId may ship in oauth.public.json; secret + app token come from env
  * (never commit those — set them when you register the app on api.slack.com).
@@ -64,7 +64,7 @@ export function loadOAuthCredentials(): OAuthCredentials {
 
   if (missing.length) {
     throw new OAuthConfigError(
-      `Tandem Slack OAuth is not configured. Set:\n${missing.map((m) => `  • ${m}`).join("\n")}\n\n` +
+      `Pip Slack OAuth is not configured. Set:\n${missing.map((m) => `  • ${m}`).join("\n")}\n\n` +
         "Register a distributed app at https://api.slack.com/apps → Activate Public Distribution,\n" +
         "add redirect URL http://127.0.0.1:8767/oauth/callback, create an app-level token (connections:write).\n" +
         "Or run `tandem slack setup` for manual token entry.",

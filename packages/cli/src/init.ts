@@ -3,7 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { agentsFile, brainDir, tasksTemplate } from "@tandem/pm-os";
 import { defaultWorkspaceHome, ensureBrainScaffold } from "@tandem/core";
 
-const MINIMAL_AGENTS = `# Tandem — Workspace Charter
+const MINIMAL_AGENTS = `# Pip — Workspace Charter
 
 Auto-loaded by cursor-agent on every run. This is Pip's shared, persistent context.
 
@@ -73,7 +73,7 @@ function seedFile(dest: string, contents: string, force: boolean, created: strin
 }
 
 /**
- * Initialize a Tandem workspace on disk — no git or GitHub required.
+ * Initialize a Pip workspace on disk — no git or GitHub required.
  *
  * The PM OS brain is OPTIONAL: if the bundled brain is available it's copied as a rich starting
  * point; if not, Pip still works with a minimal, self-growing scaffold (AGENTS.md + memory/).

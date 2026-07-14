@@ -134,7 +134,7 @@ async function main() {
   const userClient = cfg.userToken ? new WebClient(cfg.userToken) : null;
 
   const botUserId = await getBotUserId(botClient);
-  console.log(`Tandem Slack coworker starting as ${botUserId}`);
+  console.log(`Pip Slack coworker starting as ${botUserId}`);
   console.log(`Workspace: ${cfg.workdir}`);
   console.log(`Model: ${cfg.model} via ${cfg.cursorBin}`);
   console.log(`Owners: ${cfg.allowedUsers.length ? cfg.allowedUsers.join(", ") : "(anyone — set ALLOWED_USERS!)"}`);

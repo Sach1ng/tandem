@@ -33,7 +33,7 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
   const initialized = existsSync(join(ws, "AGENTS.md"));
   // Not a hard failure: `tandem pip` (and the installer) create the workspace automatically.
   checks.push({
-    name: "Tandem workspace",
+    name: "Pip workspace",
     ok: true,
     detail: initialized
       ? ws

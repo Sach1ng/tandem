@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  launchd LaunchAgent for the Tandem Slack coworker.
+  launchd LaunchAgent for the Pip Slack coworker.
   1. Edit the paths below to match your machine.
   2. Copy to ~/Library/LaunchAgents/com.tandem.slack.plist
   3. launchctl load ~/Library/LaunchAgents/com.tandem.slack.plist

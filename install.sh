@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Tandem — one-command installer for Pip, your ambient AI coworker.
+# Pip — one-command installer for Pip, your ambient AI coworker.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash
 #
 # Safe to re-run. It will:
 #   1. check Node >= 20.6 (and git),
-#   2. clone or update the Tandem repo (~/.tandem-app),
+#   2. clone or update the Pip repo (~/.tandem-app),
 #   3. install deps + build,
 #   4. put the `tandem` command on your PATH,
 #   5. make sure the Cursor CLI is installed,
@@ -25,7 +25,7 @@ ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; }
 warn() { printf '  \033[33m!\033[0m %s\n' "$1"; }
 die()  { printf '  \033[31m✗ %s\033[0m\n' "$1" >&2; exit 1; }
 
-bold "Tandem installer"
+bold "Pip installer"
 
 # 1. Prerequisites -------------------------------------------------------------
 command -v node >/dev/null 2>&1 || die "Node.js is required (>= 20.6). Install from https://nodejs.org and re-run."
@@ -38,7 +38,7 @@ ok "Node $(node -v)"
 command -v git >/dev/null 2>&1 || die "git is required."
 
 # 2. Clone or update -----------------------------------------------------------
-# If run from inside a Tandem checkout, use it in place; otherwise clone.
+# If run from inside a Pip checkout, use it in place; otherwise clone.
 if [ -f "package.json" ] && node -p "require('./package.json').name" 2>/dev/null | grep -q '^tandem$'; then
   APP_DIR="$(pwd)"
   info "Using current checkout: $APP_DIR"

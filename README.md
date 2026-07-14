@@ -1,6 +1,6 @@
-# PIP
+# Pip
 
-**An ambient AI coworker that lives where you work.** Tandem is **Pip** — one coworker who shows up
+**An ambient AI coworker that lives where you work.** **Pip** is one coworker who shows up
 in Slack, on your screen, and in your browser. Pip starts with a blank memory and **builds your
 context as you go**, or mounts a capability OS you own (like
 [PM OS](https://github.com/hardiktiwari/PM-operating-OS)) if you have one. It's powered by the
@@ -15,7 +15,7 @@ context as you go**, or mounts a capability OS you own (like
 ## The idea
 
 Most "AI in your tools" products are a model wrapped in a chat box, locked to one vendor and one
-surface. Tandem flips that:
+surface. Pip flips that:
 
 1. **The brain is yours, and it compounds.** Pip works from day one with zero setup — it saves what
    it learns to a local `memory/` and reuses it on every surface, so context grows as you work. Bring
@@ -55,7 +55,7 @@ surface. Tandem flips that:
 | **Desktop** | **Pip** | Pip lives on your screen. Click to ask; **⌘⇧T** to snip and get an answer. | `apps/pip` |
 | **Browser** | **Pip** | Page-aware prompts about whatever tab you're on, via a local bridge to the engine. | `apps/chrome-extension` |
 
-All three import `@tandem/engine`. One product (**Tandem**), one coworker (**Pip**) in three places, one brain (**PM OS**).
+All three import `@tandem/engine`. One coworker (**Pip**) in three places, one brain (**PM OS**).
 
 ---
 
@@ -89,7 +89,7 @@ npm install -g @tandem/cli @tandem/pip @tandem/slack
 tandem pip               # self-initializes ~/.tandem on first run, then launches
 tandem doctor            # optional: verify Node + cursor-agent
 
-# Slack (after the Tandem OAuth app is configured — see apps/slack/README.md)
+# Slack (after the Pip OAuth app is configured — see apps/slack/README.md)
 tandem slack connect     # one-click OAuth install into your workspace
 tandem slack start       # run the coworker bot locally
 ```
@@ -159,9 +159,9 @@ Two deliberate design choices, both from hard-won experience:
 
 ---
 
-## How Tandem differs from a single-vendor Slack bot
+## How Pip differs from a single-vendor Slack bot
 
-|  | Single-vendor Slack AI | **Tandem** |
+|  | Single-vendor Slack AI | **Pip** |
 |---|---|---|
 | Models | One vendor's models | **Any** model the Cursor CLI supports |
 | Surfaces | Slack only | **Slack + desktop + browser**, one shared engine |
@@ -208,7 +208,7 @@ npm publish --workspace @tandem/cli
 `cursor-agent --force` lets the agent run shell on your machine — that's how it gets work done, and
 it's remote code execution by design. So:
 - **Always set `ALLOWED_USERS`** in the Slack app. Empty = anyone in the channel can run commands.
-- The browser bridge binds to `127.0.0.1` only and refuses any request that isn't from the Tandem
+- The browser bridge binds to `127.0.0.1` only and refuses any request that isn't from the Pip
   extension: it enforces a loopback `Host` (anti DNS-rebind) and checks the browser-set, unforgeable
   `Origin`, so no web page can reach it (blocks both `cors` and `no-cors` POSTs). Its `/ask` endpoint
   runs in **read-only `ask` mode**; only the explicit **Assign to Pip** action (`/assign`) runs with

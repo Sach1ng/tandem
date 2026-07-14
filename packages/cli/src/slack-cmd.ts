@@ -27,7 +27,7 @@ export async function cmdSlackConnect(args: string[]): Promise<void> {
 
   if (!hasOAuthCredentials()) {
     console.error(
-      "Tandem Slack OAuth credentials are not configured on this install.\n\n" +
+      "Pip Slack OAuth credentials are not configured on this install.\n\n" +
         "The maintainer must set (or ship in oauth.public.json):\n" +
         "  TANDEM_SLACK_CLIENT_ID\n" +
         "  TANDEM_SLACK_CLIENT_SECRET\n" +
@@ -58,7 +58,7 @@ export async function cmdSlackConnect(args: string[]): Promise<void> {
 export async function cmdSlackStart(): Promise<void> {
   const ws = resolveWorkspace();
   if (!existsSync(join(ws, "AGENTS.md"))) {
-    console.error(`No Tandem workspace at ${ws}. Run: tandem init`);
+    console.error(`No Pip workspace at ${ws}. Run: tandem init`);
     process.exit(1);
   }
 
@@ -112,7 +112,7 @@ export function cmdSlackStatus(): void {
   const oauthReady = hasOAuthCredentials();
   const ws = resolveWorkspace();
 
-  console.log("\nTandem Slack status\n");
+  console.log("\nPip Slack status\n");
   console.log(`  Workspace:     ${ws}`);
   console.log(`  OAuth ready:   ${oauthReady ? "yes (distributed app configured)" : "no — use tandem slack setup"}`);
   console.log(`  Connected:     ${connected ? "yes" : "no — run tandem slack connect"}`);

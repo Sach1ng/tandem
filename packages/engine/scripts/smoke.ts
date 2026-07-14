@@ -19,7 +19,7 @@ async function main() {
   const model = arg("model", "auto");
   const cliBin = arg("bin", "cursor-agent");
 
-  console.log("Tandem engine smoke test\n");
+  console.log("Pip engine smoke test\n");
   const version = await checkCli(cliBin);
   if (!version) {
     console.error(`✗ ${cliBin} not found.`);

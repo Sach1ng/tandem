@@ -92,7 +92,7 @@
 | 1:52 | Browsing tryrote.com — a product page | "Say I'm doing research, and I'm on some product page I like." |
 | ~1:57 | Pip panel opens — already names the site | "One click — Pip's there. And it already knows what page I'm on. I can summarize it, research it… or hand it real work." |
 | ~2:02 | Typing the ask (fast burst) | "So I tell it: this FAQ section is good — build one like it for **our** site. [pause] Hit assign… and I walk away." |
-| ~2:09 | Cut to the Tandem site — quickstart | "And Pip's already on our site. This is the real one, by the way — live on GitHub Pages." |
+| ~2:09 | Cut to the Pip site — quickstart | "And Pip's already on our site. This is the real one, by the way — live on GitHub Pages." |
 | ~2:14 | The new FAQ, live | "There it is — written and shipped. Same Pip, same memory as Slack and desktop." |
 
 ---

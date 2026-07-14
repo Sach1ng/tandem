@@ -23,14 +23,14 @@ const MODEL = process.env.CURSOR_MODEL?.trim() || "auto";
 const CURSOR_BIN = process.env.CURSOR_BIN?.trim() || "cursor-agent";
 const TIMEOUT_MS = Number(process.env.TANDEM_BRIDGE_TIMEOUT_MS ?? 600_000);
 
-const BROWSER_PERSONA = `You are Pip, Tandem's page-aware browser surface. The user is looking at a web
+const BROWSER_PERSONA = `You are Pip, your page-aware browser surface. The user is looking at a web
 page and has asked you something about it. Lead with the answer. Be concise and skimmable.
 Use the page context provided. If it is a PM artifact (PRD, ticket, dashboard, doc), apply the
 relevant PM OS skill from the workspace. Never invent facts; if the page context is insufficient, say so.
 
 ${PIP_AGENT_AUTONOMY}`;
 
-const ASSIGN_PERSONA = `You are Pip, Tandem's page-aware browser surface, acting on a task the user
+const ASSIGN_PERSONA = `You are Pip, your page-aware browser surface, acting on a task the user
 just assigned from a web page (or typed directly). Do the task now using any context provided, then
 lead with the result. This answer is saved to the user's task board and shown on their desktop.
 If context is thin, use WebSearch and workspace skills to finish anyway — state assumptions briefly.
@@ -162,7 +162,7 @@ const server = createServer(async (req, res) => {
     res.writeHead(403).end("forbidden");
     return;
   }
-  // Block any browser context that isn't the Tandem extension. A web page's fetch always carries its
+  // Block any browser context that isn't the Pip extension. A web page's fetch always carries its
   // real, unforgeable Origin, so this stops both cors and no-cors POSTs to /assign (the RCE vector).
   // Requests with no Origin (curl, local tooling, tests) are allowed on loopback.
   if (origin !== undefined && !isTrustedOrigin(origin)) {
@@ -257,7 +257,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", async () => {
-  console.log(`Pip bridge (Tandem) on http://127.0.0.1:${PORT}`);
+  console.log(`Pip bridge (Pip) on http://127.0.0.1:${PORT}`);
   console.log(`Workspace: ${WORKDIR}  ·  Model: ${MODEL}`);
   console.log(`Tasks file: ${TASKS_FILE}`);
   const version = await checkCli(CURSOR_BIN);

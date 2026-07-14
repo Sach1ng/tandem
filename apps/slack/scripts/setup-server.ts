@@ -21,7 +21,7 @@ function htmlPage(manifest: string, envPath: string): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tandem — Slack setup</title>
+  <title>Pip — Slack setup</title>
   <style>
     :root { --bg:#0f1117; --card:#1a1d27; --text:#e8eaed; --muted:#9aa0a6; --accent:#6c8cff; --ok:#3dd68c; --err:#ff6b6b; }
     * { box-sizing: border-box; }
@@ -48,7 +48,7 @@ function htmlPage(manifest: string, envPath: string): string {
 </head>
 <body>
   <main>
-    <h1>Tandem Slack setup (manual)</h1>
+    <h1>Pip Slack setup (manual)</h1>
     <p>Prefer OAuth? Run <code>tandem slack connect</code> instead. This wizard writes <code>${envEsc}</code>.</p>
 
     <div class="card">
@@ -56,7 +56,7 @@ function htmlPage(manifest: string, envPath: string): string {
       <ol>
         <li>Open <a href="https://api.slack.com/apps" target="_blank" rel="noopener">api.slack.com/apps</a> → <strong>Create New App</strong> → <strong>From a manifest</strong>.</li>
         <li>Paste the manifest JSON below → create the app.</li>
-        <li>If Slack shows <strong>demo_app</strong> as the name, open <strong>Basic Information</strong> → set <strong>App Name</strong> to <code>Tandem</code> (bot display name is already Tandem in the manifest).</li>
+        <li>If Slack shows <strong>demo_app</strong> as the name, open <strong>Basic Information</strong> → set <strong>App Name</strong> to <code>Pip</code> (bot display name is already Pip in the manifest).</li>
         <li><strong>Basic Information</strong> → App-Level Tokens → generate <code>socket</code> with <code>connections:write</code> → copy <code>xapp-…</code>.</li>
         <li><strong>Install App</strong> → Install to workspace → copy <code>xoxb-…</code> (bot) and <code>xoxp-…</code> (user, optional).</li>
       </ol>
@@ -174,7 +174,7 @@ async function validateAndSave(body: { bot: string; app: string; user?: string }
   });
 
   return {
-    botUser: auth.user ?? "Tandem",
+    botUser: auth.user ?? "Pip",
     team: auth.team ?? "",
     ownerId,
   };
@@ -250,7 +250,7 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, "127.0.0.1", () => {
   slackConfigDir();
   const setupUrl = `http://127.0.0.1:${PORT}`;
-  console.log(`\nTandem Slack setup → ${setupUrl}`);
+  console.log(`\nPip Slack setup → ${setupUrl}`);
   console.log(`Writes: ${envPath}\n`);
   import("node:child_process").then(({ execFile }) => {
     execFile("open", [setupUrl], () => {});

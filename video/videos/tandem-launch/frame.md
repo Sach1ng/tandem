@@ -1,9 +1,9 @@
 ---
 version: alpha
-name: Tandem Liquid Glass — Frame
+name: Pip Liquid Glass — Frame
 description: >
   Dark cinematic canvas with frosted liquid-glass panels — translucent white fills,
-  backdrop blur, soft specular edges, and Tandem burnt-orange voltage. Product demos
+  backdrop blur, soft specular edges, and Pip burnt-orange voltage. Product demos
   play full-bleed under glass caption cards. Inter + JetBrains Mono.
 unit: the frame — 1920×1080
 principle: glass floats over footage · type is sparse · orange is scarce voltage
@@ -62,7 +62,7 @@ components:
     description: "Scarce voltage — one orange mark per frame max."
 ---
 
-# Tandem Liquid Glass
+# Pip Liquid Glass
 
 ## Overview
 

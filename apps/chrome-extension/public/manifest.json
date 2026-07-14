@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Tandem Pip",
+  "name": "Pip",
   "short_name": "Pip",
   "version": "0.1.0",
-  "description": "Pip — Tandem's page-aware browser surface. Ask about whatever tab you're on, answered by the Cursor CLI against your PM OS workspace.",
+  "description": "Pip — your page-aware browser surface. Ask about whatever tab you're on, answered by the Cursor CLI against your PM OS workspace.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Pip — ask about this page"

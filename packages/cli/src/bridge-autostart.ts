@@ -43,7 +43,7 @@ export function findChromeExtensionRoot(cliDir: string): string {
   if (existsSync(join(fromWorkspace, "bridge", "server.ts"))) return fromWorkspace;
 
   throw new Error(
-    "Chrome extension not found. Run from the Tandem monorepo (apps/chrome-extension must exist).",
+    "Chrome extension not found. Run from the Pip monorepo (apps/chrome-extension must exist).",
   );
 }
 

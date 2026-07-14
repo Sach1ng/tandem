@@ -1,7 +1,7 @@
 {
   "name": "@tandem/pm-os",
   "version": "0.1.0",
-  "description": "PM OS brain bundle for Tandem — skills, knowledge, memory, and workspace charter.",
+  "description": "PM OS brain bundle for Pip — skills, knowledge, memory, and workspace charter.",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",

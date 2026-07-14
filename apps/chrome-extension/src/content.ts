@@ -159,7 +159,7 @@ function openPipPanel(): void {
   <header>
     <div>
       <div class="brand">Pip</div>
-      <div class="sub">by Tandem · ⌘B</div>
+      <div class="sub">your AI coworker · ⌘B</div>
     </div>
     <button class="close" type="button" aria-label="Close">×</button>
   </header>

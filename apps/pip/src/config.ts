@@ -67,7 +67,7 @@ export interface PipPeekConfig {
 
 export interface PipConfig {
   workspace: string; // absolute — tasks, screenshots, local config
-  agentWorkspace: string; // absolute — cursor-agent --workspace (PM OS or Tandem root)
+  agentWorkspace: string; // absolute — cursor-agent --workspace (PM OS or Pip root)
   knowledgeBase: string; // absolute — PM OS brain directory
   tasksFile: string; // absolute
   agent: string;

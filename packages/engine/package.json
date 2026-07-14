@@ -1,7 +1,7 @@
 {
   "name": "@tandem/engine",
   "version": "0.1.0",
-  "description": "Cursor CLI adapter — the single brain every Tandem surface shells out to.",
+  "description": "Cursor CLI adapter — the single brain every Pip surface shells out to.",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

@@ -1,4 +1,4 @@
-/** Bot scopes — must match the Tandem distributed Slack app (see manifest.json). */
+/** Bot scopes — must match the Pip distributed Slack app (see manifest.json). */
 export const BOT_SCOPES = [
   "channels:history",
   "channels:join",

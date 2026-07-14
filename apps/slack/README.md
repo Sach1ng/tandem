@@ -1,11 +1,11 @@
-# Pip — Tandem's Slack coworker
+# Pip — your Slack coworker
 
-**Pip** is the team surface of Tandem — tag `@Pip` in a channel or DM it. Your message runs
+**Pip** is your team's AI coworker in Slack — tag `@Pip` in a channel or DM it. Your message runs
 as a `cursor-agent` task in the workspace (with PM OS on disk) and the answer posts back in-thread.
 
 | Surface | Name | Where |
 |---|---|---|
-| Product | **Tandem** | The ambient coworker |
+| Product | **Pip** | The ambient coworker |
 | Slack | **Pip** (`@Pip`) | Team channels & DMs |
 | Desktop | **Pip** | Pip on your screen |
 | Browser | **Pip** | Chrome extension |

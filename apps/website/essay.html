@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<title>Intelligence stopped being the bottleneck — Sachin Gupta</title>
+<meta name="description" content="The last two years were about making AI smarter. The next two are about making it present — in your tools, with your context, doing your actual work." />
+<meta property="og:title" content="Intelligence stopped being the bottleneck" />
+<meta property="og:description" content="Presence, not intelligence, is the new bottleneck for AI at work — and the question nobody is asking loudly enough: who owns the memory?" />
+<meta property="og:type" content="article" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --bg-card: #ffffff;
+    --border: #e8eaed;
+    --grid-line: rgba(20, 28, 36, 0.05);
+    --grid-size: 56px;
+    --text: #1c1b22;
+    --text-dim: #5d5c66;
+    --text-faint: #94929c;
+    --accent: #d9480f;
+    --accent-soft: #fff0e8;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif: "Source Serif 4", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(var(--grid-line) 1px, transparent 1px);
+    background-size: var(--grid-size) var(--grid-size);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(232, 89, 12, 0.18); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(248, 249, 250, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font);
+  }
+  .nav-inner {
+    max-width: 720px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-weight: 700; font-size: 15px; color: var(--text); letter-spacing: -0.01em; }
+  .nav-brand:hover { text-decoration: none; }
+  .nav-brand .dot { color: var(--accent); }
+  .nav-links { display: flex; gap: 18px; font-size: 13.5px; }
+  .nav-links a { color: var(--text-dim); }
+
+  article { max-width: 720px; margin: 0 auto; padding: 72px 24px 96px; }
+
+  .kicker {
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: var(--font); font-size: clamp(32px, 5.5vw, 46px);
+    font-weight: 800; letter-spacing: -0.025em; line-height: 1.12;
+    margin-bottom: 20px;
+  }
+  .byline {
+    font-family: var(--font); font-size: 14.5px; color: var(--text-faint);
+    margin-bottom: 52px; padding-bottom: 28px; border-bottom: 1px solid var(--border);
+  }
+  .byline b { color: var(--text-dim); font-weight: 600; }
+
+  article p { margin-bottom: 26px; }
+  article h2 {
+    font-family: var(--font); font-size: 24px; font-weight: 700;
+    letter-spacing: -0.015em; margin: 52px 0 18px;
+  }
+  article strong { font-weight: 600; }
+
+  .pull {
+    margin: 40px 0; padding: 6px 0 6px 26px;
+    border-left: 3px solid var(--accent);
+    font-size: 22px; line-height: 1.55; font-style: italic; color: var(--text);
+  }
+
+  .footer-card {
+    margin-top: 64px; padding: 28px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    font-family: var(--font); font-size: 15px; color: var(--text-dim); line-height: 1.65;
+    box-shadow: 0 1px 2px rgba(28,27,34,.05), 0 2px 8px rgba(28,27,34,.05);
+  }
+  .footer-card code {
+    font-family: var(--mono); font-size: 12.5px;
+    background: var(--accent-soft); padding: 2px 7px; border-radius: 5px; color: var(--accent);
+  }
+  @media (max-width: 560px) {
+    body { font-size: 17.5px; }
+    article { padding-top: 48px; }
+    .pull { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-brand" href="index.html">Pip<span class="dot">.</span></a>
+    <div class="nav-links">
+      <a href="index.html">Product</a>
+      <a href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<article>
+  <div class="kicker">Essay</div>
+  <h1>Intelligence stopped being the bottleneck</h1>
+  <div class="byline">By <b>Sachin Gupta</b> · July 2026 · 6 min read</div>
+
+  <p>There's a pattern in how technology changes work, and we're living through the confusing middle of it right now.</p>
+
+  <p>When factories replaced steam engines with electric motors at the turn of the last century, almost nothing improved for thirty years. Economists still argue about why, but the best explanation is simple: factory owners swapped the engine and kept everything else the same. The building, the layout, the workflow — all of it had been designed around a giant central steam shaft. The productivity explosion only came when a new generation rearranged the factory floor around what electricity actually made possible: small motors, everywhere, embedded in each machine.</p>
+
+  <p>I think about that a lot, because it's exactly where we are with AI.</p>
+
+  <p>We got the new engine. The models are genuinely remarkable, and they get better every quarter. But we bolted them onto an unchanged workflow: a chat tab, off to the side, that starts every conversation knowing nothing about you. We took the most powerful technology of our generation and gave it the working memory of a stranger.</p>
+
+  <p>And so the daily experience of AI at work is stranger than the demos suggest. The model can reason about anything, but your decisions live in Slack threads it's never seen. Your specs sit in docs it can't read. Your last three weeks of choices exist nowhere in its world. So you carry context to it by hand, chat by chat, morning after morning. The smartest tool you've ever used, and you're its courier.</p>
+
+  <div class="pull">Intelligence stopped being the bottleneck sometime last year. The bottleneck now is presence.</div>
+
+  <p>By presence I mean three specific things, and I think they arrive in this order.</p>
+
+  <h2>From answers to work</h2>
+
+  <p>A chat reply is a suggestion; work is a change in the world. The gap between "here's how you'd update the roadmap" and "the roadmap is updated, here's what changed" is the gap between a search engine and a coworker. Agents with real tools close it. This is already happening, and it quietly changes what a "response" even is.</p>
+
+  <h2>From sessions to memory</h2>
+
+  <p>Every AI session today is a goldfish. The moment memory persists — what you're building, what got decided, how you like things done — something economic shifts: the cost of delegating collapses. Most tasks never get handed off because explaining them takes longer than doing them. Durable memory removes that tax, and suddenly the delegation threshold drops from "big enough to justify a briefing" to "anything I'd rather not do." That's not a feature. That's a labor market change in miniature.</p>
+
+  <h2>From destination to ambient</h2>
+
+  <p>Today AI is a place you go. The last stage is when it's simply there — in the thread where the debate happened, over the calendar you're staring at, on the page you're reading. Not because it's convenient, but because context lives where work happens, and an assistant that's already in the room needs no briefing at all.</p>
+
+  <p>Put those together and the unit of progress changes. The question stops being "how smart is your model?" and becomes "how much does your AI know about your work, and where is it standing?" A mediocre model that's present — in your tools, with your history — will outperform a frontier model that meets you as a stranger. I've watched this happen on my own desk. Presence beats intelligence, and it isn't close.</p>
+
+  <h2>Who owns the memory?</h2>
+
+  <p>Which raises the question I think we're all underweighting.</p>
+
+  <p>If the accumulated context of your working life — your decisions, your preferences, your half-finished thoughts — becomes the most valuable layer of the stack, then where that layer lives matters enormously. Locked inside one vendor's model, it's a moat pointed at you: switching costs made of your own history. Owned by you, in files you can read and carry between models, it's leverage. The models will keep leapfrogging each other every few months. Your memory shouldn't be hostage to whichever lab is winning this quarter.</p>
+
+  <p>That belief is why, when Hardik Tiwari and I built our own AI coworker (it's called <a href="index.html">Pip</a> — open source, lives in Slack, on the desktop, and in Chrome, one shared memory across all three), we made the unfashionable choice: the memory is plain files on your machine, and the model underneath is swappable. Pip is our small bet on this thesis, not the thesis itself.</p>
+
+  <p>The thesis is this: the last two years were about making AI smarter. The next two are about making it present — on your side of the table, with your context, doing your actual work. The teams that rearrange the factory floor around that will look, in hindsight, like the ones who figured out what the electric motor was for.</p>
+
+  <div class="footer-card">
+    Sachin Gupta builds <a href="index.html">Pip</a> with Hardik Tiwari — an open-source AI coworker for Slack, desktop, and Chrome.
+    Try it: <code>curl -fsSL https://raw.githubusercontent.com/Sach1ng/tandem/main/install.sh | bash</code>
+    · <a href="https://github.com/Sach1ng/tandem" target="_blank" rel="noopener">github.com/Sach1ng/tandem</a>
+  </div>
+</article>
+
+</body>
+</html>

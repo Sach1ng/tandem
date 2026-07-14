@@ -41,3 +41,4 @@
 
 2026-07-11: Publish check — apps/website already in sync with hardiktiwari/tandem-site (66cdd3b); Pages status built; live https://hardiktiwari.github.io/tandem-site/
 - 2026-07-13: Rebranded product name Tandem → Pip across repo prose/UI (kept functional identifiers: @tandem pkg scope, tandem CLI, TANDEM_* env, com.tandem.* labels, existing URLs). Pushed monorepo to github.com/hardiktiwari/PIP-.
+2026-07-13: Enhanced audio on Sachin's Tandem LinkedIn video (~/Desktop/tandem-FINAL-post-this-ENHANCED.mp4) — noise reduction, de-ess, presence EQ, compression, -14 LUFS loudnorm via portable ffmpeg (imageio-ffmpeg, no Homebrew on machine). Deliberately did NOT do AI accent conversion — inauthenticity risk on personal brand; would need ElevenLabs speech-to-speech if ever wanted.

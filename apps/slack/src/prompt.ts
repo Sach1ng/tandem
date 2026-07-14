@@ -36,10 +36,18 @@ export function assemblePrompt(input: PromptInput): string {
   }
 
   const context = [`Slack channel: ${input.channelName} (infer the project from this)`];
-  if (input.threadHistory) context.push(`Thread so far:\n${input.threadHistory}`);
+  if (input.threadHistory) {
+    const n = input.threadHistory.split("\n").filter(Boolean).length;
+    context.push(
+      `Full Slack thread (${n} message${n === 1 ? "" : "s"} before your tag — read ALL of this for context; ` +
+        `do not act on the TASK line alone):\n${input.threadHistory}`,
+    );
+  }
   parts.push(`--- CONTEXT ---\n${context.join("\n\n")}`);
 
-  parts.push(`--- TASK (from @${input.userId}) ---\n${input.task}`);
+  parts.push(
+    `--- TASK (from @${input.userId} — latest instruction; combine with full thread above) ---\n${input.task}`,
+  );
 
   return parts.join("\n\n");
 }

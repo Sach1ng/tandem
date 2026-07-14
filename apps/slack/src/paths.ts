@@ -11,7 +11,10 @@ declare global {
 
 function resolveSlackPkgDir(): string {
   if (globalThis.__TANDEM_SLACK_PKG_DIR) return globalThis.__TANDEM_SLACK_PKG_DIR;
-  return resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  if (typeof import.meta !== "undefined" && import.meta.url) {
+    return resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  }
+  throw new Error("Cannot resolve @tandem/slack package directory");
 }
 
 export const SLACK_PKG_DIR = resolveSlackPkgDir();

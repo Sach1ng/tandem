@@ -62,8 +62,8 @@ Opens a browser wizard to paste `xoxb-`, `xapp-`, and `xoxp-` tokens manually.
 
 ## Commands
 
-- `@Pip <anything>` — run a task
-- `open thread` *(owner only)* — let non-owners use Pip in this thread
+- `@Pip <anything>` — run a task (anyone in a channel; DMs are owner-only)
+- `open thread` *(owner only)* — let non-owners use Pip in this DM thread
 - `close thread` *(owner only)* — revoke it
 
 ## CLI reference

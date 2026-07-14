@@ -27,6 +27,8 @@
     "setup": "node --import tsx scripts/setup-server.ts",
     "smoke": "node --env-file=.env --import tsx scripts/smoke.ts",
     "reinstall": "node --env-file=.env --import tsx scripts/reinstall-manifest.ts",
+    "install-service": "node --import tsx scripts/install-service.ts",
+    "activate": "node --env-file=.env --import tsx scripts/activate.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

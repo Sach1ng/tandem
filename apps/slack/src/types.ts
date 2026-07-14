@@ -11,7 +11,7 @@ export interface NormalizedMessage {
   user: string;
   text: string;
   channelType?: string; // "im" | "channel" | "group" | "mpim"
-  source: "socket" | "search" | "dm-poll";
+  source: "socket" | "search" | "dm-poll" | "channel-poll";
 }
 
 export interface Ctx {
@@ -24,4 +24,5 @@ export interface Ctx {
   gate: AccessGate;
   queue: KeyedQueue;
   bootTs: number;
+  socketModeOn: boolean;
 }

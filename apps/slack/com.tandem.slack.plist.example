@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  launchd LaunchAgent for the Pip Slack coworker.
-  1. Edit the paths below to match your machine.
-  2. Copy to ~/Library/LaunchAgents/com.tandem.slack.plist
-  3. launchctl load ~/Library/LaunchAgents/com.tandem.slack.plist
+  launchd LaunchAgent for the Pip Slack coworker (always-on).
+  Install: npm run slack:install-service
+  Or copy to ~/Library/LaunchAgents/com.tandem.slack.plist and:
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tandem.slack.plist
+
+  Use npm directly (not run.sh) — launchd often cannot execute scripts under ~/Desktop.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -12,8 +14,11 @@
     <string>com.tandem.slack</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/ABSOLUTE/PATH/TO/tandem/apps/slack/run.sh</string>
+        <string>/Users/sachin/.local/node-v22.22.3-darwin-arm64/bin/npm</string>
+        <string>start</string>
     </array>
+    <key>WorkingDirectory</key>
+    <string>/ABSOLUTE/PATH/TO/tandem/apps/slack</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
@@ -22,5 +27,12 @@
     <string>/tmp/tandem-slack.out.log</string>
     <key>StandardErrorPath</key>
     <string>/tmp/tandem-slack.err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/sachin</string>
+        <key>PATH</key>
+        <string>/Users/sachin/.local/bin:/Users/sachin/.local/node-v22.22.3-darwin-arm64/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
 </dict>
 </plist>

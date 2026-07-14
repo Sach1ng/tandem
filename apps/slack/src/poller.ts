@@ -2,6 +2,9 @@ import type { Ctx, NormalizedMessage } from "./types.ts";
 
 const SEARCH_INTERVAL_MS = 15_000;
 const DM_INTERVAL_MS = 60_000;
+const CHANNEL_INTERVAL_SOCKET_MS = 60_000;
+const CHANNEL_INTERVAL_FALLBACK_MS = 1_500;
+const STARTUP_LOOKBACK_SEC = 600;
 
 type Handle = (m: NormalizedMessage) => Promise<void>;
 
@@ -9,6 +12,63 @@ function threadTsFromPermalink(permalink?: string): string | undefined {
   if (!permalink) return undefined;
   const m = /thread_ts=([0-9.]+)/.exec(permalink);
   return m?.[1];
+}
+
+/** Scan channels the bot is in for @mentions (works when Socket Mode is off or flaky). */
+function startChannelPolling(ctx: Ctx, handle: Handle): void {
+  const { botClient, botUserId, bootTs } = ctx;
+  let pollSince = bootTs - STARTUP_LOOKBACK_SEC;
+
+  const channelTick = async () => {
+    const oldest = String(pollSince);
+    try {
+      let cursor: string | undefined;
+      do {
+        const list = await botClient.conversations.list({
+          types: "public_channel,private_channel",
+          exclude_archived: true,
+          limit: 200,
+          cursor,
+        });
+        for (const ch of list.channels ?? []) {
+          const channelId = ch.id as string | undefined;
+          if (!channelId || !ch.is_member) continue;
+          try {
+            const hist = await botClient.conversations.history({ channel: channelId, oldest, limit: 50 });
+            for (const msg of (hist.messages ?? []) as Array<Record<string, any>>) {
+              if (msg.subtype || msg.bot_id || !msg.user) continue;
+              if (msg.user === botUserId) continue;
+              const text = String(msg.text ?? "");
+              if (!text.includes(`<@${botUserId}>`)) continue;
+              await handle({
+                channel: channelId,
+                ts: msg.ts,
+                threadTs: msg.thread_ts,
+                user: msg.user,
+                text,
+                channelType: ch.is_private ? "group" : "channel",
+                source: "channel-poll",
+              });
+            }
+          } catch {
+            /* not_in_channel, etc. */
+          }
+        }
+        cursor = list.response_metadata?.next_cursor || undefined;
+      } while (cursor);
+      pollSince = Date.now() / 1000 - 3;
+    } catch (err) {
+      console.error("[poll:channels]", (err as Error)?.message ?? err);
+    }
+  };
+
+  void channelTick();
+  const intervalMs = ctx.socketModeOn ? CHANNEL_INTERVAL_SOCKET_MS : CHANNEL_INTERVAL_FALLBACK_MS;
+  setInterval(channelTick, intervalMs);
+  console.log(
+    `Polling fallback: channel history every ${intervalMs / 1000}s` +
+      (ctx.socketModeOn ? " (socket mode primary)" : " (socket mode off — fast poll)"),
+  );
 }
 
 /**
@@ -43,7 +103,12 @@ export function startPolling(ctx: Ctx, handle: Handle): void {
           });
         }
       } catch (err) {
-        console.error("[poll:search]", (err as Error)?.message ?? err);
+        const msg = (err as Error)?.message ?? String(err);
+        if (msg.includes("token_revoked") || msg.includes("invalid_auth")) {
+          console.error("[poll:search] user token invalid — re-paste xoxp- in npm run slack:setup");
+        } else {
+          console.error("[poll:search]", msg);
+        }
       }
     };
     setInterval(searchTick, SEARCH_INTERVAL_MS);
@@ -51,6 +116,8 @@ export function startPolling(ctx: Ctx, handle: Handle): void {
   } else {
     console.log("Polling fallback: search disabled (no SLACK_USER_TOKEN)");
   }
+
+  startChannelPolling(ctx, handle);
 
   // DM poll — only meaningful when owners are explicit.
   if (cfg.allowedUsers.length) {

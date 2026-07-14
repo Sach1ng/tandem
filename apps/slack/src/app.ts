@@ -6,6 +6,7 @@ import { loadConfig } from "./config.ts";
 import { AccessGate, parseAccessCommand } from "./access.ts";
 import { OpenThreadStore, ProcessedStore, SessionStore, threadKey } from "./state.ts";
 import { assemblePrompt } from "./prompt.ts";
+import { ensureRealtimeDelivery, isSocketModeEnabled } from "./socket-health.ts";
 import {
   fetchThreadHistory,
   getBotUserId,
@@ -19,6 +20,19 @@ import type { NormalizedMessage, Ctx } from "./types.ts";
 const { App, LogLevel } = boltPkg;
 const { WebClient } = webApiPkg;
 
+function fromSlackEvent(e: Record<string, any>, source: NormalizedMessage["source"]): NormalizedMessage | null {
+  if (!e.user || !e.channel || !e.ts) return null;
+  return {
+    channel: e.channel,
+    ts: e.ts,
+    threadTs: e.thread_ts,
+    user: e.user,
+    text: String(e.text ?? ""),
+    channelType: e.channel_type,
+    source,
+  };
+}
+
 async function processMessage(m: NormalizedMessage, ctx: Ctx): Promise<void> {
   const { botUserId, gate, processed, queue, botClient } = ctx;
 
@@ -30,9 +44,6 @@ async function processMessage(m: NormalizedMessage, ctx: Ctx): Promise<void> {
   const mentioned = m.text.includes(`<@${botUserId}>`);
   if (!isDM && !mentioned) return;
 
-  // Single markHandled point so socket + poll never double-deliver.
-  processed.markHandled(m.ts);
-
   const threadTs = m.threadTs || m.ts;
   const key = threadKey(m.channel, threadTs);
   const cleanText = removeBotMention(m.text, botUserId);
@@ -40,6 +51,7 @@ async function processMessage(m: NormalizedMessage, ctx: Ctx): Promise<void> {
   // Owner-only access commands.
   const cmd = parseAccessCommand(cleanText);
   if (cmd) {
+    processed.markHandled(m.ts);
     if (!gate.isOwner(m.user)) {
       await postReply(botClient, m.channel, threadTs, ":lock: Only the owner can open or close this thread.");
       return;
@@ -54,19 +66,25 @@ async function processMessage(m: NormalizedMessage, ctx: Ctx): Promise<void> {
     return;
   }
 
-  if (!gate.canRun(m.user, m.channel, threadTs)) {
+  if (!gate.canRun(m.user, m.channel, threadTs, isDM)) {
+    processed.markHandled(m.ts);
+    await postReply(botClient, m.channel, threadTs, ":no_entry: I only take DMs from my owner.");
+    return;
+  }
+
+  if (!cleanText) {
+    processed.markHandled(m.ts);
     await postReply(
       botClient,
       m.channel,
       threadTs,
-      ":no_entry: I only take tasks from my owner here. The owner can say `open thread` to let everyone in.",
+      "Hey — tag me with a task, e.g. `@Pip summarize the launch checklist`.",
     );
     return;
   }
 
-  if (!cleanText) return; // bare mention, nothing to do
-
   // Serialize per thread so follow-ups don't race the session file.
+  processed.markHandled(m.ts);
   await queue.run(key, () => runTask(m, threadTs, key, cleanText, ctx));
 }
 
@@ -148,6 +166,10 @@ async function main() {
     console.log(`Engine: ${version}`);
   }
 
+  const appId = process.env.SLACK_APP_ID?.trim() || (await botClient.auth.test()).api_app_id || "A0BDPE7D7KQ";
+  await ensureRealtimeDelivery(cfg.appToken, appId);
+  const socketModeOn = await isSocketModeEnabled(cfg.appToken);
+
   const ctx: Ctx = {
     cfg,
     botUserId,
@@ -158,6 +180,7 @@ async function main() {
     gate: new AccessGate(cfg, new OpenThreadStore()),
     queue: new KeyedQueue(),
     bootTs: Date.now() / 1000,
+    socketModeOn,
   };
 
   const app = new App({
@@ -170,18 +193,17 @@ async function main() {
   app.event("message", async ({ event }) => {
     const e = event as Record<string, any>;
     if (e.subtype || e.bot_id || !e.user) return; // skip edits, bot posts, system messages
-    await processMessage(
-      {
-        channel: e.channel,
-        ts: e.ts,
-        threadTs: e.thread_ts,
-        user: e.user,
-        text: String(e.text ?? ""),
-        channelType: e.channel_type,
-        source: "socket",
-      },
-      ctx,
-    ).catch((err) => console.error("[socket] handler error:", err));
+    const m = fromSlackEvent(e, "socket");
+    if (!m) return;
+    await processMessage(m, ctx).catch((err) => console.error("[socket] handler error:", err));
+  });
+
+  app.event("app_mention", async ({ event }) => {
+    const e = event as Record<string, any>;
+    if (!e.user) return;
+    const m = fromSlackEvent(e, "socket");
+    if (!m) return;
+    await processMessage(m, ctx).catch((err) => console.error("[app_mention] handler error:", err));
   });
 
   await app.start();

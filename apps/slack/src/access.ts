@@ -24,9 +24,10 @@ export class AccessGate {
     return this.cfg.allowedUsers.length === 0 || this.cfg.allowedUsers.includes(userId);
   }
 
-  /** Owners always pass. Non-owners pass only inside a thread the owner opened. */
-  canRun(userId: string, channel: string, threadTs: string): boolean {
+  /** Owners always pass. In channels, anyone who @mentions the bot passes. DMs need an open-thread grant. */
+  canRun(userId: string, channel: string, threadTs: string, isDM: boolean): boolean {
     if (this.isOwner(userId)) return true;
+    if (!isDM) return true;
     return this.openThreads.isOpen(threadKey(channel, threadTs));
   }
 
